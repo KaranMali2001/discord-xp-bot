@@ -1,0 +1,24 @@
+node_modules/
+dist/
+*.log
+
+# env
+.env
+.env.*
+!.env.sample
+
+# sqlite
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+
+# misc
+.DS_Store
+.turbo/
+coverage/

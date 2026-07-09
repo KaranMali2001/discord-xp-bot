@@ -1,0 +1,50 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { config } from 'dotenv'
+import { z } from 'zod'
+import { findWorkspaceRoot } from './util/paths'
+
+// Load the workspace-root .env into process.env (each package runs from its own dir).
+{
+  const candidate = join(findWorkspaceRoot(), '.env')
+  if (existsSync(candidate)) config({ path: candidate })
+}
+
+/**
+ * Single validated env for the whole workspace. Every package imports from here,
+ * so a missing/invalid var fails fast at boot instead of surfacing as a runtime
+ * `undefined` deep in a handler. (This is the gap our previous projects had.)
+ */
+const schema = z.object({
+  DISCORD_TOKEN: z.string().min(1),
+  DISCORD_CLIENT_ID: z.string().min(1),
+  DISCORD_CLIENT_SECRET: z.string().default(''),
+  DISCORD_GUILD_ID: z.string().default(''),
+
+  DATABASE_URL: z.string().default('file:./dev.db'),
+
+  API_PORT: z.coerce.number().default(8080),
+  WEB_URL: z.string().default('http://localhost:5173'),
+  SESSION_SECRET: z.string().min(8).default('dev-only-insecure-session-secret'),
+
+  XP_TICK_SECONDS: z.coerce.number().min(1).default(60),
+  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+})
+
+/**
+ * Parsed lazily so tooling (e.g. drizzle-kit) that only needs DATABASE_URL doesn't
+ * crash on a missing DISCORD_TOKEN. Access via `env`.
+ */
+function load(): z.infer<typeof schema> {
+  const parsed = schema.safeParse(process.env)
+  if (!parsed.success) {
+    const issues = parsed.error.issues
+      .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
+      .join('\n')
+    throw new Error(`Invalid environment variables:\n${issues}`)
+  }
+  return parsed.data
+}
+
+export type Env = z.infer<typeof schema>
+export const env: Env = load()
