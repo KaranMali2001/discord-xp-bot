@@ -1,7 +1,7 @@
 import { authService, env } from '@xp/core'
 import type { FastifyInstance, FastifyReply, FastifyRequest, preHandlerHookHandler } from 'fastify'
 import { z } from 'zod'
-import { clearSession, getSession, setSession } from '../lib/session'
+import { type SessionData, clearSession, getSession, setSession } from '../lib/session'
 import { parse } from '../lib/validate'
 
 const DISCORD_API = 'https://discord.com/api'
@@ -44,7 +44,18 @@ const devLoginBody = z.object({
   guildId: z.string().min(1),
 })
 
+/** Synthetic session used when AUTH_DISABLED — grants management of any guild. */
+function devSession(guildId: string): SessionData {
+  return {
+    userId: 'dev',
+    username: 'Dev (auth disabled)',
+    guildId,
+    manageGuildIds: [guildId],
+  }
+}
+
 function assertCanManage(request: FastifyRequest, reply: FastifyReply, guildId: string): boolean {
+  if (env.AUTH_DISABLED) return true
   const session = getSession(request)
   if (!session) {
     reply.code(401).send({ error: 'Not authenticated' })
@@ -135,6 +146,7 @@ export function registerAuth(app: FastifyInstance): void {
 
   // Current session, or 401.
   app.get('/auth/me', async (request, reply) => {
+    if (env.AUTH_DISABLED) return devSession(env.DISCORD_GUILD_ID)
     const session = getSession(request)
     if (!session) return reply.code(401).send({ error: 'Not authenticated' })
     return session

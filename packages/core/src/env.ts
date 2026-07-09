@@ -27,6 +27,13 @@ const schema = z.object({
   WEB_URL: z.string().default('http://localhost:5173'),
   SESSION_SECRET: z.string().min(8).default('dev-only-insecure-session-secret'),
 
+  // Local-only escape hatch: skip OAuth/session checks so the dashboard is fully
+  // viewable and editable without logging in. Never enable outside dev.
+  AUTH_DISABLED: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
+
   XP_TICK_SECONDS: z.coerce.number().min(1).default(60),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 })

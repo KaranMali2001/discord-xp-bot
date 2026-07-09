@@ -1,3 +1,4 @@
+import { ChannelPicker } from '@/components/ChannelPicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -114,14 +115,14 @@ export function ConfigTab({ guildId }: { guildId: string }) {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="levelUpChannelId">Level-up channel id</Label>
-            <Input
+            <Label htmlFor="levelUpChannelId">Level-up channel</Label>
+            <ChannelPicker
               id="levelUpChannelId"
+              guildId={guildId}
+              kind="text"
               placeholder="(blank = announce in the same channel)"
-              value={current.levelUpChannelId ?? ''}
-              onChange={(e) =>
-                setForm({ ...current, levelUpChannelId: e.target.value.trim() || null })
-              }
+              value={current.levelUpChannelId}
+              onChange={(next) => setForm({ ...current, levelUpChannelId: next })}
             />
           </div>
 

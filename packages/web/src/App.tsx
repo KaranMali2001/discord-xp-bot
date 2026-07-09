@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { AdminsTab } from '@/features/AdminsTab'
 import { BadgesTab } from '@/features/BadgesTab'
 import { ChannelsTab } from '@/features/ChannelsTab'
 import { ConfigTab } from '@/features/ConfigTab'
@@ -15,6 +16,7 @@ const TABS = [
   { value: 'rewards', label: 'Level Rewards' },
   { value: 'badges', label: 'Badges' },
   { value: 'leaderboard', label: 'Leaderboard' },
+  { value: 'admins', label: 'Admins' },
 ] as const
 
 export default function App() {
@@ -52,6 +54,9 @@ export default function App() {
             </TabsContent>
             <TabsContent value="leaderboard">
               <LeaderboardTab guildId={guildId} />
+            </TabsContent>
+            <TabsContent value="admins">
+              <AdminsTab guildId={guildId} />
             </TabsContent>
           </Tabs>
         ) : (

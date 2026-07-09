@@ -1,3 +1,4 @@
+import { ChannelPicker } from '@/components/ChannelPicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -107,11 +108,13 @@ export function ChannelsTab({ guildId }: { guildId: string }) {
         <CardContent>
           <form onSubmit={onSubmit} className="grid items-end gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="channelId">Channel id</Label>
-              <Input
+              <Label htmlFor="channelId">Channel</Label>
+              <ChannelPicker
                 id="channelId"
-                value={form.channelId}
-                onChange={(e) => setForm({ ...form, channelId: e.target.value })}
+                guildId={guildId}
+                kind={form.kind}
+                value={form.channelId || null}
+                onChange={(next) => setForm({ ...form, channelId: next ?? '' })}
               />
             </div>
             <div className="space-y-1.5">

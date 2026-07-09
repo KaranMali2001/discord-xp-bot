@@ -127,6 +127,18 @@ export type AuthUser = {
   username: string
 }
 
+export type DiscordChannel = {
+  id: string
+  name: string
+  kind: 'text' | 'voice'
+}
+
+export type DiscordMember = {
+  id: string
+  username: string
+  displayName: string
+}
+
 // ── endpoint helpers ──────────────────────────────────────────────────
 
 const g = (guildId: string) => `/api/guilds/${encodeURIComponent(guildId)}`
@@ -185,5 +197,25 @@ export const endpoints = {
   leaderboard: {
     get: (guildId: string, limit: number, offset: number) =>
       apiFetch<LeaderboardPage>(`${g(guildId)}/leaderboard?limit=${limit}&offset=${offset}`),
+  },
+
+  admins: {
+    list: (guildId: string) => apiFetch<string[]>(`${g(guildId)}/admins`),
+    add: (guildId: string, userId: string) =>
+      apiFetch<{ ok: true; userId: string }>(`${g(guildId)}/admins`, {
+        method: 'POST',
+        body: { userId },
+      }),
+    remove: (guildId: string, userId: string) =>
+      apiFetch<void>(`${g(guildId)}/admins/${encodeURIComponent(userId)}`, { method: 'DELETE' }),
+  },
+
+  discord: {
+    channels: (guildId: string) =>
+      apiFetch<DiscordChannel[]>(`${g(guildId)}/discord/channels`),
+    members: (guildId: string, query?: string) =>
+      apiFetch<DiscordMember[]>(
+        `${g(guildId)}/discord/members${query ? `?query=${encodeURIComponent(query)}` : ''}`,
+      ),
   },
 }
