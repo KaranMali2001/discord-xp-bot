@@ -1,3 +1,4 @@
+import { ChannelPicker } from '@/components/ChannelPicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -17,6 +18,7 @@ type FormState = {
   start: string
   end: string
   countsAttendance: boolean
+  channelId: string | null
 }
 
 const EMPTY: FormState = {
@@ -26,6 +28,7 @@ const EMPTY: FormState = {
   start: '18:00',
   end: '22:00',
   countsAttendance: true,
+  channelId: null,
 }
 
 function describeWindow(
@@ -62,6 +65,7 @@ export function EventsTab({ guildId }: { guildId: string }) {
       dayOfWeek: form.dayOfWeek,
       startMinute,
       endMinute,
+      channelId: form.channelId,
     }
     create.mutate(body, {
       onSuccess: () => {
@@ -183,6 +187,16 @@ export function EventsTab({ guildId }: { guildId: string }) {
                 onCheckedChange={(checked) => setForm({ ...form, countsAttendance: checked })}
               />
               <Label htmlFor="ev-attend">Counts attendance</Label>
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="ev-channel">Restrict to channel (optional)</Label>
+              <ChannelPicker
+                id="ev-channel"
+                guildId={guildId}
+                placeholder="(blank = applies guild-wide)"
+                value={form.channelId}
+                onChange={(next) => setForm({ ...form, channelId: next })}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ev-start">Start (HH:MM UTC)</Label>
