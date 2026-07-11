@@ -8,6 +8,8 @@ export const guildConfigInput = z.object({
   ignoreMutedVoice: z.boolean().optional(),
   levelUpChannelId: z.string().nullable().optional(),
   levelUpMessage: z.string().max(500).optional(),
+  tierUpMessage: z.string().max(500).optional(),
+  voiceCaptureChannelId: z.string().nullable().optional(),
 })
 export type GuildConfigInput = z.infer<typeof guildConfigInput>
 
@@ -49,5 +51,6 @@ export type EventInput = z.infer<typeof eventInput>
 export const levelRewardInput = z.object({
   level: z.number().int().min(1).max(1000),
   roleId: z.string().min(1),
+  message: z.string().max(500).nullable().optional(),
 })
 export type LevelRewardInput = z.infer<typeof levelRewardInput>

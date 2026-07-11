@@ -163,7 +163,7 @@ const friday: Command = {
     .addIntegerOption((o) =>
       o
         .setName('start_hour')
-        .setDescription('Start hour UTC (0-23)')
+        .setDescription('Start hour IST (0-23)')
         .setMinValue(0)
         .setMaxValue(23)
         .setRequired(true),
@@ -171,7 +171,7 @@ const friday: Command = {
     .addIntegerOption((o) =>
       o
         .setName('end_hour')
-        .setDescription('End hour UTC (1-24)')
+        .setDescription('End hour IST (1-24)')
         .setMinValue(1)
         .setMaxValue(24)
         .setRequired(true),
@@ -197,11 +197,51 @@ const friday: Command = {
       endsAt: null,
     })
     await i.reply({
-      content: `✅ Friday boost ×${multiplier} created (${startHour}:00–${endHour}:00 UTC${channel ? ` in <#${channel.id}>` : ''}).`,
+      content: `✅ Friday boost ×${multiplier} created (${startHour}:00–${endHour}:00 IST${channel ? ` in <#${channel.id}>` : ''}).`,
       ephemeral: true,
     })
   },
 }
 
-export const commands: Command[] = [rank, leaderboard, badges, setMessageXp, setChannel, friday]
+const setLevelRole: Command = {
+  data: new SlashCommandBuilder()
+    .setName('setlevelrole')
+    .setDescription('Map a level to a rank role (Manage Server)')
+    .addIntegerOption((o) =>
+      o
+        .setName('level')
+        .setDescription('Level threshold')
+        .setMinValue(1)
+        .setMaxValue(1000)
+        .setRequired(true),
+    )
+    .addRoleOption((o) =>
+      o.setName('role').setDescription('Role to grant at that level').setRequired(true),
+    )
+    .addStringOption((o) =>
+      o.setName('message').setDescription('Optional announcement — supports {user} {role} {level}'),
+    )
+    .toJSON(),
+  async execute(i) {
+    if (!i.guildId || (await denyIfNotManager(i))) return
+    const level = i.options.getInteger('level', true)
+    const role = i.options.getRole('role', true)
+    const message = i.options.getString('message') ?? null
+    rulesDao.upsertLevelReward(i.guildId, { level, roleId: role.id, message })
+    await i.reply({
+      content: `✅ Level **${level}** now grants <@&${role.id}>. Members get it on their next level-up.`,
+      ephemeral: true,
+    })
+  },
+}
+
+export const commands: Command[] = [
+  rank,
+  leaderboard,
+  badges,
+  setMessageXp,
+  setChannel,
+  friday,
+  setLevelRole,
+]
 export const commandMap = new Map(commands.map((c) => [c.data.name, c]))

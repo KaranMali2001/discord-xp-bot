@@ -46,5 +46,13 @@ export type { Badge } from './domains/badges/badges.dao'
 export { badgeInput, BADGE_CRITERIA } from './domains/badges/badges.schema'
 export type { BadgeInput } from './domains/badges/badges.schema'
 
+// ── level-reward roles + reconcile ────────────────────────
+export { discordRest, DiscordError } from './lib/discord-rest'
+export type { DiscordRole, DiscordMember } from './lib/discord-rest'
+export { targetTier, reconcileDecision } from './domains/rewards/level-roles.service'
+export type { LevelReward, RoleDiff } from './domains/rewards/level-roles.service'
+export { reconcileMember, announceReconcile } from './domains/rewards/reconcile.service'
+export type { ReconcileResult } from './domains/rewards/reconcile.service'
+
 // ── auth (identity data only) ─────────────────────────────
 export { authService } from './domains/auth/auth.service'

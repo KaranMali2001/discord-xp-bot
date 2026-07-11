@@ -12,17 +12,21 @@ import { tracker } from './tracker'
  */
 function reconcileConnections(client: Client): void {
   const at = nowSec()
-  for (const guildId of tracker.guildsWithSessions()) {
-    const guild = client.guilds.cache.get(guildId)
-    if (!guild) continue
+  // Iterate every guild (not just ones with sessions) so a manual capture can join an
+  // empty channel and wait, and so capture works even before anyone is tracked.
+  for (const guild of client.guilds.cache.values()) {
+    const guildId = guild.id
+
+    // Manual dashboard capture wins: join the chosen channel regardless of events/members.
+    const manualChannelId = rulesService.getConfig(guildId).voiceCaptureChannelId
 
     const activeEvents = rulesDao.listEvents(guildId).filter((e) => isEventActive(e, at))
-    const eligible = tracker
+    const eventChannel = tracker
       .channelsWithMembers(guildId)
       .filter((chId) => activeEvents.some((e) => e.channelId == null || e.channelId === chId))
-      .sort((a, b) => tracker.countInChannel(guildId, b) - tracker.countInChannel(guildId, a))
+      .sort((a, b) => tracker.countInChannel(guildId, b) - tracker.countInChannel(guildId, a))[0]
 
-    const best = eligible[0]
+    const best = manualChannelId ?? eventChannel
     const current = tracker.connectedChannelId(guildId)
 
     if (best) {
@@ -30,14 +34,38 @@ function reconcileConnections(client: Client): void {
         const ch = guild.channels.cache.get(best)
         if (ch?.isVoiceBased()) {
           tracker.connectTo(ch)
-          log.info('voice', `bot joined #${ch.name} — event active, listening for speaking`)
+          const reason = manualChannelId ? 'manual capture' : 'event active'
+          log.info('voice', `bot joined #${ch.name} — ${reason}, listening for speaking`)
         }
       }
     } else if (current) {
       tracker.disconnect(guildId)
-      log.info('voice', 'bot left voice — no active event')
+      log.info('voice', 'bot left voice — no active event / capture')
     }
   }
+}
+
+/**
+ * Seed sessions from members already in voice at startup. No voiceStateUpdate fires for
+ * people who were connected before the bot logged in (or before a dev-watch restart), so
+ * without this the bot is blind to them until they toggle their voice state.
+ */
+export function seedVoiceSessions(client: Client): void {
+  let seeded = 0
+  for (const guild of client.guilds.cache.values()) {
+    for (const vs of guild.voiceStates.cache.values()) {
+      if (!vs.channelId || !vs.member || vs.member.user.bot) continue
+      tracker.upsert({
+        guildId: guild.id,
+        userId: vs.id,
+        username: vs.member.displayName,
+        channelId: vs.channelId,
+        muted: Boolean(vs.mute || vs.deaf || vs.selfMute || vs.selfDeaf),
+      })
+      seeded++
+    }
+  }
+  if (seeded > 0) log.info('voice', `seeded ${seeded} member(s) already in voice`)
 }
 
 /**
@@ -75,7 +103,7 @@ export function startVoiceTick(client: Client): NodeJS.Timeout {
           'voice',
           `${s.username} +${outcome.result.awarded}xp (spoke=${spoke}) → ${outcome.result.member.xp}`,
         )
-        await processGrant(client, s.guildId, s.userId, outcome.result, s.channelId)
+        await processGrant(s.guildId, s.userId, outcome.result, s.channelId)
       }
     }
   }, env.XP_TICK_SECONDS * 1000)

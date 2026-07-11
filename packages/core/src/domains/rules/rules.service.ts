@@ -1,5 +1,5 @@
 import type { multiplierEvents } from '../../db/schema'
-import { nowSec, utcClock } from '../../util/time'
+import { localClock, nowSec } from '../../util/time'
 import { rulesDao } from './rules.dao'
 
 type EventRow = typeof multiplierEvents.$inferSelect
@@ -13,6 +13,8 @@ export const DEFAULT_CONFIG = {
   ignoreMutedVoice: true,
   levelUpChannelId: null as string | null,
   levelUpMessage: '🎉 {user} reached level **{level}**!',
+  tierUpMessage: '🎖️ {user} is now **{role}**!',
+  voiceCaptureChannelId: null as string | null,
 }
 export type ResolvedConfig = typeof DEFAULT_CONFIG
 
@@ -23,7 +25,7 @@ export function isEventActive(e: EventRow, atSec: number): boolean {
     return atSec >= e.startsAt && atSec < e.endsAt
   }
   if (e.dayOfWeek != null && e.startMinute != null && e.endMinute != null) {
-    const { dow, minute } = utcClock(atSec)
+    const { dow, minute } = localClock(atSec) // IST — matches how the dashboard takes input
     return dow === e.dayOfWeek && minute >= e.startMinute && minute < e.endMinute
   }
   return false
@@ -42,6 +44,8 @@ export const rulesService = {
       ignoreMutedVoice: row.ignoreMutedVoice,
       levelUpChannelId: row.levelUpChannelId,
       levelUpMessage: row.levelUpMessage,
+      tierUpMessage: row.tierUpMessage,
+      voiceCaptureChannelId: row.voiceCaptureChannelId,
     }
   },
 

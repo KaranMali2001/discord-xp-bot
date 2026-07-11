@@ -93,7 +93,7 @@ export const rulesDao = {
       .values({ guildId, ...input })
       .onConflictDoUpdate({
         target: [levelRewards.guildId, levelRewards.level],
-        set: { roleId: input.roleId },
+        set: { roleId: input.roleId, message: input.message ?? null },
       })
       .returning()
       .get()

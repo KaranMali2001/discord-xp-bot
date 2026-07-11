@@ -83,6 +83,22 @@ export const xpService = {
     })
   },
 
+  /**
+   * Admin XP Boost: apply a signed delta to a member's XP (clamped at 0), recompute
+   * level, and return the before/after. Reconciliation (roles/badges/announcement) is
+   * the caller's job — see the reconcile service. Creates the row if the member is new.
+   */
+  adjust(guildId: string, userId: string, username: string, delta: number): GrantResult {
+    // ensure() upserts the username too, so a boost also refreshes a stale/placeholder
+    // name (e.g. a row first created by a boost before the real name was known).
+    const base = xpDao.ensure(guildId, userId, username)
+    const oldLevel = base.level
+    const newXp = Math.max(0, base.xp + delta)
+    const newLevel = levelFromXp(newXp)
+    const member = xpDao.setXp(guildId, userId, newXp, newLevel)
+    return { awarded: newXp - base.xp, member, oldLevel, newLevel, leveledUp: newLevel > oldLevel }
+  },
+
   leaderboard: xpDao.leaderboard,
   rank: xpDao.rank,
   count: xpDao.count,

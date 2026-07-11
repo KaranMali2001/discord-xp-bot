@@ -58,6 +58,16 @@ export const xpDao = {
       .get()
   },
 
+  /** Set XP + level to absolute values (used by admin XP Boosts). Returns the fresh row. */
+  setXp(guildId: string, userId: string, xp: number, level: number): Member {
+    return db
+      .update(members)
+      .set({ xp, level, updatedAt: nowSec() })
+      .where(and(eq(members.guildId, guildId), eq(members.userId, userId)))
+      .returning()
+      .get()
+  },
+
   leaderboard(guildId: string, limit = 25, offset = 0): Member[] {
     return db
       .select()

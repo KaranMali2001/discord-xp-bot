@@ -8,9 +8,9 @@ const DISCORD_API = 'https://discord.com/api'
 /** MANAGE_GUILD permission bit. */
 const MANAGE_GUILD = 0x20n
 
-/** No API_URL in env — derive it from the port the server listens on. */
+/** Public API origin for the OAuth redirect: PUBLIC_API_URL in prod, localhost in dev. */
 function apiUrl(): string {
-  return `http://localhost:${env.API_PORT}`
+  return env.PUBLIC_API_URL || `http://localhost:${env.API_PORT}`
 }
 
 function redirectUri(): string {

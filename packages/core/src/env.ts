@@ -24,6 +24,9 @@ const schema = z.object({
   DATABASE_URL: z.string().default('file:./dev.db'),
 
   API_PORT: z.coerce.number().default(8080),
+  // Public origin the API is reachable at (used for the Discord OAuth redirect URI).
+  // Leave blank for local dev — falls back to http://localhost:${API_PORT}.
+  PUBLIC_API_URL: z.string().default(''),
   WEB_URL: z.string().default('http://localhost:5173'),
   SESSION_SECRET: z.string().min(8).default('dev-only-insecure-session-secret'),
 

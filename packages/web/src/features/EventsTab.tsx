@@ -38,7 +38,7 @@ function describeWindow(
 ) {
   if (dayOfWeek == null || startMinute == null || endMinute == null) return 'one-off'
   const day = DAY_NAMES[dayOfWeek] ?? `day ${dayOfWeek}`
-  return `${day} ${minutesToHhmm(startMinute)}–${minutesToHhmm(endMinute)} UTC`
+  return `${day} ${minutesToHhmm(startMinute)}–${minutesToHhmm(endMinute)} IST`
 }
 
 export function EventsTab({ guildId }: { guildId: string }) {
@@ -199,7 +199,7 @@ export function EventsTab({ guildId }: { guildId: string }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ev-start">Start (HH:MM UTC)</Label>
+              <Label htmlFor="ev-start">Start (HH:MM IST)</Label>
               <Input
                 id="ev-start"
                 value={form.start}
@@ -207,7 +207,7 @@ export function EventsTab({ guildId }: { guildId: string }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ev-end">End (HH:MM UTC)</Label>
+              <Label htmlFor="ev-end">End (HH:MM IST)</Label>
               <Input
                 id="ev-end"
                 value={form.end}

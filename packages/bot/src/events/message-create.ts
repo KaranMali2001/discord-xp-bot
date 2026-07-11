@@ -21,7 +21,7 @@ export function registerMessageCreate(client: Client): void {
       `${name} +${outcome.result.awarded}xp → ${outcome.result.member.xp} (L${outcome.result.newLevel}) in ${channel}`,
     )
     if (outcome.result.leveledUp || outcome.result.awarded > 0) {
-      await processGrant(client, msg.guild.id, msg.author.id, outcome.result, msg.channelId)
+      await processGrant(msg.guild.id, msg.author.id, outcome.result, msg.channelId)
     }
   })
 }
