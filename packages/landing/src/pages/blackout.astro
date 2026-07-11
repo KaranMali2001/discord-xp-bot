@@ -1,0 +1,443 @@
+---
+import Base from '../layouts/Base.astro';
+import Avatar from '../components/Avatar.astro';
+import SessionShot from '../components/SessionShot.astro';
+import SignupForm from '../components/SignupForm.astro';
+import { site, crew, sessions, nextSession } from '../data/site';
+
+const steps = [
+  { n: '01', t: 'Book a slot', d: 'Take an open time on the sheet. No résumé screen.' },
+  { n: '02', t: 'Sit the round', d: 'Forty-five minutes of real pressure — DSA or system design.' },
+  { n: '03', t: 'Get the notes', d: 'Written feedback the same weekend, plus your recording.' },
+];
+---
+
+<Base title="Blackout">
+  <a href="/" class="back">← all concepts</a>
+
+  <main id="top" class="bo">
+    <!-- HERO: single centered headline, nothing else above the fold -->
+    <section class="hero" data-reveal>
+      <p class="hero__eyebrow">{site.cadence}</p>
+      <h1 class="hero__title">We talk code,<br />every Friday.</h1>
+      <p class="hero__sub">{site.blurb}</p>
+      <div class="hero__actions">
+        <a href="#join" class="btn">Get notified</a>
+        <p class="hero__next">
+          <span class="dot" aria-hidden="true"></span>
+          Next · EP.{nextSession.ep} — {nextSession.title}
+        </p>
+      </div>
+    </section>
+
+    <!-- CREW -->
+    <section id="crew" class="block" data-reveal>
+      <p class="eyebrow">The crew</p>
+      <h2 class="block__h">A small team keeps Friday running.</h2>
+      <ul class="crew">
+        {crew.map((m) => (
+          <li class="crew__row">
+            <span class="crew__pic"><Avatar name={m.name} initials={m.initials} tint="var(--muted)" ratio={1} /></span>
+            <div class="crew__body">
+              <h3 class="crew__name">{m.name}</h3>
+              <p class="crew__role">{m.role}</p>
+              <p class="crew__blurb">{m.blurb}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- FRIDAY SESSIONS -->
+    <section id="sessions" class="block" data-reveal>
+      <p class="eyebrow">The sessions</p>
+      <h2 class="block__h">One topic. Forty-five minutes.</h2>
+      <p class="block__lead">
+        Live and unscripted — internals, systems, the real work. The recording lands by Monday.
+      </p>
+      <ul class="list">
+        {sessions.map((s, i) => (
+          <li class:list={['list__row', i === 0 && 'is-next']}>
+            <span class="list__ep">{s.ep}</span>
+            <span class="list__title">{s.title}</span>
+            <span class="list__topic">{s.topic}</span>
+            <time class="list__date" datetime={s.iso}>{i === 0 ? 'Up next' : s.date}</time>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <!-- MOCK -->
+    <section id="mock" class="block" data-reveal>
+      <p class="eyebrow">Mock interviews</p>
+      <h2 class="block__h">Make the real one feel like a rerun.</h2>
+      <ol class="steps">
+        {steps.map((s) => (
+          <li class="steps__row">
+            <span class="steps__n">{s.n}</span>
+            <div class="steps__body">
+              <h3 class="steps__t">{s.t}</h3>
+              <p class="steps__d">{s.d}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <!-- ARCHIVE -->
+    <section id="archive" class="block" data-reveal>
+      <p class="eyebrow">From the archive</p>
+      <h2 class="block__h">A recent Friday, mid-session.</h2>
+      <figure class="proof">
+        <SessionShot />
+        <figcaption class="proof__cap">Placeholder screenshot.</figcaption>
+      </figure>
+    </section>
+
+    <!-- JOIN -->
+    <section id="join" class="block block--join" data-reveal>
+      <p class="eyebrow">Join</p>
+      <h2 class="block__h">Don't miss a Friday.</h2>
+      <p class="block__lead">One quiet reminder before we go live.</p>
+      <div class="join__form"><SignupForm cta="Get notified" /></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span class="foot__mark">{site.name}</span>
+    <span class="foot__cadence">{site.cadence}</span>
+    <a href={site.xUrl} class="foot__link">{site.handle}</a>
+  </footer>
+</Base>
+
+<style is:global>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #141416;
+    --surface-2: #1c1c1f;
+    --text: #ececef;
+    --muted: #83838c;
+    --border: rgba(255, 255, 255, 0.08);
+    --accent: #ececef;
+    --accent-2: #83838c;
+    --accent-ink: #0a0a0b;
+    --live: #8aa0ff;
+    --radius: 8px;
+    --font-display: var(--font-geist);
+    --font-mono: var(--font-geist-mono);
+  }
+  body {
+    background:
+      radial-gradient(60rem 40rem at 50% -6%, rgba(236, 236, 239, 0.05), transparent 62%),
+      var(--bg);
+    color: var(--text);
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-reveal] {
+        opacity: 0;
+        transform: translateY(14px);
+        animation: reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 16%;
+      }
+      @keyframes reveal { to { opacity: 1; transform: none; } }
+    }
+  }
+</style>
+
+<style>
+  .back {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 80;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    transition: color 0.2s ease;
+  }
+  .back:hover { color: var(--text); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem clamp(1.2rem, 4vw, 3rem);
+  }
+  .hero__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .hero__title {
+    margin-top: 1.4rem;
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 6vw, 5rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .hero__sub {
+    margin-top: 1.6rem;
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+  .hero__actions {
+    margin-top: 2.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+  }
+  .hero__next {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--live);
+    box-shadow: 0 0 8px 1px color-mix(in srgb, var(--live) 60%, transparent);
+  }
+
+  /* PRIMARY BUTTON (white / ink) */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.98rem;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border-radius: var(--radius);
+    padding: 0.75rem 1.6rem;
+    transition: opacity 0.2s ease;
+  }
+  .btn:hover { opacity: 0.86; }
+
+  /* SECTIONS */
+  .block {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: clamp(4rem, 10vw, 8rem) clamp(1.2rem, 4vw, 3rem);
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .block__h {
+    margin-top: 1rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 4vw, 2.6rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    color: var(--text);
+  }
+  .block__lead {
+    margin: 1.2rem auto 0;
+    max-width: 54ch;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  /* CREW */
+  .crew {
+    list-style: none;
+    padding: 0;
+    margin: 3rem auto 0;
+    max-width: 560px;
+    display: grid;
+    gap: 0;
+  }
+  .crew__row {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 1.2rem;
+    align-items: center;
+    text-align: left;
+    padding: 1.4rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .crew__row:first-child { border-top: none; }
+  .crew__pic { width: 56px; --avatar-radius: 50%; }
+  .crew__name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .crew__role {
+    margin-top: 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .crew__blurb {
+    margin-top: 0.5rem;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  /* SESSIONS LIST */
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 3rem auto 0;
+    max-width: 640px;
+    text-align: left;
+  }
+  .list__row {
+    display: grid;
+    grid-template-columns: 3rem 1fr auto auto;
+    gap: 1.1rem;
+    align-items: baseline;
+    padding: 1.1rem 0;
+    border-top: 1px solid var(--border);
+    transition: opacity 0.2s ease;
+  }
+  .list__row:hover { opacity: 0.72; }
+  .list__ep {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .list__title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .list__topic {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .list__date {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .list__row.is-next .list__date { color: var(--text); }
+  @media (max-width: 600px) {
+    .list__row { grid-template-columns: 2.4rem 1fr auto; }
+    .list__topic { display: none; }
+  }
+
+  /* STEPS */
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 3rem auto 0;
+    max-width: 560px;
+    text-align: left;
+  }
+  .steps__row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.2rem;
+    align-items: baseline;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .steps__row:first-child { border-top: none; }
+  .steps__n {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .steps__t {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .steps__d {
+    margin-top: 0.4rem;
+    color: var(--muted);
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+
+  /* ARCHIVE */
+  .proof {
+    margin: 3rem auto 0;
+    max-width: 620px;
+  }
+  .proof :global(.shot) { box-shadow: none; }
+  .proof__cap {
+    margin-top: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  /* JOIN */
+  .block--join { border-bottom: 1px solid var(--border); }
+  .join__form {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+  }
+  .join__form :global(.signup) { text-align: left; }
+
+  /* FOOTER */
+  .foot {
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    padding: 2.5rem clamp(1.2rem, 4vw, 3rem) 5rem;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+  .foot__mark {
+    letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  .foot__cadence { letter-spacing: 0.04em; }
+  .foot__link {
+    margin-left: auto;
+    transition: color 0.2s ease;
+  }
+  .foot__link:hover { color: var(--text); }
+</style>

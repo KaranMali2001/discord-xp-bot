@@ -1,0 +1,593 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Avatar from '../components/Avatar.astro';
+import SessionShot from '../components/SessionShot.astro';
+import SignupForm from '../components/SignupForm.astro';
+import { site, crew, sessions, nextSession } from '../data/site';
+
+// Split the sessions array into a J-card SIDE A / SIDE B tracklist.
+const half = Math.ceil(sessions.length / 2);
+const sideA = sessions.slice(0, half);
+const sideB = sessions.slice(half);
+
+// Organic, made-up runtimes (mm:ss) — one per session, mono liner-notes style.
+const runtimes = ['44:12', '38:47', '41:03', '52:19', '36:55', '47:28'];
+const runtimeOf = (ep: string) => runtimes[sessions.findIndex((s) => s.ep === ep) % runtimes.length];
+
+// Mock-interview "liner notes / instructions" for playing the B-side.
+const instructions = [
+  { n: 'A1', t: 'Cue up a slot', d: 'Pick an open time on the sheet. No résumé screen, no gatekeeping — just press record.' },
+  { n: 'A2', t: 'Run the take', d: 'Forty-five minutes of real pressure — DSA or system design, tracked live by someone who has sat the loop.' },
+  { n: 'A3', t: 'Keep the dub', d: 'Written notes land the same weekend, plus a rerun of your own thinking to play back.' },
+];
+---
+
+<Base title="Mixtape">
+  <a href="/" class="back">&larr; all concepts</a>
+
+  <main id="top" class="mx">
+    <!-- HERO: cassette J-card -->
+    <section id="hero" class="hero">
+      <header class="hero__nav">
+        <Logo size={26} />
+        <span class="hero__cat">no. {site.since} &middot; dubbed with care</span>
+      </header>
+
+      <div class="hero__body">
+        <!-- decorative cassette graphic: tape body, label, two spinning reels -->
+        <div class="tape" aria-hidden="true">
+          <div class="tape__shell">
+            <span class="tape__screw tape__screw--tl"></span>
+            <span class="tape__screw tape__screw--tr"></span>
+            <span class="tape__screw tape__screw--bl"></span>
+            <span class="tape__screw tape__screw--br"></span>
+            <div class="tape__label">
+              <span class="tape__brand">TECH TALKS</span>
+              <span class="tape__vol">VOL.2</span>
+              <span class="tape__lines"></span>
+              <span class="tape__side">SIDE A / SIDE B &middot; 60 MIN</span>
+            </div>
+            <div class="tape__window">
+              <span class="tape__reel tape__reel--l">
+                <svg viewBox="0 0 100 100" class="tape__reelart">
+                  <circle cx="50" cy="50" r="46" class="tape__wound" />
+                  <circle cx="50" cy="50" r="20" class="tape__hub" />
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <rect x="47" y="18" width="6" height="16" rx="2" class="tape__tooth" transform={`rotate(${i * 60} 50 50)`} />
+                  ))}
+                </svg>
+              </span>
+              <span class="tape__reel tape__reel--r">
+                <svg viewBox="0 0 100 100" class="tape__reelart">
+                  <circle cx="50" cy="50" r="30" class="tape__wound" />
+                  <circle cx="50" cy="50" r="20" class="tape__hub" />
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <rect x="47" y="18" width="6" height="16" rx="2" class="tape__tooth" transform={`rotate(${i * 60} 50 50)`} />
+                  ))}
+                </svg>
+              </span>
+            </div>
+            <span class="tape__strip" aria-hidden="true"></span>
+          </div>
+        </div>
+
+        <div class="hero__copy">
+          <p class="hero__kick">Recorded live, every Friday.</p>
+          <h1 class="hero__title">TECH TALKS<br /><span class="hero__vol">&mdash; VOL.2</span></h1>
+          <p class="hero__sub">{site.blurb}</p>
+          <div class="hero__acts">
+            <a href="#sessions" class="btn btn--play">
+              <svg viewBox="0 0 24 24" class="btn__ico" aria-hidden="true"><path d="M8 5 L19 12 L8 19 Z" /></svg>
+              Play Side A
+            </a>
+            <a href="#join" class="btn btn--ghost">Get the next drop</a>
+          </div>
+          <p class="hero__meta">{site.cadence} &middot; {site.station}</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="mx__wrap">
+      <!-- CREW: featured artists / liner notes -->
+      <section id="crew" class="block">
+        <p class="eyebrow">Featured artists</p>
+        <h2 class="block__h">A small crew presses every copy.</h2>
+        <ol class="artists">
+          {crew.map((m, i) => (
+            <li class="artist">
+              <span class="artist__n">{String(i + 1).padStart(2, '0')}</span>
+              <span class="artist__pic"><Avatar name={m.name} initials={m.initials} tint={m.tint} ratio={1} /></span>
+              <div class="artist__meta">
+                <h3 class="artist__name">{m.name}</h3>
+                <p class="artist__role">{m.role}</p>
+                <p class="artist__blurb">{m.blurb}</p>
+              </div>
+              <span class="artist__handle">{m.handle}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <!-- FRIDAY SESSIONS: SIDE A / SIDE B tracklist -->
+      <section id="sessions" class="block">
+        <p class="eyebrow">The tracklist</p>
+        <h2 class="block__h">Forty-five minutes a track. <span class="ital">Every Friday.</span></h2>
+        <p class="block__lead">
+          Every Friday session gets pressed to tape. Flip it over, drop the needle, and hear
+          the internals, the systems, the messy real stuff &mdash; unscripted and unabridged.
+        </p>
+        <div class="jcard">
+          <div class="jcard__side">
+            <p class="jcard__label"><span class="jcard__ab">A</span> Side A</p>
+            <ol class="tracks">
+              {sideA.map((s, i) => (
+                <li class:list={['track', i === 0 && 'is-latest']}>
+                  <span class="track__n">A{i + 1}</span>
+                  <span class="track__main">
+                    <span class="track__title">{s.title}</span>
+                    <span class="track__by">{s.speaker}</span>
+                  </span>
+                  <span class="track__run">{runtimeOf(s.ep)}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div class="jcard__spine" aria-hidden="true"></div>
+          <div class="jcard__side">
+            <p class="jcard__label"><span class="jcard__ab">B</span> Side B</p>
+            <ol class="tracks">
+              {sideB.map((s, i) => (
+                <li class="track">
+                  <span class="track__n">B{i + 1}</span>
+                  <span class="track__main">
+                    <span class="track__title">{s.title}</span>
+                    <span class="track__by">{s.speaker}</span>
+                  </span>
+                  <span class="track__run">{runtimeOf(s.ep)}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOCK: liner-notes instructions -->
+      <section id="mock" class="block">
+        <p class="eyebrow">Playback instructions</p>
+        <h2 class="block__h">Practice the take before the real cut.</h2>
+        <p class="block__lead">
+          Book a mock and run the loop under real pressure &mdash; so the interview that counts
+          plays back like a track you already know by heart.
+        </p>
+        <ol class="notes">
+          {instructions.map((s) => (
+            <li class="note">
+              <span class="note__n">{s.n}</span>
+              <div>
+                <h3 class="note__t">{s.t}</h3>
+                <p class="note__d">{s.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <!-- ARCHIVE: bonus track / photo -->
+      <section id="archive" class="block">
+        <p class="eyebrow">Bonus track</p>
+        <h2 class="block__h">A recent night, mid-flight.</h2>
+        <figure class="bonus">
+          <SessionShot />
+          <figcaption class="bonus__cap">Hidden track &mdash; EP.{nextSession.ep}, straight off the master. Placeholder still.</figcaption>
+        </figure>
+      </section>
+
+      <!-- JOIN -->
+      <section id="join" class="join">
+        <p class="eyebrow"><span class="join__dot"></span>Subscribe to the label</p>
+        <h2 class="join__h">Never miss a drop.</h2>
+        <p class="block__lead">One quiet reminder before we press the next Friday track. That&rsquo;s the whole deal.</p>
+        <SignupForm cta="Get the next drop" />
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <Logo size={22} />
+    <span class="foot__note">Dubbed with care since {site.since}. {site.cadence}.</span>
+    <a href={site.xUrl} class="foot__link">{site.handle}</a>
+  </footer>
+
+  <div class="grain" aria-hidden="true"></div>
+</Base>
+
+<style is:global>
+  :root {
+    --bg: #EDE6D6;
+    --surface: #F6F1E5;
+    --surface-2: #E2D9C4;
+    --text: #1C1A17;
+    --muted: #6E6656;
+    --border: #1c1a1722;
+    --accent: #E23B2E;
+    --accent-2: #E0A32E;
+    --accent-ink: #F6F1E5;
+    --live: #E23B2E;
+    --radius: 6px;
+    --font-display: var(--font-geist);
+    --font-mono: var(--font-geist-mono);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    /* photocopied halftone dots layered under content */
+    background-image:
+      radial-gradient(var(--border) 1px, transparent 1.4px),
+      radial-gradient(color-mix(in srgb, var(--accent-2) 22%, transparent) 1px, transparent 1.4px);
+    background-size: 14px 14px, 14px 14px;
+    background-position: 0 0, 7px 7px;
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .block, .join {
+        opacity: 0;
+        transform: translateY(22px);
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 20%;
+      }
+      @keyframes rise { to { opacity: 1; transform: none; } }
+    }
+  }
+</style>
+
+<style>
+  .mx { position: relative; z-index: 1; }
+
+  .back {
+    position: fixed; left: 1rem; bottom: 1rem; z-index: 80;
+    font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--text);
+    padding: 0.4rem 0.7rem; border-radius: var(--radius);
+    box-shadow: 3px 3px 0 var(--text);
+  }
+  .back:hover { color: var(--accent); }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding: 2.6rem clamp(1.2rem, 4vw, 3rem) 0;
+    overflow: hidden;
+  }
+  .hero__nav {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; color: var(--text);
+  }
+  .hero__cat {
+    font-family: var(--font-mono); font-size: 0.72rem;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+  }
+  .hero__body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center;
+    padding: 2.5rem 0;
+  }
+  .hero__copy { min-width: 0; }
+  .hero__kick {
+    font-family: var(--font-mono); font-size: 0.78rem;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+  }
+  .hero__title {
+    font-size: clamp(2.6rem, 7.5vw, 5.5rem);
+    font-weight: 700; letter-spacing: -0.03em; line-height: 0.9;
+    margin: 1rem 0 0;
+  }
+  .hero__vol { color: var(--accent); }
+  .hero__sub {
+    margin-top: 1.4rem; max-width: 40ch;
+    color: var(--muted); font-size: 1.08rem; line-height: 1.6;
+  }
+  .hero__acts { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1.8rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.8rem;
+    letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500;
+    border-radius: var(--radius); padding: 0.7rem 1.2rem;
+    border: 1px solid var(--text);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.2s ease;
+  }
+  .btn--play {
+    color: var(--accent-ink); background: var(--accent);
+    box-shadow: 3px 3px 0 var(--text);
+  }
+  .btn--play:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--text); }
+  .btn--play:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--text); }
+  .btn__ico { width: 13px; height: 13px; fill: currentColor; }
+  .btn--ghost { color: var(--text); background: var(--surface); }
+  .btn--ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .hero__meta {
+    margin-top: 1.6rem; font-family: var(--font-mono);
+    font-size: 0.74rem; letter-spacing: 0.1em; color: var(--muted);
+  }
+
+  /* CASSETTE GRAPHIC */
+  .tape {
+    justify-self: center;
+    width: min(100%, 460px);
+    filter: drop-shadow(6px 8px 0 color-mix(in srgb, var(--text) 22%, transparent));
+  }
+  .tape__shell {
+    position: relative;
+    aspect-ratio: 8 / 5;
+    border-radius: 14px;
+    background: linear-gradient(160deg, var(--surface) 0%, var(--surface-2) 100%);
+    border: 2px solid var(--text);
+    padding: 8% 8% 12%;
+    overflow: hidden;
+  }
+  .tape__shell::after {
+    /* halftone shading band on the shell */
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(color-mix(in srgb, var(--text) 10%, transparent) 1px, transparent 1.4px);
+    background-size: 8px 8px; opacity: 0.5; pointer-events: none;
+  }
+  .tape__screw {
+    position: absolute; width: 9px; height: 9px; border-radius: 50%;
+    border: 1.5px solid var(--text);
+    background: var(--surface-2);
+  }
+  .tape__screw--tl { top: 5%; left: 4%; }
+  .tape__screw--tr { top: 5%; right: 4%; }
+  .tape__screw--bl { bottom: 6%; left: 4%; }
+  .tape__screw--br { bottom: 6%; right: 4%; }
+  .tape__label {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    background: var(--surface);
+    border: 1.5px solid var(--text);
+    border-radius: 4px;
+    padding: 0.5rem 0.7rem 0.55rem;
+    margin-bottom: 6%;
+  }
+  .tape__label::before {
+    /* mustard header stripe on the label */
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 26%;
+    background: var(--accent-2); border-radius: 3px 3px 0 0;
+    border-bottom: 1.5px solid var(--text);
+  }
+  .tape__brand {
+    position: relative; z-index: 1;
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(0.8rem, 2.4vw, 1.05rem); letter-spacing: 0.06em;
+    color: var(--text);
+  }
+  .tape__vol {
+    position: absolute; top: 0.42rem; right: 0.7rem; z-index: 1;
+    font-family: var(--font-mono); font-weight: 600;
+    font-size: 0.72rem; letter-spacing: 0.08em; color: var(--accent);
+  }
+  .tape__lines {
+    margin: 0.35rem 0 0.4rem; height: 8px;
+    background: repeating-linear-gradient(
+      to bottom,
+      var(--border) 0 1.5px,
+      transparent 1.5px 4px
+    );
+  }
+  .tape__side {
+    font-family: var(--font-mono); font-size: 0.62rem;
+    letter-spacing: 0.1em; color: var(--muted);
+  }
+  .tape__window {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: space-around;
+    gap: 8%;
+    background: color-mix(in srgb, var(--text) 82%, var(--surface));
+    border: 1.5px solid var(--text);
+    border-radius: 8px;
+    padding: 7% 12%;
+  }
+  .tape__reel { display: block; width: 32%; }
+  .tape__reelart { width: 100%; height: auto; transform-origin: 50% 50%; }
+  .tape__reel--l .tape__reelart { animation: reel 5.5s linear infinite; }
+  .tape__reel--r .tape__reelart { animation: reel 3.4s linear infinite; }
+  .tape__wound { fill: none; stroke: var(--surface-2); stroke-width: 3; opacity: 0.55; }
+  .tape__hub { fill: var(--surface); stroke: var(--text); stroke-width: 3; }
+  .tape__tooth { fill: var(--surface); stroke: var(--text); stroke-width: 2.5; }
+  @keyframes reel { to { transform: rotate(360deg); } }
+  .tape__strip {
+    position: absolute; z-index: 3; left: -6%; top: 16%;
+    width: 42%; height: 12px;
+    background: color-mix(in srgb, var(--accent-2) 78%, transparent);
+    border: 1px solid var(--text);
+    transform: rotate(-7deg);
+    opacity: 0.9;
+  }
+
+  .mx__wrap {
+    position: relative; z-index: 1;
+    max-width: 1000px; margin: 0 auto;
+    padding: 0 clamp(1.2rem, 4vw, 3rem);
+  }
+  .block { padding: clamp(3.5rem, 8vw, 6rem) 0; border-bottom: 1.5px solid var(--text); }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    font-family: var(--font-mono); font-size: 0.72rem;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+  }
+  .block__h {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(1.8rem, 4.6vw, 3rem);
+    letter-spacing: -0.03em; line-height: 1.04;
+    margin-top: 0.9rem; max-width: 20ch;
+  }
+  .block__h .ital { color: var(--accent); }
+  .block__lead {
+    margin-top: 1.2rem; max-width: 54ch;
+    color: var(--muted); font-size: 1.08rem; line-height: 1.65;
+  }
+
+  /* ARTISTS / crew */
+  .artists { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: 0; }
+  .artist {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.2rem 72px 1fr auto;
+    gap: 1.2rem; align-items: center;
+    padding: 1.4rem 0;
+    border-top: 1.5px solid var(--border);
+  }
+  .artist:first-child { border-top: none; }
+  .artist__n {
+    font-family: var(--font-mono); font-size: 0.9rem;
+    color: var(--accent); font-weight: 600;
+  }
+  .artist__pic { width: 72px; --avatar-radius: 4px; }
+  .artist__meta { min-width: 0; }
+  .artist__name { font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+  .artist__role {
+    font-family: var(--font-mono); font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2);
+    margin-top: 0.25rem;
+  }
+  .artist__blurb { color: var(--muted); line-height: 1.5; margin-top: 0.5rem; max-width: 52ch; }
+  .artist__handle {
+    font-family: var(--font-mono); font-size: 0.74rem;
+    color: var(--muted); white-space: nowrap;
+  }
+  @media (max-width: 720px) {
+    .artist { grid-template-columns: 1.8rem 56px 1fr; }
+    .artist__pic { width: 56px; }
+    .artist__handle { display: none; }
+  }
+
+  /* J-CARD TRACKLIST */
+  .jcard {
+    margin-top: 2.5rem;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0;
+    border: 1.5px solid var(--text);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: 5px 5px 0 color-mix(in srgb, var(--text) 18%, transparent);
+    overflow: hidden;
+  }
+  .jcard__side { padding: 1.6rem clamp(1.1rem, 3vw, 1.8rem); }
+  .jcard__spine { width: 1.5px; background: var(--text); }
+  .jcard__label {
+    display: flex; align-items: center; gap: 0.6rem;
+    font-family: var(--font-mono); font-size: 0.82rem;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
+    padding-bottom: 1rem; border-bottom: 1.5px solid var(--border); margin-bottom: 0.4rem;
+  }
+  .jcard__ab {
+    display: inline-grid; place-items: center;
+    width: 1.5rem; height: 1.5rem; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    font-weight: 700; font-size: 0.78rem;
+  }
+  .tracks { list-style: none; padding: 0; margin: 0; }
+  .track {
+    display: grid;
+    grid-template-columns: 2.4rem 1fr auto;
+    gap: 0.9rem; align-items: baseline;
+    padding: 0.9rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    border-radius: 4px;
+    transition: background 0.2s ease, padding-left 0.2s ease;
+  }
+  .track:last-child { border-bottom: none; }
+  .track:hover { background: color-mix(in srgb, var(--accent-2) 26%, transparent); padding-left: 1rem; }
+  .track__n { font-family: var(--font-mono); font-size: 0.9rem; color: var(--muted); }
+  .track.is-latest .track__n { color: var(--accent); font-weight: 600; }
+  .track__main { min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+  .track__title { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; }
+  .track.is-latest .track__title { color: var(--accent); }
+  .track__by { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.06em; color: var(--muted); }
+  .track__run { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-2); white-space: nowrap; }
+  @media (max-width: 720px) {
+    .jcard { grid-template-columns: 1fr; }
+    .jcard__spine { width: auto; height: 1.5px; }
+  }
+
+  /* NOTES / mock instructions */
+  .notes { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: 0; }
+  .note {
+    display: grid; grid-template-columns: auto 1fr; gap: 1.3rem;
+    padding: 1.5rem 0; border-top: 1.5px solid var(--border);
+  }
+  .note:first-child { border-top: none; }
+  .note__n {
+    font-family: var(--font-mono); font-size: 0.95rem;
+    color: var(--accent-ink); font-weight: 600;
+    background: var(--accent); border-radius: 4px;
+    padding: 0.15rem 0.55rem; height: max-content;
+  }
+  .note__t { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; }
+  .note__d { color: var(--muted); line-height: 1.6; margin-top: 0.4rem; max-width: 54ch; }
+
+  /* BONUS TRACK */
+  .bonus { margin: 2.5rem 0 0; }
+  .bonus__cap {
+    margin-top: 0.9rem; font-family: var(--font-mono);
+    font-size: 0.76rem; color: var(--muted); letter-spacing: 0.04em;
+  }
+
+  /* JOIN */
+  .join { padding: clamp(3.5rem, 8vw, 6rem) 0; }
+  .join__dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--live);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 22%, transparent);
+    animation: throb 1.8s ease-in-out infinite;
+  }
+  @keyframes throb { 50% { opacity: 0.4; } }
+  .join__h {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: clamp(2rem, 5.5vw, 3.6rem); letter-spacing: -0.03em;
+    margin: 0.9rem 0 0;
+  }
+  .join .block__lead { margin-bottom: 1.8rem; }
+
+  /* FOOTER liner notes */
+  .foot {
+    position: relative; z-index: 1;
+    max-width: 1000px; margin: 0 auto;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 1.2rem;
+    padding: 2.5rem clamp(1.2rem, 4vw, 3rem) 5rem;
+    border-top: 1.5px solid var(--text);
+    font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted);
+  }
+  .foot__note { letter-spacing: 0.03em; }
+  .foot__link { margin-left: auto; color: var(--text); }
+  .foot__link:hover { color: var(--accent); }
+
+  /* photocopy grain overlay */
+  .grain {
+    position: fixed; inset: 0; z-index: 90;
+    pointer-events: none; opacity: 0.06; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  @media (max-width: 720px) {
+    .hero__body { grid-template-columns: 1fr; padding: 1.5rem 0 3rem; }
+    .tape { order: -1; width: min(100%, 380px); }
+    .hero__title { font-size: clamp(2.6rem, 12vw, 4rem); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tape__reel--l .tape__reelart,
+    .tape__reel--r .tape__reelart,
+    .join__dot { animation: none; }
+  }
+</style>

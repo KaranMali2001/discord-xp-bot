@@ -12,6 +12,8 @@
     "dev:bot": "pnpm --filter @xp/bot dev",
     "dev:api": "pnpm --filter @xp/api dev",
     "dev:web": "pnpm --filter @xp/web dev",
+    "dev:landing": "pnpm --filter @xp/landing dev",
+    "build:landing": "pnpm --filter @xp/landing build",
     "db:generate": "pnpm --filter @xp/core db:generate",
     "db:migrate": "pnpm --filter @xp/core db:migrate",
     "db:push": "pnpm --filter @xp/core db:push",
