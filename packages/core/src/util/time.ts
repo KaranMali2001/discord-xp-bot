@@ -13,3 +13,15 @@ export function utcClock(atSec: number = nowSec()): { dow: number; minute: numbe
   const d = new Date(atSec * 1000)
   return { dow: d.getUTCDay(), minute: d.getUTCHours() * 60 + d.getUTCMinutes() }
 }
+
+/**
+ * India Standard Time offset (UTC+5:30, no DST). Recurring event windows are defined
+ * and evaluated in IST — see localClock / EventsTab.
+ */
+export const IST_OFFSET_MIN = 330
+
+/** Minutes since IST midnight, and IST day-of-week (0=Sun..6=Sat). */
+export function localClock(atSec: number = nowSec()): { dow: number; minute: number } {
+  // Shifting the instant forward by the offset makes its UTC wall-clock read as IST.
+  return utcClock(atSec + IST_OFFSET_MIN * 60)
+}

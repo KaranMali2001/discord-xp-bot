@@ -1,6 +1,12 @@
-import { type VoiceConnection, VoiceConnectionStatus, joinVoiceChannel } from '@discordjs/voice'
+import {
+  type VoiceConnection,
+  VoiceConnectionStatus,
+  entersState,
+  joinVoiceChannel,
+} from '@discordjs/voice'
 import { nowSec } from '@xp/core'
 import type { VoiceBasedChannel } from 'discord.js'
+import { log } from '../lib/log'
 
 /** Per-member voice session, held in memory between XP ticks. */
 export interface VoiceSession {
@@ -74,8 +80,9 @@ export const tracker = {
 
   /**
    * Join `channel` so the receiver emits speaking events. Called by the tick's
-   * reconcile step ONLY while an event is active on that channel — the bot is never
-   * in voice otherwise. Switches channels if already connected elsewhere in the guild.
+   * reconcile step when an event is active on that channel OR a manual dashboard capture
+   * targets it — the bot is never in voice otherwise. Switches channels if already
+   * connected elsewhere in the guild.
    */
   connectTo(channel: VoiceBasedChannel): void {
     const existing = connections.get(channel.guild.id)
@@ -89,7 +96,37 @@ export const tracker = {
       selfDeaf: false, // must not be deaf to receive audio / speaking events
       selfMute: true, // we never transmit
     })
-    conn.receiver.speaking.on('start', (userId) => tracker.markSpoke(channel.guild.id, userId))
+
+    // Diagnostic: log every state transition so a stuck handshake is visible.
+    conn.on('stateChange', (o, n) => log.info('voice', `connection: ${o.status} → ${n.status}`))
+    // Speaking events only flow once the UDP + encryption handshake reaches Ready.
+    conn.on(VoiceConnectionStatus.Ready, () =>
+      log.info('voice', `🎧 voice connection ready in #${channel.name} — receiving audio`),
+    )
+    entersState(conn, VoiceConnectionStatus.Ready, 15_000).catch(() =>
+      log.warn(
+        'voice',
+        `voice never reached Ready (stuck at "${conn.state.status}") — no audio/speaking; the UDP audio handshake to Discord is likely being blocked`,
+      ),
+    )
+    // A dropped connection must be reconnected or destroyed, else it hangs half-joined.
+    conn.on(VoiceConnectionStatus.Disconnected, async () => {
+      try {
+        await Promise.race([
+          entersState(conn, VoiceConnectionStatus.Signalling, 5000),
+          entersState(conn, VoiceConnectionStatus.Connecting, 5000),
+        ])
+      } catch {
+        log.warn('voice', `lost voice connection in #${channel.name} — leaving`)
+        conn.destroy()
+      }
+    })
+    conn.on('error', (e) => log.error('voice', `connection error: ${(e as Error).message}`))
+
+    conn.receiver.speaking.on('start', (userId) => {
+      log.debug('voice', `🗣️ speaking: ${userId}`)
+      tracker.markSpoke(channel.guild.id, userId)
+    })
     conn.on(VoiceConnectionStatus.Destroyed, () => {
       if (connections.get(channel.guild.id)?.channelId === channel.id) {
         connections.delete(channel.guild.id)
@@ -104,5 +141,18 @@ export const tracker = {
       c.conn.destroy()
       connections.delete(guildId)
     }
+  },
+
+  /** Leave every voice channel — called on shutdown so restarts don't leave a ghost
+   * session on Discord (which otherwise wedges the next join in "signalling"). */
+  disconnectAll(): void {
+    for (const { conn } of connections.values()) {
+      try {
+        conn.destroy()
+      } catch {
+        // already destroyed — ignore
+      }
+    }
+    connections.clear()
   },
 }

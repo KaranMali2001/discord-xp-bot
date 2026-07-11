@@ -34,6 +34,12 @@ export const guildConfig = sqliteTable('guild_config', {
   levelUpMessage: text('level_up_message')
     .notNull()
     .default('🎉 {user} reached level **{level}**!'),
+  // Global fallback announcement when a member reaches a level-reward tier.
+  // Supports {user}, {role}, {level}. A per-tier message on level_rewards overrides it.
+  tierUpMessage: text('tier_up_message').notNull().default('🎖️ {user} is now **{role}**!'),
+  // Manual voice-capture override: when set, the bot joins this voice channel and tracks
+  // activity regardless of events (dashboard "Voice capture" control). Null = off.
+  voiceCaptureChannelId: text('voice_capture_channel_id'),
   updatedAt: integer('updated_at').notNull().default(now),
 })
 
@@ -80,6 +86,8 @@ export const levelRewards = sqliteTable(
     guildId: text('guild_id').notNull(),
     level: integer('level').notNull(),
     roleId: text('role_id').notNull(),
+    // Optional per-tier announcement text; falls back to guildConfig.tierUpMessage.
+    message: text('message'),
   },
   (t) => ({ uq: uniqueIndex('level_rewards_guild_level').on(t.guildId, t.level) }),
 )

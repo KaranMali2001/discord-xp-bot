@@ -47,10 +47,7 @@ export function AdminsTab({ guildId }: { guildId: string }) {
             <p className="text-sm text-muted-foreground">No explicit admins yet.</p>
           ) : (
             admins.map((userId) => (
-              <div
-                key={userId}
-                className="flex items-center justify-between rounded-lg border p-3"
-              >
+              <div key={userId} className="flex items-center justify-between rounded-lg border p-3">
                 <span className="font-mono text-xs">{userId}</span>
                 <Button
                   variant="ghost"

@@ -29,8 +29,21 @@ export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promis
   if (!res.ok) {
     let message = `Request failed (${res.status})`
     try {
-      const data = (await res.json()) as { error?: string; message?: string }
+      const data = (await res.json()) as {
+        error?: string
+        message?: string
+        issues?: { fieldErrors?: Record<string, string[]>; formErrors?: string[] }
+      }
       message = data.error ?? data.message ?? message
+      // Surface zod field errors (e.g. "key: lowercase letters …") instead of a bare
+      // "Validation failed", so the user knows which field to fix.
+      const fieldErrors = data.issues?.fieldErrors
+      if (fieldErrors) {
+        const details = Object.entries(fieldErrors)
+          .map(([field, errs]) => `${field}: ${errs.join(', ')}`)
+          .join('; ')
+        if (details) message = `${message} — ${details}`
+      }
     } catch {
       // response had no JSON body — keep the default message
     }
@@ -51,6 +64,8 @@ export type GuildConfig = {
   ignoreMutedVoice: boolean
   levelUpChannelId: string | null
   levelUpMessage: string
+  tierUpMessage?: string
+  voiceCaptureChannelId?: string | null
 }
 
 export type ChannelRule = {
@@ -90,6 +105,23 @@ export type EventInput = {
 export type LevelReward = {
   level: number
   roleId: string
+  message?: string | null
+}
+
+export type DiscordRole = {
+  id: string
+  name: string
+  color: number
+  position: number
+  assignable: boolean
+}
+
+export type XpBoostResult = {
+  member: { xp: number; level: number; username: string }
+  awarded: number
+  oldLevel: number
+  newLevel: number
+  leveledUp: boolean
 }
 
 export const BADGE_CRITERIA = [
@@ -211,11 +243,21 @@ export const endpoints = {
   },
 
   discord: {
-    channels: (guildId: string) =>
-      apiFetch<DiscordChannel[]>(`${g(guildId)}/discord/channels`),
+    channels: (guildId: string) => apiFetch<DiscordChannel[]>(`${g(guildId)}/discord/channels`),
     members: (guildId: string, query?: string) =>
       apiFetch<DiscordMember[]>(
         `${g(guildId)}/discord/members${query ? `?query=${encodeURIComponent(query)}` : ''}`,
       ),
+    roles: (guildId: string) => apiFetch<DiscordRole[]>(`${g(guildId)}/discord/roles`),
+    createRole: (guildId: string, body: { name: string; color?: number; hoist?: boolean }) =>
+      apiFetch<DiscordRole>(`${g(guildId)}/discord/roles`, { method: 'POST', body }),
+  },
+
+  members: {
+    boostXp: (guildId: string, userId: string, body: { delta: number; username?: string }) =>
+      apiFetch<XpBoostResult>(`${g(guildId)}/members/${encodeURIComponent(userId)}/xp`, {
+        method: 'POST',
+        body,
+      }),
   },
 }

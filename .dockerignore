@@ -1,0 +1,26 @@
+# Never ship host node_modules (native binaries are platform-specific) or build output.
+**/node_modules
+**/dist
+**/.turbo
+**/.vite
+
+# Local database + logs
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite*
+
+# Secrets — provided at runtime via env_file, not baked into the image
+.env
+**/.env
+**/.env.*
+!**/.env.sample
+
+# VCS / editor / OS cruft
+.git
+.gitignore
+*.log
+.DS_Store
+Dockerfile
+docker-compose.yml

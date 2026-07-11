@@ -95,8 +95,8 @@ export function Combobox({
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
           <div className="border-b p-2">
-            {/* biome-ignore lint/a11y/noAutofocus: focus the filter when the panel opens */}
             <input
+              // biome-ignore lint/a11y/noAutofocus: focus the filter when the panel opens
               autoFocus
               value={search}
               onChange={(e) => setQuery(e.target.value)}

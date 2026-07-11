@@ -112,8 +112,20 @@ export function BadgesTab({ guildId }: { guildId: string }) {
                 id="b-key"
                 placeholder="lowercase_key"
                 value={form.key}
-                onChange={(e) => setForm({ ...form, key: e.target.value })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    // Enforce the server's key format as the user types.
+                    key: e.target.value
+                      .toLowerCase()
+                      .replace(/\s+/g, '_')
+                      .replace(/[^a-z0-9_-]/g, ''),
+                  })
+                }
               />
+              <p className="text-xs text-muted-foreground">
+                Lowercase letters, numbers, - and _ only.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="b-name">Name</Label>

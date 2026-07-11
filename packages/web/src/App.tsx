@@ -7,6 +7,7 @@ import { EventsTab } from '@/features/EventsTab'
 import { Header } from '@/features/Header'
 import { LeaderboardTab } from '@/features/LeaderboardTab'
 import { LevelRewardsTab } from '@/features/LevelRewardsTab'
+import { VoiceCaptureCard } from '@/features/VoiceCaptureCard'
 import { useGuildId } from '@/hooks/useGuildId'
 
 const TABS = [
@@ -28,37 +29,40 @@ export default function App() {
 
       <main className="container py-6">
         {guildId ? (
-          <Tabs defaultValue="config">
-            <TabsList className="flex-wrap">
-              {TABS.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="space-y-6">
+            <VoiceCaptureCard guildId={guildId} />
+            <Tabs defaultValue="config">
+              <TabsList className="flex-wrap">
+                {TABS.map((tab) => (
+                  <TabsTrigger key={tab.value} value={tab.value}>
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <TabsContent value="config">
-              <ConfigTab guildId={guildId} />
-            </TabsContent>
-            <TabsContent value="channels">
-              <ChannelsTab guildId={guildId} />
-            </TabsContent>
-            <TabsContent value="events">
-              <EventsTab guildId={guildId} />
-            </TabsContent>
-            <TabsContent value="rewards">
-              <LevelRewardsTab guildId={guildId} />
-            </TabsContent>
-            <TabsContent value="badges">
-              <BadgesTab guildId={guildId} />
-            </TabsContent>
-            <TabsContent value="leaderboard">
-              <LeaderboardTab guildId={guildId} />
-            </TabsContent>
-            <TabsContent value="admins">
-              <AdminsTab guildId={guildId} />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="config">
+                <ConfigTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="channels">
+                <ChannelsTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="events">
+                <EventsTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="rewards">
+                <LevelRewardsTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="badges">
+                <BadgesTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="leaderboard">
+                <LeaderboardTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="admins">
+                <AdminsTab guildId={guildId} />
+              </TabsContent>
+            </Tabs>
+          </div>
         ) : (
           <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
             Enter a guild id above to get started.

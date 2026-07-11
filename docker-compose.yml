@@ -1,0 +1,72 @@
+name: discord-xp-bot
+
+# One `docker compose up --build` runs the whole stack: schema migration → api + bot →
+# web dashboard. The SQLite file lives on a shared named volume so api & bot see the
+# same data. Secrets come from .env (never baked into the image).
+
+services:
+  # One-shot: apply the SQLite schema to the shared volume, then exit.
+  migrate:
+    build:
+      context: .
+      target: server
+    command: pnpm --filter @xp/core db:push
+    env_file: .env
+    environment:
+      DATABASE_URL: file:/data/xp.db
+    volumes:
+      - db:/data
+
+  api:
+    build:
+      context: .
+      target: server
+    command: pnpm --filter @xp/api start
+    env_file: .env
+    environment:
+      DATABASE_URL: file:/data/xp.db
+      API_PORT: "8090"
+      WEB_URL: ${WEB_URL:-http://localhost:5173}
+    ports:
+      - "8090:8090"
+    volumes:
+      - db:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: .
+      target: server
+    command: pnpm --filter @xp/bot start
+    env_file: .env
+    environment:
+      DATABASE_URL: file:/data/xp.db
+    volumes:
+      - db:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # Discord voice needs direct, bidirectional UDP. On a LINUX host, host networking
+    # bypasses Docker's NAT — the usual cause of "voice never reaches Ready". (On macOS/
+    # Windows Docker Desktop this has no effect; run the bot natively there for voice.)
+    network_mode: host
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8090}
+        VITE_DEFAULT_GUILD_ID: ${DISCORD_GUILD_ID:-}
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  db:
