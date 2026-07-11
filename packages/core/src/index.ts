@@ -40,6 +40,16 @@ export type { Member, CounterDelta } from './domains/xp/xp.dao'
 export { voiceService } from './domains/voice/voice.service'
 export type { VoiceTick } from './domains/voice/voice.service'
 
+// ── transcription (Part 1: capture + store; queue for a separate Whisper worker) ──
+export { transcriptService } from './domains/transcript/transcript.service'
+export type { EnqueueInput } from './domains/transcript/transcript.service'
+export { transcriptDao } from './domains/transcript/transcript.dao'
+export type {
+  TranscriptJob,
+  TranscriptJobInput,
+  TranscriptStatus,
+} from './domains/transcript/transcript.dao'
+
 // ── badges ────────────────────────────────────────────────
 export { badgesService } from './domains/badges/badges.service'
 export type { Badge } from './domains/badges/badges.dao'

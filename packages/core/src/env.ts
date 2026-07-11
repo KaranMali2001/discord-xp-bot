@@ -39,6 +39,17 @@ const schema = z.object({
 
   XP_TICK_SECONDS: z.coerce.number().min(1).default(60),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+
+  // ── Transcription (Part 1: capture + store) ─────────────
+  // Off by default. When true the bot records each speaker's audio (during an event /
+  // manual capture) to AUDIO_ROOT and enqueues a transcript_jobs row for a separate
+  // Whisper worker to pick up. No effect on XP.
+  TRANSCRIPTS_ENABLED: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
+  // Where captured WAVs land. In Docker point this at a mounted volume (e.g. /data/audio).
+  AUDIO_ROOT: z.string().default('./data/audio'),
 })
 
 /**
