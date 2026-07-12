@@ -1,5 +1,13 @@
 import { sql } from 'drizzle-orm'
-import { integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import {
+  index,
+  integer,
+  primaryKey,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core'
 
 const now = sql`(unixepoch())`
 
@@ -141,4 +149,42 @@ export const admins = sqliteTable(
     userId: text('user_id').notNull(),
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
+)
+
+/**
+ * Transcription work queue. One row per captured utterance (Part 1 of the transcript
+ * pipeline): the bot decodes a speaker's audio to a WAV on the shared audio volume and
+ * inserts a `pending` row here. A separate Whisper worker (Part 2) claims pending rows,
+ * transcribes the file, and writes back `text`/`language` — the two halves never share
+ * state beyond this table + the audio file, so the worker can run anywhere.
+ */
+export const transcriptJobs = sqliteTable(
+  'transcript_jobs',
+  {
+    id: text('id').primaryKey(), // uuid, minted by the capturer
+    guildId: text('guild_id').notNull(),
+    channelId: text('channel_id').notNull(),
+    // One capture window (a single event/manual-capture join). Groups utterances so a
+    // full conversation can be reassembled in order across speakers.
+    sessionId: text('session_id').notNull(),
+    userId: text('user_id').notNull(),
+    username: text('username').notNull().default(''),
+    filePath: text('file_path').notNull(),
+    startedAt: integer('started_at').notNull(), // epoch seconds
+    durationMs: integer('duration_ms').notNull().default(0),
+    // Format of the stored WAV — self-describing so the worker needn't guess.
+    sampleRate: integer('sample_rate').notNull().default(48000),
+    channels: integer('channels').notNull().default(2),
+    encoding: text('encoding').notNull().default('pcm_s16le'),
+    status: text('status', { enum: ['pending', 'processing', 'done', 'error'] })
+      .notNull()
+      .default('pending'),
+    text: text('text'),
+    language: text('language'),
+    error: text('error'),
+    createdAt: integer('created_at').notNull().default(now),
+    updatedAt: integer('updated_at').notNull().default(now),
+  },
+  // Worker polls by status; index keeps that cheap as the table grows.
+  (t) => ({ statusIdx: index('transcript_jobs_status').on(t.status, t.startedAt) }),
 )
