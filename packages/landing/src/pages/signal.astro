@@ -1,0 +1,269 @@
+---
+import { site } from '../data/site'
+import Base from '../layouts/Base.astro'
+import { AudioCarousel } from '../signal/AudioCarousel'
+import { LiveMic } from '../signal/LiveMic'
+import { TeamOrbit } from '../signal/TeamOrbit'
+import '../signal/signal.css'
+
+const signalBars = Array.from({ length: 38 }, (_, index) => ({
+  index,
+  base: (0.18 + ((index * 5) % 8) * 0.08).toFixed(2),
+  peak: (0.36 + ((index * 3) % 6) * 0.11).toFixed(2),
+}))
+const spectrumBars = Array.from({ length: 58 }, (_, index) => ({
+  index,
+  base: (0.1 + ((index * 7) % 10) * 0.055).toFixed(2),
+  peak: (0.32 + ((index * 5) % 9) * 0.075).toFixed(2),
+  speed: (3.2 + (index % 5) * 0.26).toFixed(2),
+}))
+---
+
+<Base
+  title="Signal Room"
+  description="Tech Talks is a beginner-friendly developer community for Friday discussions, mock interviews and shared reading."
+>
+  <script is:inline>
+    (() => {
+      const saved = localStorage.getItem('tech-talks-theme');
+      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = saved || (dark ? 'dark' : 'light');
+    })();
+  </script>
+
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <aside class="signal-head" aria-label="Tech Talks is on air">
+    <span class="signal-head__status"><i aria-hidden="true"></i>ON AIR</span>
+    <span class="signal-head__episode">Friday discussion: WebSockets, SSE and the live web</span>
+    <span class="signal-head__meter" aria-hidden="true">
+      {signalBars.map((bar) => <i style={`--bar:${bar.index}; --scale:${bar.base}; --peak:${bar.peak}`}></i>)}
+    </span>
+    <span class="signal-head__time">38:24 / 42:00</span>
+  </aside>
+
+  <main id="main-content" class="signal-page">
+    <nav class="frequency-nav" aria-label="Primary navigation">
+      <a href="#top" class="frequency-nav__brand" aria-label="Tech Talks home">
+        <img src="/signal/tech-talks-mark-v2.png" alt="" width="56" height="56" />
+        <span><strong>TECH</strong> TALKS</span>
+      </a>
+
+      <div class="frequency-nav__links">
+        <a href="#team">Team</a>
+        <a href="#events">Events</a>
+        <a href="#listen">Listen</a>
+        <a href="#contribute">Community contribution</a>
+      </div>
+
+      <div class="frequency-nav__actions">
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme">
+          <span class="theme-toggle__light">Light</span>
+          <span class="theme-toggle__dark">Dark</span>
+        </button>
+        <a class="island-button island-button--small" href={site.xUrl} target="_blank" rel="noreferrer">
+          <span>Join the community</span><i aria-hidden="true">↗</i>
+        </a>
+        <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="mobile-menu" data-mobile-menu role="dialog" aria-modal="true" aria-label="Mobile navigation" aria-hidden="true">
+      <div class="mobile-menu__links">
+        <a href="#team">Meet the team</a>
+        <a href="#events">Events</a>
+        <a href="#listen">Listen</a>
+        <a href="#contribute">Community contribution</a>
+        <a href={site.xUrl} target="_blank" rel="noreferrer">Join the community</a>
+      </div>
+    </div>
+
+    <section id="top" class="signal-hero">
+      <div class="spectrum-mesh" aria-hidden="true">
+        <i class="spectrum-mesh__violet"></i>
+        <i class="spectrum-mesh__coral"></i>
+        <i class="spectrum-mesh__blue"></i>
+        <i class="spectrum-mesh__amber"></i>
+      </div>
+      <div class="spectrum-field" aria-hidden="true">
+        {spectrumBars.map((bar) => <i style={`--wave:${bar.index}; --scale:${bar.base}; --peak:${bar.peak}; --speed:${bar.speed}s`}></i>)}
+      </div>
+
+      <div class="signal-hero__copy reveal-block">
+        <h1>Learn out loud.<br /><span>Grow in good company.</span></h1>
+        <p>A beginner-friendly tech community for conversations, mock interviews and shared reading that help you move faster.</p>
+        <div class="signal-hero__actions">
+          <a class="island-button" href={site.xUrl} target="_blank" rel="noreferrer">
+            <span>Join the community</span><i aria-hidden="true">↗</i>
+          </a>
+          <a class="text-link" href="#events">See what we do <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+
+      <div class="signal-hero__studio reveal-block">
+        <LiveMic client:load />
+      </div>
+
+      <p class="signal-hero__frequency" aria-hidden="true">FRIDAY FREQUENCY 88.7</p>
+    </section>
+
+    <section class="team-section section-shell reveal-block">
+      <div id="team" class="section-heading section-heading--center">
+        <h2>Every voice shapes the room.</h2>
+        <p>Hover or focus a signal to meet the people who keep each conversation welcoming and useful.</p>
+      </div>
+      <TeamOrbit client:visible />
+    </section>
+
+    <section class="events-section section-shell reveal-block">
+      <div id="events" class="section-heading">
+        <p class="section-kicker">What happens here</p>
+        <h2>Three ways to get better together.</h2>
+      </div>
+
+      <div class="event-bento">
+        <article class="bezel event-card event-card--friday">
+          <div class="bezel__core">
+            <div class="event-card__image">
+              <img
+                src="/signal/community-session.webp"
+                alt="Developers talking together around a table"
+                width="1400"
+                height="933"
+                loading="lazy"
+              />
+            </div>
+            <div class="event-card__copy">
+              <span>Every Friday</span>
+              <h3>Friday discussions</h3>
+              <p>One technical question, unpacked by people at different stages of the same journey.</p>
+              <a href="#listen">Hear a session <i aria-hidden="true">↘</i></a>
+            </div>
+          </div>
+        </article>
+
+        <article class="bezel event-card event-card--mock">
+          <div class="bezel__core">
+            <div class="event-card__signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="event-card__copy">
+              <span>Now refining</span>
+              <h3>Mock interviews</h3>
+              <p>Practice with a real person, get a useful debrief, then return stronger.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="bezel event-card event-card--reading">
+          <div class="bezel__core">
+            <div class="reading-stack" aria-hidden="true">
+              <i>01</i><i>02</i><i>03</i>
+            </div>
+            <div class="event-card__copy">
+              <span>Starting next</span>
+              <h3>Blog reading</h3>
+              <p>Read one strong technical article, compare mental models and keep the useful notes.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="listen-section section-shell reveal-block">
+      <div id="listen" class="section-heading">
+        <p class="section-kicker">Friday recordings</p>
+        <h2>Press play. Join the circle.</h2>
+        <p>Choose a cover and the clip plays directly. Add the audio source later without changing the interaction.</p>
+      </div>
+      <AudioCarousel client:visible />
+    </section>
+
+    <section class="contribute-section section-shell reveal-block">
+      <div class="contribute-section__spectrum" aria-hidden="true">
+        {signalBars.slice(0, 26).map((bar) => (
+          <i style={`--bar:${bar.index}; --scale:${bar.base}; --peak:${bar.peak}`}></i>
+        ))}
+      </div>
+      <div id="contribute" class="contribute-section__copy">
+        <h2>Bring the next question.</h2>
+        <p>Join the room, suggest a Friday topic or help turn a community idea into a session.</p>
+      </div>
+      <div class="contribute-section__actions">
+        <a class="island-button" href={site.xUrl} target="_blank" rel="noreferrer">
+          <span>Join the community</span><i aria-hidden="true">↗</i>
+        </a>
+        <a class="island-button island-button--quiet" href={site.xUrl} target="_blank" rel="noreferrer">
+          <span>Community contribution</span><i aria-hidden="true">↗</i>
+        </a>
+      </div>
+    </section>
+
+    <footer class="signal-footer">
+      <div class="signal-footer__brand">
+        <img src="/signal/tech-talks-mark-v2.png" alt="" width="70" height="70" />
+        <p>Beginners connect here, learn together and grow faster.</p>
+      </div>
+      <div class="signal-footer__console" aria-label="Tech Talks sign off">
+        <span>88.7 Friday FM</span>
+        <div class="signal-footer__dial" aria-hidden="true"><i></i></div>
+        <a href={site.xUrl} target="_blank" rel="noreferrer">{site.handle}</a>
+      </div>
+      <p class="signal-footer__signoff">Mic down. Questions stay open.</p>
+    </footer>
+  </main>
+
+  <div class="signal-grain" aria-hidden="true"></div>
+
+  <script>
+    const root = document.documentElement;
+    const themeToggle = document.querySelector('[data-theme-toggle]');
+    const menuToggle = document.querySelector('[data-menu-toggle]');
+    const mobileMenu = document.querySelector('[data-mobile-menu]');
+
+    themeToggle?.addEventListener('click', () => {
+      const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      localStorage.setItem('tech-talks-theme', next);
+    });
+
+    const closeMenu = () => {
+      menuToggle?.setAttribute('aria-expanded', 'false');
+      menuToggle?.setAttribute('aria-label', 'Open navigation');
+      mobileMenu?.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('menu-open');
+    };
+
+    menuToggle?.addEventListener('click', () => {
+      const open = menuToggle.getAttribute('aria-expanded') !== 'true';
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      mobileMenu?.setAttribute('aria-hidden', String(!open));
+      document.body.classList.toggle('menu-open', open);
+    });
+
+    mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        });
+      },
+      { threshold: 0.12 },
+    );
+
+    document.querySelectorAll('.reveal-block').forEach((element) => revealObserver.observe(element));
+
+    window.addEventListener(
+      'load',
+      () => {
+        if (!window.location.hash) return;
+        document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'start' });
+      },
+      { once: true },
+    );
+  </script>
+</Base>
