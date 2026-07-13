@@ -28,6 +28,7 @@ export const signalMembers: SignalMember[] = [
 ]
 
 export const discussionQuestions = [
+  'It depends.',
   'When should SSE beat WebSockets?',
   'What actually happens after an IP lookup?',
   'Why does Redis feel so fast?',

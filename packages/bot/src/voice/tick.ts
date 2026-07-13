@@ -69,14 +69,28 @@ export function seedVoiceSessions(client: Client): void {
 }
 
 /**
- * Runs every XP_TICK_SECONDS. Reconciles voice connections, then bills each member's
- * elapsed voice time at the speaking rate (if they spoke this tick — only possible in
- * the channel the bot joined) or the presence rate. Set XP_TICK_SECONDS=2 locally.
+ * Voice connections are reconciled on their own fast loop so dashboard capture
+ * start/stop (and event windows) take effect promptly — independent of the XP bill
+ * interval, which is often long in prod (XP_TICK_SECONDS=60). Without this, "Stop
+ * capture" could leave the bot in voice for up to a full XP tick.
  */
-export function startVoiceTick(client: Client): NodeJS.Timeout {
-  return setInterval(async () => {
-    reconcileConnections(client)
+const RECONCILE_INTERVAL_MS = 5_000
 
+/**
+ * Starts two loops:
+ *  - reconcile (every ~5s, or the XP tick if shorter): keep the bot's voice presence
+ *    in sync with capture/events quickly.
+ *  - bill (every XP_TICK_SECONDS): award each member's elapsed voice time at the
+ *    speaking rate (if they spoke this tick) or the presence rate.
+ * Set XP_TICK_SECONDS=2 locally.
+ */
+export function startVoiceTick(client: Client): void {
+  // Reconcile immediately, then on a short interval — never slower than the bill tick.
+  reconcileConnections(client)
+  const reconcileMs = Math.min(RECONCILE_INTERVAL_MS, env.XP_TICK_SECONDS * 1000)
+  setInterval(() => reconcileConnections(client), reconcileMs)
+
+  setInterval(async () => {
     const now = nowSec()
     for (const s of tracker.all()) {
       const cfg = rulesService.getConfig(s.guildId)

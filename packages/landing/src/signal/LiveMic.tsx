@@ -2,7 +2,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { type CSSProperties, useEffect, useState } from 'react'
 import { discussionQuestions } from './data'
 
-const spring = { type: 'spring' as const, stiffness: 180, damping: 22 }
 
 export function LiveMic() {
   const reduceMotion = useReducedMotion()
@@ -20,18 +19,16 @@ export function LiveMic() {
   return (
     <div className="live-mic" aria-label="Questions from Tech Talks Friday discussions">
       <div className="live-mic__signal-rings" aria-hidden="true">
-        <i />
-        <i />
-        <i />
+        <i /><i /><i /><i /><i />
       </div>
       <AnimatePresence mode="wait">
         <motion.p
           className="live-mic__question"
           key={discussionQuestions[active]}
-          initial={reduceMotion ? false : { opacity: 0, x: 28, y: 12, rotate: 2 }}
-          animate={{ opacity: 1, x: 0, y: 0, rotate: -1 }}
-          exit={reduceMotion ? undefined : { opacity: 0, x: -20, y: -12, rotate: -2 }}
-          transition={spring}
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.78, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={reduceMotion ? undefined : { opacity: 0, scale: 0.88, y: 10 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 24 }}
         >
           {discussionQuestions[active]}
         </motion.p>

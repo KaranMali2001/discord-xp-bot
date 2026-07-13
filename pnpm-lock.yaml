@@ -116,6 +116,9 @@ importers:
       astro:
         specifier: ^7.0.7
         version: 7.0.7(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@22.20.0)(jiti@1.21.7)(rollup@4.62.2)(tsx@4.23.0)(yaml@2.9.0)
+      lucide-react:
+        specifier: ^0.454.0
+        version: 0.454.0(react@18.3.1)
       motion:
         specifier: ^12.42.2
         version: 12.42.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -594,11 +597,11 @@ packages:
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild-kit/esm-loader@2.6.5':
     resolution: {integrity: sha512-FxEMIkJKnodyA1OaCUoEvbYRkoZlLZ4d/eXFu9Fh8CbBBgP5EmZxrfTRyN0qpXZ4vOvqnE5YdRdcrmUUXuU+dA==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild/aix-ppc64@0.19.12':
     resolution: {integrity: sha512-bmoCYyWdEL3wDQIVbcyzRyeKLgk2WtWLTWz1ZIAZF/EGbNOwSA6ew3PftJ1PqMiOOGu0OyFMzG53L0zqIpPeNA==}

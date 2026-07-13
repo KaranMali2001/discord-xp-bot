@@ -1,11 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
 import Logo from '../components/Logo.astro';
-import Avatar from '../components/Avatar.astro';
 import Waveform from '../components/Waveform.astro';
 import SessionShot from '../components/SessionShot.astro';
 import SignupForm from '../components/SignupForm.astro';
-import { site, crew, sessions, nextSession, contributions } from '../data/site';
+import CrewOrbitSection from '../components/CrewOrbitSection';
+import { site, sessions, nextSession, contributions } from '../data/site';
 
 const steps = [
   { n: '01', t: 'Book a slot', d: 'Grab an open time on the sheet. No résumé screen, no gatekeeping.' },
@@ -13,16 +13,6 @@ const steps = [
   { n: '03', t: 'Get the tape', d: 'Written notes the same weekend, plus the recording of your own thinking.' },
 ];
 
-// Radial placement for the constellation (computed at build time, upright planets).
-// Each planet orbits via a single self-uprighting animation (see @keyframes orbit).
-// --angle spaces them; --delay offsets the animation phase to match that angle.
-const ORBIT_SECONDS = 130;
-const orbit = crew.map((m, i) => ({
-  ...m,
-  i,
-  angle: (360 / crew.length) * i,
-  delay: -((ORBIT_SECONDS / crew.length) * i),
-}));
 ---
 
 <Base title="Broadcast">
@@ -72,53 +62,7 @@ const orbit = crew.map((m, i) => ({
           Five people who love this stuff enough to show up every Friday. Tap anyone to find them.
         </p>
 
-        <div class="orbit">
-          <div class="sun" aria-hidden="true"><Logo size={30} wordmark={false} /></div>
-          <div class="ring" aria-hidden="true"></div>
-          <ul class="planets">
-            {orbit.map((m) => (
-              <li class="planet" style={`--i:${m.i}; --angle:${m.angle}deg; --delay:${m.delay}s;`}>
-                <button
-                  type="button"
-                  class="planet__btn"
-                  popovertarget={`crew-${m.i}`}
-                  aria-label={`${m.name}, ${m.role} — open links`}
-                >
-                  <span class="planet__spin">
-                    <span class="planet__lift">
-                      <span class="planet__pic"><Avatar name={m.name} initials={m.initials} tint={m.tint} ratio={1} /></span>
-                      <span class="planet__name">{m.name}</span>
-                      <span class="planet__role">{m.role}</span>
-                    </span>
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {orbit.map((m) => (
-          <div id={`crew-${m.i}`} popover="auto" class="scard">
-            <div class="scard__head">
-              <span class="scard__pic"><Avatar name={m.name} initials={m.initials} tint={m.tint} ratio={1} /></span>
-              <div>
-                <h3 class="scard__name">{m.name}</h3>
-                <p class="scard__role">{m.role}</p>
-              </div>
-            </div>
-            <p class="scard__blurb">{m.blurb}</p>
-            <ul class="scard__links">
-              {m.socials.map((s) => (
-                <li>
-                  <a href={s.href} target="_blank" rel="noopener noreferrer">
-                    {s.label}
-                    <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 11 L11 5 M6 5 h5 v5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <CrewOrbitSection client:only="react" />
       </section>
 
       <!-- FRIDAY SESSIONS (Kinetic big list) -->

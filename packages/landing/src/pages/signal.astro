@@ -11,11 +11,11 @@ const signalBars = Array.from({ length: 38 }, (_, index) => ({
   base: (0.18 + ((index * 5) % 8) * 0.08).toFixed(2),
   peak: (0.36 + ((index * 3) % 6) * 0.11).toFixed(2),
 }))
-const spectrumBars = Array.from({ length: 58 }, (_, index) => ({
+const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
   index,
-  base: (0.1 + ((index * 7) % 10) * 0.055).toFixed(2),
-  peak: (0.32 + ((index * 5) % 9) * 0.075).toFixed(2),
-  speed: (3.2 + (index % 5) * 0.26).toFixed(2),
+  base: (0.08 + ((index * 7) % 10) * 0.05).toFixed(2),
+  peak: (0.28 + ((index * 5) % 9) * 0.08).toFixed(2),
+  speed: (2.6 + (index % 7) * 0.28).toFixed(2),
 }))
 ---
 
@@ -52,18 +52,17 @@ const spectrumBars = Array.from({ length: 58 }, (_, index) => ({
       <div class="frequency-nav__links">
         <a href="#team">Team</a>
         <a href="#events">Events</a>
-        <a href="#listen">Listen</a>
-        <a href="#contribute">Community contribution</a>
+        <a href="#contribute">Community</a>
       </div>
 
       <div class="frequency-nav__actions">
-        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme">
-          <span class="theme-toggle__light">Light</span>
-          <span class="theme-toggle__dark">Dark</span>
-        </button>
         <a class="island-button island-button--small" href={site.xUrl} target="_blank" rel="noreferrer">
           <span>Join the community</span><i aria-hidden="true">↗</i>
         </a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme">
+          <span class="theme-toggle__light" aria-hidden="true">☀</span>
+          <span class="theme-toggle__dark" aria-hidden="true">☽</span>
+        </button>
         <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
           <span></span><span></span>
         </button>
@@ -74,8 +73,7 @@ const spectrumBars = Array.from({ length: 58 }, (_, index) => ({
       <div class="mobile-menu__links">
         <a href="#team">Meet the team</a>
         <a href="#events">Events</a>
-        <a href="#listen">Listen</a>
-        <a href="#contribute">Community contribution</a>
+        <a href="#contribute">Community</a>
         <a href={site.xUrl} target="_blank" rel="noreferrer">Join the community</a>
       </div>
     </div>
@@ -188,13 +186,8 @@ const spectrumBars = Array.from({ length: 58 }, (_, index) => ({
       <div id="contribute" class="contribute-section__copy">
         <h2>Bring the next question.</h2>
         <p>Join the room, suggest a Friday topic or help turn a community idea into a session.</p>
-      </div>
-      <div class="contribute-section__actions">
-        <a class="island-button" href={site.xUrl} target="_blank" rel="noreferrer">
+        <a class="island-button contribute-section__cta" href={site.xUrl} target="_blank" rel="noreferrer">
           <span>Join the community</span><i aria-hidden="true">↗</i>
-        </a>
-        <a class="island-button island-button--quiet" href={site.xUrl} target="_blank" rel="noreferrer">
-          <span>Community contribution</span><i aria-hidden="true">↗</i>
         </a>
       </div>
     </section>
@@ -205,7 +198,7 @@ const spectrumBars = Array.from({ length: 58 }, (_, index) => ({
         <p>Beginners connect here, learn together and grow faster.</p>
       </div>
       <div class="signal-footer__console" aria-label="Tech Talks sign off">
-        <span>88.7 Friday FM</span>
+        <span>Fri · 10:30 PM IST</span>
         <div class="signal-footer__dial" aria-hidden="true"><i></i></div>
         <a href={site.xUrl} target="_blank" rel="noreferrer">{site.handle}</a>
       </div>
