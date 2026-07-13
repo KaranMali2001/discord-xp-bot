@@ -1,72 +1,56 @@
-import { BookOpen, Calendar, Mic2, Radio, Users } from "lucide-react";
-import RadialOrbitalTimeline from "./OrbitTimeline";
+import { BookOpen, Calendar, Crown, Mic2, Server, Users } from "lucide-react";
+import { signalMembers } from "../signal/data";
+import RadialOrbitalTimeline, { type TimelineItem } from "./OrbitTimeline";
 
-// Maps the Tech Talks crew to RadialOrbitalTimeline items.
-// All data is defined here so no non-serialisable props (React elements) need
-// to cross the Astro → React boundary.
-const crewData = [
-  {
-    id: 1,
-    title: "Atharv",
-    date: "Since 2025",
-    content: "Runs the Friday desk and keeps the mic warm. Backend by trade, teacher by habit.",
-    category: "Host & Founder",
-    icon: Mic2,
-    relatedIds: [2, 3, 4, 5],
-    status: "completed" as const,
-    energy: 96,
-  },
-  {
-    id: 2,
-    title: "Sneha",
-    date: "Since 2025",
-    content: "Books the lineup and turns raw topics into tight, 45-minute walkthroughs.",
-    category: "Sessions Lead",
-    icon: Calendar,
-    relatedIds: [1, 3],
-    status: "completed" as const,
-    energy: 88,
-  },
-  {
-    id: 3,
-    title: "Rohit",
-    date: "Since 2025",
-    content: "Sits across the table so the real interview feels routine. DSA and system design.",
-    category: "Mock Interviews",
-    icon: Radio,
-    relatedIds: [1, 4],
-    status: "completed" as const,
-    energy: 82,
-  },
-  {
-    id: 4,
-    title: "Priya",
-    date: "Since 2025",
-    content: "Keeps the room welcoming and the calendar honest. First reply you get when you join.",
-    category: "Community & Ops",
-    icon: Users,
-    relatedIds: [1, 5],
-    status: "completed" as const,
-    energy: 78,
-  },
-  {
-    id: 5,
-    title: "Kabir",
-    date: "Since 2025",
-    content: "Cuts every session into notes and reruns so nothing said on Friday gets lost.",
-    category: "Content & Archive",
-    icon: BookOpen,
-    relatedIds: [1, 2],
-    status: "completed" as const,
-    energy: 74,
-  },
-];
+const iconForRole = (role: string) => {
+  if (role === "Owner") return Crown;
+  if (role === "Community manager") return Users;
+  if (role === "Server manager") return Server;
+  if (role === "Event manager") return Calendar;
+  if (role === "Reader and mentor") return BookOpen;
+  return Mic2;
+};
+
+const bioForMember = (name: string): string => {
+  const bios: Record<string, string> = {
+    Priyanshu: "Calls the room to order and sets the bar for what a good Friday discussion looks like.",
+    Saumya: "Keeps the community welcoming and makes sure no question goes unanswered.",
+    Hayat: "Runs the server infrastructure so everything stays reliable and fast.",
+    Beast: "Coordinates the event calendar and makes sure sessions start on time.",
+    Saurav: "Manages events and keeps the energy up on discussion nights.",
+    Affan: "Organises the lineup and handles logistics when sessions go long.",
+    Atharv: "Brings the reading list and sticks around to answer the questions you didn't ask aloud.",
+    Karan: "Reads broadly across the stack and mentors early-career devs finding their footing.",
+  };
+  return bios[name] ?? "A core part of the Tech Talks crew.";
+};
+
+// Connect event managers together, owner to both managers, readers to each other
+const relatedMap: Record<string, string[]> = {
+  Priyanshu: ["Saumya", "Hayat"],
+  Saumya:    ["Priyanshu", "Beast", "Saurav", "Affan"],
+  Hayat:     ["Priyanshu", "Atharv", "Karan"],
+  Beast:     ["Saumya", "Saurav", "Affan"],
+  Saurav:    ["Saumya", "Beast", "Affan"],
+  Affan:     ["Saumya", "Beast", "Saurav"],
+  Atharv:    ["Hayat", "Karan"],
+  Karan:     ["Hayat", "Atharv"],
+};
+
+const nameToId = Object.fromEntries(signalMembers.map((m, i) => [m.name, i + 1]));
+
+const crewData: TimelineItem[] = signalMembers.map((member, i) => ({
+  id: i + 1,
+  title: member.name,
+  date: "Since 2025",
+  content: bioForMember(member.name),
+  category: member.role,
+  icon: iconForRole(member.role),
+  relatedIds: (relatedMap[member.name] ?? []).map((n) => nameToId[n]).filter(Boolean),
+  status: "completed" as const,
+  energy: 90 - i * 4,
+}));
 
 export default function CrewOrbitSection() {
-  return (
-    <RadialOrbitalTimeline
-      timelineData={crewData}
-      height="680px"
-    />
-  );
+  return <RadialOrbitalTimeline timelineData={crewData} height="680px" />;
 }

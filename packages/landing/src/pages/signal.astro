@@ -3,7 +3,7 @@ import { site } from '../data/site'
 import Base from '../layouts/Base.astro'
 import { AudioCarousel } from '../signal/AudioCarousel'
 import { LiveMic } from '../signal/LiveMic'
-import { TeamOrbit } from '../signal/TeamOrbit'
+import CrewOrbitSection from '../components/CrewOrbitSection'
 import '../signal/signal.css'
 
 const signalBars = Array.from({ length: 38 }, (_, index) => ({
@@ -112,7 +112,7 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
         <h2>Every voice shapes the room.</h2>
         <p>Hover or focus a signal to meet the people who keep each conversation welcoming and useful.</p>
       </div>
-      <TeamOrbit client:visible />
+      <CrewOrbitSection client:visible />
     </section>
 
     <section class="events-section section-shell reveal-block">
