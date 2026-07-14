@@ -1,12 +1,24 @@
-import { authService, badgesService, levelProgress, rulesDao, xpService } from '@xp/core'
+import {
+  MIN_LEAD_SEC,
+  authService,
+  badgesService,
+  formatIst,
+  istWallClockToEpochSec,
+  levelProgress,
+  nowSec,
+  rulesDao,
+  xpService,
+} from '@xp/core'
 import {
   ChannelType,
   type ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   PermissionFlagsBits,
   type RESTPostAPIApplicationCommandsJSONBody,
   SlashCommandBuilder,
 } from 'discord.js'
+import { buildAnnounceComponents, startAnnounceDraft } from './features/announce'
 
 export interface Command {
   data: RESTPostAPIApplicationCommandsJSONBody
@@ -235,6 +247,58 @@ const setLevelRole: Command = {
   },
 }
 
+const announce: Command = {
+  data: new SlashCommandBuilder()
+    .setName('announce')
+    .setDescription('Post or schedule an announcement with member & role mentions (Manage Server)')
+    .addChannelOption((o) =>
+      o
+        .setName('channel')
+        .setDescription('Channel to post the announcement in')
+        .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)
+        .setRequired(true),
+    )
+    .addStringOption((o) =>
+      o
+        .setName('time')
+        .setDescription('Schedule for later (IST) — format: YYYY-MM-DD HH:MM. Omit to post now.'),
+    )
+    .toJSON(),
+  async execute(i) {
+    if (!i.guildId || (await denyIfNotManager(i))) return
+    const channel = i.options.getChannel('channel', true)
+    const timeStr = i.options.getString('time')
+
+    let fireAt: number | null = null
+    if (timeStr) {
+      fireAt = istWallClockToEpochSec(timeStr)
+      if (fireAt == null) {
+        await i.reply({
+          content:
+            '⚠️ Couldn’t read that time. Use IST format `YYYY-MM-DD HH:MM`, e.g. `2026-07-20 18:30`.',
+          flags: MessageFlags.Ephemeral,
+        })
+        return
+      }
+      if (fireAt < nowSec() + MIN_LEAD_SEC) {
+        await i.reply({
+          content: `⚠️ That time is in the past (or too soon). Pick a time at least ${MIN_LEAD_SEC}s from now, in IST.`,
+          flags: MessageFlags.Ephemeral,
+        })
+        return
+      }
+    }
+
+    startAnnounceDraft(i.guildId, i.user.id, channel.id, fireAt)
+    const when = fireAt != null ? ` to be sent **${formatIst(fireAt)}**` : ''
+    await i.reply({
+      content: `📣 Composing an announcement for <#${channel.id}>${when}.\nPick who to mention (optional), then **Write message & send**.`,
+      components: buildAnnounceComponents(),
+      flags: MessageFlags.Ephemeral,
+    })
+  },
+}
+
 export const commands: Command[] = [
   rank,
   leaderboard,
@@ -243,5 +307,6 @@ export const commands: Command[] = [
   setChannel,
   friday,
   setLevelRole,
+  announce,
 ]
 export const commandMap = new Map(commands.map((c) => [c.data.name, c]))

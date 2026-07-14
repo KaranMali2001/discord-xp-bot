@@ -5,6 +5,7 @@ import { deployCommands } from './deploy-commands'
 import { registerInteractionCreate } from './events/interaction-create'
 import { registerMessageCreate } from './events/message-create'
 import { registerVoiceStateUpdate } from './events/voice-state-update'
+import { startAnnouncementTick, sweepMissedAnnouncements } from './features/scheduled-tick'
 import { log } from './lib/log'
 import { seedVoiceSessions, startVoiceTick } from './voice/tick'
 import { tracker } from './voice/tracker'
@@ -23,6 +24,8 @@ async function main(): Promise<void> {
     await deployCommands().catch((e) => log.error('boot', `command deploy failed: ${e}`))
     seedVoiceSessions(client)
     startVoiceTick(client)
+    sweepMissedAnnouncements()
+    startAnnouncementTick()
     log.info('boot', `voice XP tick every ${env.XP_TICK_SECONDS}s — ready ✅`)
   })
 

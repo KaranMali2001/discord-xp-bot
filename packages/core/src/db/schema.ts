@@ -152,6 +152,35 @@ export const admins = sqliteTable(
 )
 
 /**
+ * Scheduled (one-off) announcements. The bot's scheduler tick claims `pending` rows
+ * whose `fireAt` has arrived and posts them via the shared announcements service.
+ * `fireAt` is epoch seconds (computed from an IST wall-clock at creation). Member/role
+ * mention lists are stored as JSON text — the same payload the immediate-send path uses.
+ */
+export const scheduledAnnouncements = sqliteTable(
+  'scheduled_announcements',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    guildId: text('guild_id').notNull(),
+    channelId: text('channel_id').notNull(),
+    message: text('message').notNull(),
+    // JSON-encoded string[] of user / role ids to mention.
+    memberIds: text('member_ids').notNull().default('[]'),
+    roleIds: text('role_ids').notNull().default('[]'),
+    mentionEveryone: integer('mention_everyone', { mode: 'boolean' }).notNull().default(false),
+    fireAt: integer('fire_at').notNull(), // epoch seconds
+    status: text('status', { enum: ['pending', 'sent', 'missed', 'cancelled'] })
+      .notNull()
+      .default('pending'),
+    createdBy: text('created_by').notNull().default(''),
+    createdAt: integer('created_at').notNull().default(now),
+    sentAt: integer('sent_at'),
+  },
+  // Scheduler polls pending rows by fire time; index keeps that cheap.
+  (t) => ({ dueIdx: index('scheduled_announcements_due').on(t.status, t.fireAt) }),
+)
+
+/**
  * Transcription work queue. One row per captured utterance (Part 1 of the transcript
  * pipeline): the bot decodes a speaker's audio to a WAV on the shared audio volume and
  * inserts a `pending` row here. A separate Whisper worker (Part 2) claims pending rows,
