@@ -3,6 +3,10 @@
 ######## base: Node + pnpm (baked in via corepack, no runtime download) ########
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm PATH="/pnpm:$PATH"
+# ca-certificates: the native `libsql` client needs system root CAs for TLS to Turso.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 WORKDIR /app
 
