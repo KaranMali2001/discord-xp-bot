@@ -1,8 +1,10 @@
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { discussionQuestions } from './data'
 
 export function LiveMic() {
   const [active, setActive] = useState(0)
+  const reduceMotion = useReducedMotion()
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -21,14 +23,20 @@ export function LiveMic() {
         <i /><i /><i /><i />
       </div>
 
-      <p
-        className={`live-mic__question${active === 0 ? ' is-tagline' : ''}`}
-        data-side={side}
-        key={discussionQuestions[active]}
-        aria-live="polite"
-      >
-        {discussionQuestions[active]}
-      </p>
+      <AnimatePresence initial={false} mode="sync">
+        <motion.p
+          className={`live-mic__question${active === 0 ? ' is-tagline' : ''}`}
+          data-side={side}
+          key={discussionQuestions[active]}
+          aria-live="polite"
+          initial={reduceMotion ? false : { opacity: 0, x: side === 'left' ? 12 : -12, y: 6, scale: 0.98, filter: 'blur(4px)' }}
+          animate={{ opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)' }}
+          exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.985, filter: 'blur(2px)' }}
+          transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
+        >
+          {discussionQuestions[active]}
+        </motion.p>
+      </AnimatePresence>
 
       <div className="live-mic__body">
         <img

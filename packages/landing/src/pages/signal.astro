@@ -144,29 +144,34 @@ const applicationsPaused = true
           <div class="bezel__core">
             <div class="event-card__illustration" aria-hidden="true">
               <svg viewBox="0 0 680 440" role="presentation">
+                <g class="event-card__diagram-signal">
+                  <path d="M122 188c54-50 118-76 194-78 83-2 160 24 232 78"></path>
+                  <path d="M154 190c48-34 105-51 170-51 70 0 136 17 198 51"></path>
+                </g>
                 <g class="event-card__diagram-ui">
-                  <rect x="76" y="62" width="118" height="72" rx="14"></rect>
-                  <path d="M105 98h60M135 78v40"></path>
-                  <rect x="244" y="48" width="148" height="92" rx="14"></rect>
-                  <path d="M275 82h86M275 106h58"></path>
-                  <path d="M462 72h122a14 14 0 0 1 14 14v50a14 14 0 0 1-14 14h-52l-22 22v-22h-48a14 14 0 0 1-14-14V86a14 14 0 0 1 14-14Z"></path>
-                  <path d="M486 104h76M486 126h48"></path>
+                  <rect x="74" y="66" width="114" height="68" rx="18"></rect>
+                  <path d="M102 103h10l9-18 12 34 11-25 9 9h9"></path>
+                  <rect x="250" y="44" width="180" height="98" rx="18"></rect>
+                  <path d="M282 78h116M282 104h76M282 124h48"></path>
+                  <path d="M488 72h112a16 16 0 0 1 16 16v48a16 16 0 0 1-16 16h-44l-28 24v-24h-40a16 16 0 0 1-16-16V88a16 16 0 0 1 16-16Z"></path>
+                  <path d="M500 106h84M500 128h54"></path>
                 </g>
                 <g class="event-card__diagram-people">
-                  <circle cx="156" cy="236" r="25"></circle>
-                  <circle cx="276" cy="214" r="25"></circle>
-                  <circle cx="404" cy="214" r="25"></circle>
-                  <circle cx="524" cy="236" r="25"></circle>
-                  <path d="M101 342c5-60 19-88 55-88s52 30 56 88M221 342c4-73 18-108 55-108s51 35 55 108M349 342c4-73 18-108 55-108s51 35 55 108M468 342c5-60 19-88 56-88s51 30 55 88"></path>
-                  <path d="M277 280c22 18 45 28 63 28 19 0 42-10 64-28"></path>
-                  <path d="M156 282c30 2 57 13 82 34M524 282c-30 2-57 13-82 34"></path>
+                  <circle cx="154" cy="238" r="25"></circle>
+                  <circle cx="276" cy="214" r="26"></circle>
+                  <circle cx="404" cy="214" r="26"></circle>
+                  <circle cx="526" cy="238" r="25"></circle>
+                  <path d="M102 344c4-58 18-88 52-88 25 0 42 16 49 48M222 344c3-72 18-108 54-108 37 0 52 36 55 108M349 344c3-72 18-108 55-108 36 0 51 36 54 108M477 304c8-32 24-48 49-48 34 0 48 30 52 88"></path>
+                  <path d="M154 282c29 3 54 15 77 35M526 282c-29 3-54 15-77 35"></path>
+                  <path d="M276 276c19 18 40 28 64 28s45-10 64-28"></path>
+                  <path d="M242 306l-36-24M438 306l36-24"></path>
                 </g>
                 <g class="event-card__diagram-table">
-                  <path d="M72 342h536l-46 50H118Z"></path>
-                  <path d="M248 342l18-54h78l18 54M276 314h58"></path>
-                  <path d="M390 342l14-42h62l14 42"></path>
-                  <circle cx="214" cy="326" r="14"></circle>
-                  <path d="M228 326h12"></path>
+                  <path d="M72 344h536l-46 52H118Z"></path>
+                  <path d="M248 344l18-56h78l18 56M276 316h58"></path>
+                  <path d="M390 344l14-44h62l14 44"></path>
+                  <path d="M206 344v-28M194 316h24M198 304h16"></path>
+                  <circle cx="206" cy="298" r="8"></circle>
                 </g>
               </svg>
             </div>
@@ -182,7 +187,13 @@ const applicationsPaused = true
         <article class="bezel event-card event-card--mock">
           <span class="event-card__spotlight" aria-hidden="true"><i></i></span>
           <div class="bezel__core">
-            <div class="event-card__signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="event-card__interview" aria-hidden="true">
+              <i class="event-card__interview-person event-card__interview-person--left"></i>
+              <span class="event-card__interview-turn"><b></b></span>
+              <i class="event-card__interview-person event-card__interview-person--right"></i>
+              <span class="event-card__interview-prompt"></span>
+              <span class="event-card__interview-response"></span>
+            </div>
             <div class="event-card__copy">
               <span>Now refining</span>
               <h3>Mock interviews</h3>
@@ -324,7 +335,10 @@ const applicationsPaused = true
       if (event.target === applicationDialog && applicationDialog instanceof HTMLDialogElement) applicationDialog.close();
     });
 
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
       const cards = Array.from(document.querySelectorAll('.event-card')).flatMap((card) => {
         const spotlight = card.querySelector('.event-card__spotlight');
         const light = spotlight?.querySelector('i');
@@ -354,11 +368,6 @@ const applicationsPaused = true
       };
 
       document.addEventListener('pointermove', (event) => {
-        pointerX = event.clientX;
-        pointerY = event.clientY;
-        if (!frame) frame = window.requestAnimationFrame(renderSpotlights);
-      });
-      document.addEventListener('mousemove', (event) => {
         pointerX = event.clientX;
         pointerY = event.clientY;
         if (!frame) frame = window.requestAnimationFrame(renderSpotlights);
