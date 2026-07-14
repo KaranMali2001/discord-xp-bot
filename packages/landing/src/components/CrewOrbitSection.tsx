@@ -1,56 +1,112 @@
-import { BookOpen, Calendar, Crown, Mic2, Server, Users } from "lucide-react";
-import { signalMembers } from "../signal/data";
-import RadialOrbitalTimeline, { type TimelineItem } from "./OrbitTimeline";
+import {
+  CalendarDotsIcon,
+  ChalkboardTeacherIcon,
+  CrownSimpleIcon,
+  DiscordLogoIcon,
+  GithubLogoIcon,
+  GlobeSimpleIcon,
+  UsersThreeIcon,
+  XLogoIcon,
+} from '@phosphor-icons/react'
+import type { CSSProperties, ElementType } from 'react'
+import { signalMembers, type SignalMember } from '../signal/data'
 
-const iconForRole = (role: string) => {
-  if (role === "Owner") return Crown;
-  if (role === "Community manager") return Users;
-  if (role === "Server manager") return Server;
-  if (role === "Event manager") return Calendar;
-  if (role === "Reader and mentor") return BookOpen;
-  return Mic2;
-};
+const roleIcons: Record<SignalMember['roleKind'], ElementType> = {
+  founder: CrownSimpleIcon,
+  community: UsersThreeIcon,
+  server: DiscordLogoIcon,
+  events: CalendarDotsIcon,
+  mentor: ChalkboardTeacherIcon,
+}
 
-const bioForMember = (name: string): string => {
-  const bios: Record<string, string> = {
-    Priyanshu: "Calls the room to order and sets the bar for what a good Friday discussion looks like.",
-    Saumya: "Keeps the community welcoming and makes sure no question goes unanswered.",
-    Hayat: "Runs the server infrastructure so everything stays reliable and fast.",
-    Beast: "Coordinates the event calendar and makes sure sessions start on time.",
-    Saurav: "Manages events and keeps the energy up on discussion nights.",
-    Affan: "Organises the lineup and handles logistics when sessions go long.",
-    Atharv: "Brings the reading list and sticks around to answer the questions you didn't ask aloud.",
-    Karan: "Reads broadly across the stack and mentors early-career devs finding their footing.",
-  };
-  return bios[name] ?? "A core part of the Tech Talks crew.";
-};
+const positions = [
+  ['50%', '4%'],
+  ['75%', '14%'],
+  ['88%', '43%'],
+  ['75%', '72%'],
+  ['50%', '82%'],
+  ['25%', '72%'],
+  ['12%', '43%'],
+  ['25%', '14%'],
+]
 
-// Connect event managers together, owner to both managers, readers to each other
-const relatedMap: Record<string, string[]> = {
-  Priyanshu: ["Saumya", "Hayat"],
-  Saumya:    ["Priyanshu", "Beast", "Saurav", "Affan"],
-  Hayat:     ["Priyanshu", "Atharv", "Karan"],
-  Beast:     ["Saumya", "Saurav", "Affan"],
-  Saurav:    ["Saumya", "Beast", "Affan"],
-  Affan:     ["Saumya", "Beast", "Saurav"],
-  Atharv:    ["Hayat", "Karan"],
-  Karan:     ["Hayat", "Atharv"],
-};
+function SocialLinks({ member }: { member: SignalMember }) {
+  const socials = [
+    { label: 'X', href: member.socials?.x, Icon: XLogoIcon },
+    { label: 'GitHub', href: member.socials?.github, Icon: GithubLogoIcon },
+    { label: 'Portfolio', href: member.socials?.portfolio, Icon: GlobeSimpleIcon },
+  ]
 
-const nameToId = Object.fromEntries(signalMembers.map((m, i) => [m.name, i + 1]));
-
-const crewData: TimelineItem[] = signalMembers.map((member, i) => ({
-  id: i + 1,
-  title: member.name,
-  date: "Since 2025",
-  content: bioForMember(member.name),
-  category: member.role,
-  icon: iconForRole(member.role),
-  relatedIds: (relatedMap[member.name] ?? []).map((n) => nameToId[n]).filter(Boolean),
-  status: "completed" as const,
-  energy: 90 - i * 4,
-}));
+  return (
+    <div className="crew-member__socials" aria-label={`${member.name} links`}>
+      {socials.map(({ label, href, Icon }) =>
+        href ? (
+          <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={`${member.name} on ${label}`}>
+            <Icon size={16} weight="light" aria-hidden="true" />
+          </a>
+        ) : (
+          <span key={label} aria-label={`${label} link pending`} title={`${label} link pending`}>
+            <Icon size={16} weight="light" aria-hidden="true" />
+          </span>
+        ),
+      )}
+    </div>
+  )
+}
 
 export default function CrewOrbitSection() {
-  return <RadialOrbitalTimeline timelineData={crewData} height="680px" />;
+  return (
+    <div className="crew-orbit">
+      <div className="crew-orbit__field" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+        <i />
+      </div>
+
+      <div className="crew-orbit__core" aria-label="Tech Talks microphone broadcasting to the team">
+        <img src="/signal/brand-mic-alpha.png" alt="Tech Talks microphone" width="900" height="900" />
+      </div>
+
+      <div className="crew-orbit__members">
+        {signalMembers.map((member, index) => {
+          const RoleIcon = roleIcons[member.roleKind]
+          const [left, top] = positions[index]
+          const style = {
+            '--member-left': left,
+            '--member-top': top,
+            '--member-hue': member.hue,
+            '--member-index': index,
+            '--member-image-position': member.imagePosition,
+          } as CSSProperties
+
+          return (
+            <article className="crew-member" key={member.name} style={style} tabIndex={0}>
+              <div className="crew-member__portrait">
+                <img src={member.image} alt="" width="1254" height="1254" loading="lazy" />
+                <span className="crew-member__role-icon" aria-hidden="true">
+                  <RoleIcon size={23} weight="light" />
+                </span>
+              </div>
+              <strong className="crew-member__name">{member.name}</strong>
+
+              <div className="crew-member__popover">
+                <div className="crew-member__popover-heading">
+                  <span>
+                    <RoleIcon size={18} weight="light" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <strong>{member.name}</strong>
+                    <small>{member.role}</small>
+                  </div>
+                </div>
+                <p>{member.description}</p>
+                <SocialLinks member={member} />
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </div>
+  )
 }

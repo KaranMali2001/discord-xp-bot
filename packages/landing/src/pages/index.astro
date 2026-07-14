@@ -5,6 +5,14 @@ import { site } from '../data/site';
 
 const concepts = [
   {
+    slug: 'signal',
+    name: 'Signal Room',
+    tag: 'Expressive',
+    thesis: 'The live Tech Talks room. Fluid sound fields, a broadcasting crew orbit, responsive event cards and Friday recordings in one focused world.',
+    palette: ['#0D0F13', '#DC7966', '#8776AD', '#F0F0EB'],
+    accent: '#DC7966',
+  },
+  {
     slug: 'after-hours',
     name: 'After Hours',
     tag: 'Expressive',
@@ -63,14 +71,14 @@ const concepts = [
 ];
 ---
 
-<Base title="Concept Gallery" description="Seven landing-page worlds for the Tech Talks community.">
+<Base title="Concept Gallery" description="Eight landing-page worlds for the Tech Talks community.">
   <main class="gallery">
     <header class="gallery__head">
       <a href="/" class="gallery__logo"><Logo size={30} /></a>
       <p class="gallery__eyebrow">Concept gallery · placeholder data</p>
-      <h1 class="gallery__title">Seven worlds for {site.name}.</h1>
+      <h1 class="gallery__title">Eight worlds for {site.name}.</h1>
       <p class="gallery__sub">
-        Five expressive, two minimal — each a distinct atmosphere with its own structure, texture,
+        Six expressive, two minimal — each a distinct atmosphere with its own structure, texture,
         and motion. Same crew and sessions underneath. Click in, then tell me which one to take further.
       </p>
     </header>
@@ -86,7 +94,7 @@ const concepts = [
       <span class="featured__go">Open the build <span aria-hidden="true">→</span></span>
     </a>
 
-    <p class="gallery__label">The seven explorations</p>
+    <p class="gallery__label">The eight explorations</p>
     <ul class="gallery__grid">
       {concepts.map((c) => (
         <li>

@@ -1,121 +1,138 @@
-import { PauseIcon, PlayIcon, WaveformIcon } from '@phosphor-icons/react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useRef, useState } from 'react'
+import {
+  MicrophoneStageIcon,
+  PauseIcon,
+  PlayIcon,
+  ShuffleIcon,
+  UsersThreeIcon,
+  WaveformIcon,
+} from '@phosphor-icons/react'
+import { type CSSProperties, useRef, useState } from 'react'
 import { audioSessions } from './data'
 
 export function AudioCarousel() {
-  const reduceMotion = useReducedMotion()
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [active, setActive] = useState(0)
-  const [playing, setPlaying] = useState<number | null>(null)
-  const [notice, setNotice] = useState('Choose a recording')
-  const audioRefs = useRef<Array<HTMLAudioElement | null>>([])
+  const [playing, setPlaying] = useState(false)
+  const [progress, setProgress] = useState(audioSessions[0].sampleProgress)
+  const [notice, setNotice] = useState('Recording preview')
   const session = audioSessions[active]
 
-  const playSession = async (index: number) => {
-    const selected = audioSessions[index]
-    const audio = audioRefs.current[index]
-    audioRefs.current.forEach((item, itemIndex) => {
-      if (item && itemIndex !== index) item.pause()
-    })
+  const chooseSession = (index: number) => {
+    audioRef.current?.pause()
+    setPlaying(false)
     setActive(index)
+    setProgress(audioSessions[index].sampleProgress)
+    setNotice('Recording preview')
+  }
 
-    if (!selected.audioSrc || !audio) {
-      setPlaying(null)
-      setNotice('Clip coming soon. Add its source in data.ts.')
+  const shuffleSession = () => {
+    chooseSession((active + 1) % audioSessions.length)
+  }
+
+  const togglePlayback = async () => {
+    const audio = audioRef.current
+    if (!session.audioSrc || !audio) {
+      setPlaying(false)
+      setNotice('Audio source coming soon')
       return
     }
 
-    if (playing === index) {
+    if (playing) {
       audio.pause()
-      setPlaying(null)
+      setPlaying(false)
       setNotice('Paused')
       return
     }
 
     try {
       await audio.play()
-      setPlaying(index)
-      setNotice(`Playing ${selected.title}`)
+      setPlaying(true)
+      setNotice(`Playing ${session.topic}`)
     } catch {
-      setPlaying(null)
-      setNotice('Playback could not start. Try again.')
+      setPlaying(false)
+      setNotice('Playback could not start')
     }
   }
 
   return (
     <div className="audio-stage">
-      <div className="audio-stage__orbit" aria-label="Friday recording covers">
+      <div className="audio-stage__mesh" aria-hidden="true">
+        <i /><i /><i />
+      </div>
+
+      <div className="audio-stage__clips" aria-label="Choose a Friday recording">
         {audioSessions.map((item, index) => (
           <button
-            className={`audio-record${index === active ? ' is-active' : ''}${playing === index ? ' is-playing' : ''}`}
+            className={index === active ? 'is-active' : ''}
             type="button"
             key={item.title}
-            onClick={() => playSession(index)}
-            aria-label={`${playing === index ? 'Pause' : 'Play'} ${item.title}`}
+            onClick={() => chooseSession(index)}
+            aria-pressed={index === active}
           >
-            <span className="audio-record__grooves" aria-hidden="true" />
-            <img src={item.image} alt={item.alt} width="1254" height="1254" loading="lazy" />
-            <span className="audio-record__play" aria-hidden="true">
-              {playing === index ? (
-                <PauseIcon size={22} weight="fill" />
-              ) : (
-                <PlayIcon size={22} weight="fill" />
-              )}
-            </span>
+            <WaveformIcon size={15} weight="light" aria-hidden="true" />
+            {item.topic}
+          </button>
+        ))}
+        <button className="audio-stage__shuffle" type="button" onClick={shuffleSession} aria-label="Show the next recording">
+          <ShuffleIcon size={16} weight="light" aria-hidden="true" />
+        </button>
+      </div>
+
+      <article className="audio-stage__content">
+          <div className="audio-stage__art">
+            <img src={session.image} alt={session.alt} width="1254" height="1254" loading="lazy" />
+            <button className="audio-stage__play" type="button" onClick={togglePlayback} aria-label={`${playing ? 'Pause' : 'Play'} ${session.title}`}>
+              {playing ? <PauseIcon size={24} weight="fill" /> : <PlayIcon size={24} weight="fill" />}
+            </button>
+          </div>
+
+          <div className="audio-stage__details">
+            <div className="audio-stage__status">
+              <WaveformIcon size={19} weight="light" aria-hidden="true" />
+              <span aria-live="polite">{notice}</span>
+            </div>
+            <h3>{session.title}</h3>
+
+            <div className="audio-stage__meta">
+              <span><MicrophoneStageIcon size={18} weight="light" aria-hidden="true" /> Speaker: {session.host}</span>
+              <span><UsersThreeIcon size={18} weight="light" aria-hidden="true" /> {session.listeners.length + 1} in the room</span>
+            </div>
+
+            <div className="audio-stage__progress">
+              <div className="audio-stage__progress-copy">
+                <span>Clip position</span>
+                <span>{session.duration}</span>
+              </div>
+              <div className="audio-stage__track" role="progressbar" aria-label="Recording progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
+                <i style={{ '--clip-progress': Math.max(0, Math.min(1, progress / 100)) } as CSSProperties} />
+              </div>
+            </div>
+
+            <div className="audio-stage__listeners" aria-label="People in this recording">
+              {session.listeners.map((listener) => (
+                <span key={listener} title={listener}>{listener.slice(0, 2).toUpperCase()}</span>
+              ))}
+              <small>{session.listeners.join(', ')}</small>
+            </div>
+
             <audio
-              ref={(node) => {
-                audioRefs.current[index] = node
+              ref={audioRef}
+              src={session.audioSrc}
+              preload="metadata"
+              onTimeUpdate={(event) => {
+                const audio = event.currentTarget
+                if (audio.duration) setProgress((audio.currentTime / audio.duration) * 100)
               }}
-              src={item.audioSrc}
-              preload="none"
               onEnded={() => {
-                setPlaying(null)
+                setPlaying(false)
                 setNotice('Recording finished')
+                setProgress(100)
               }}
             >
               <track kind="captions" />
             </audio>
-          </button>
-        ))}
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.article
-          className="audio-stage__session"
-          key={session.title}
-          initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-          transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <div className="audio-stage__now">
-            <WaveformIcon size={21} weight="light" aria-hidden="true" />
-            <span aria-live="polite">{notice}</span>
           </div>
-          <p className="audio-stage__topic">{session.topic}</p>
-          <h3>{session.title}</h3>
-          <p className="audio-stage__duration">Friday recording, {session.duration}</p>
-          <div className="audio-stage__room">
-            <div className="audio-stage__host">
-              <span>{session.host.slice(0, 2).toUpperCase()}</span>
-              <div>
-                <small>Host</small>
-                <strong>{session.host}</strong>
-              </div>
-            </div>
-            <div className="audio-stage__listeners">
-              <small>Listening in</small>
-              <ul>
-                {session.listeners.map((listener) => (
-                  <li key={listener} title={listener}>
-                    {listener.slice(0, 2).toUpperCase()}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </motion.article>
-      </AnimatePresence>
+      </article>
     </div>
   )
 }

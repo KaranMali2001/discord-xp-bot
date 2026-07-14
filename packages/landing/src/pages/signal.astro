@@ -1,21 +1,15 @@
 ---
 import { site } from '../data/site'
 import Base from '../layouts/Base.astro'
+import CrewOrbitSection from '../components/CrewOrbitSection'
 import { AudioCarousel } from '../signal/AudioCarousel'
 import { LiveMic } from '../signal/LiveMic'
-import CrewOrbitSection from '../components/CrewOrbitSection'
 import '../signal/signal.css'
 
-const signalBars = Array.from({ length: 38 }, (_, index) => ({
+const signalBars = Array.from({ length: 34 }, (_, index) => ({
   index,
   base: (0.18 + ((index * 5) % 8) * 0.08).toFixed(2),
   peak: (0.36 + ((index * 3) % 6) * 0.11).toFixed(2),
-}))
-const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
-  index,
-  base: (0.08 + ((index * 7) % 10) * 0.05).toFixed(2),
-  peak: (0.28 + ((index * 5) % 9) * 0.08).toFixed(2),
-  speed: (2.6 + (index % 7) * 0.28).toFixed(2),
 }))
 ---
 
@@ -79,14 +73,35 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
     </div>
 
     <section id="top" class="signal-hero">
-      <div class="spectrum-mesh" aria-hidden="true">
-        <i class="spectrum-mesh__violet"></i>
-        <i class="spectrum-mesh__coral"></i>
-        <i class="spectrum-mesh__blue"></i>
-        <i class="spectrum-mesh__amber"></i>
-      </div>
-      <div class="spectrum-field" aria-hidden="true">
-        {spectrumBars.map((bar) => <i style={`--wave:${bar.index}; --scale:${bar.base}; --peak:${bar.peak}; --speed:${bar.speed}s`}></i>)}
+      <div class="hero-wave" aria-hidden="true">
+        <svg viewBox="0 0 900 320" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="heroSignalGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="var(--signal-violet)"></stop>
+              <stop offset="0.28" stop-color="var(--signal-blue)"></stop>
+              <stop offset="0.5" stop-color="var(--signal-accent-bright)"></stop>
+              <stop offset="0.72" stop-color="var(--signal-blue)"></stop>
+              <stop offset="1" stop-color="var(--signal-violet)"></stop>
+            </linearGradient>
+          </defs>
+          <g class="hero-wave__signal">
+            <path
+              class="hero-wave__glow"
+              pathLength="100"
+              d="M0 160 C70 160 80 160 120 160 C150 160 158 118 190 118 C222 118 230 202 266 202 C304 202 312 76 350 76 C388 76 396 244 450 244 C504 244 512 76 550 76 C588 76 596 202 634 202 C670 202 678 118 710 118 C742 118 750 160 780 160 C820 160 830 160 900 160"
+            ></path>
+            <path
+              class="hero-wave__line"
+              pathLength="100"
+              d="M0 160 C70 160 80 160 120 160 C150 160 158 118 190 118 C222 118 230 202 266 202 C304 202 312 76 350 76 C388 76 396 244 450 244 C504 244 512 76 550 76 C588 76 596 202 634 202 C670 202 678 118 710 118 C742 118 750 160 780 160 C820 160 830 160 900 160"
+            ></path>
+            <path
+              class="hero-wave__current"
+              pathLength="100"
+              d="M0 160 C70 160 80 160 120 160 C150 160 158 118 190 118 C222 118 230 202 266 202 C304 202 312 76 350 76 C388 76 396 244 450 244 C504 244 512 76 550 76 C588 76 596 202 634 202 C670 202 678 118 710 118 C742 118 750 160 780 160 C820 160 830 160 900 160"
+            ></path>
+          </g>
+        </svg>
       </div>
 
       <div class="signal-hero__copy reveal-block">
@@ -96,7 +111,7 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
           <a class="island-button" href={site.xUrl} target="_blank" rel="noreferrer">
             <span>Join the community</span><i aria-hidden="true">↗</i>
           </a>
-          <a class="text-link" href="#events">See what we do <span aria-hidden="true">↓</span></a>
+          <a class="text-link" href="#events">Explore the room</a>
         </div>
       </div>
 
@@ -123,6 +138,7 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
 
       <div class="event-bento">
         <article class="bezel event-card event-card--friday">
+          <span class="event-card__spotlight" aria-hidden="true"><i></i></span>
           <div class="bezel__core">
             <div class="event-card__image">
               <img
@@ -143,6 +159,7 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
         </article>
 
         <article class="bezel event-card event-card--mock">
+          <span class="event-card__spotlight" aria-hidden="true"><i></i></span>
           <div class="bezel__core">
             <div class="event-card__signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
             <div class="event-card__copy">
@@ -154,9 +171,12 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
         </article>
 
         <article class="bezel event-card event-card--reading">
+          <span class="event-card__spotlight" aria-hidden="true"><i></i></span>
           <div class="bezel__core">
             <div class="reading-stack" aria-hidden="true">
-              <i>01</i><i>02</i><i>03</i>
+              <i><span></span><span></span><span></span><span></span></i>
+              <i><span></span><span></span><span></span><span></span></i>
+              <i><span></span><span></span><span></span><span></span></i>
             </div>
             <div class="event-card__copy">
               <span>Starting next</span>
@@ -172,16 +192,29 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
       <div id="listen" class="section-heading">
         <p class="section-kicker">Friday recordings</p>
         <h2>Press play. Join the circle.</h2>
-        <p>Choose a cover and the clip plays directly. Add the audio source later without changing the interaction.</p>
+        <p>Move between WebSockets, Redis, frontend and networking conversations without leaving the room.</p>
       </div>
       <AudioCarousel client:visible />
     </section>
 
     <section class="contribute-section section-shell reveal-block">
       <div class="contribute-section__spectrum" aria-hidden="true">
-        {signalBars.slice(0, 26).map((bar) => (
-          <i style={`--bar:${bar.index}; --scale:${bar.base}; --peak:${bar.peak}`}></i>
-        ))}
+        <svg viewBox="0 0 1200 260" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="ctaSignalGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="var(--signal-violet)"></stop>
+              <stop offset="0.34" stop-color="var(--signal-blue)"></stop>
+              <stop offset="0.5" stop-color="var(--signal-accent-bright)"></stop>
+              <stop offset="0.66" stop-color="var(--signal-blue)"></stop>
+              <stop offset="1" stop-color="var(--signal-violet)"></stop>
+            </linearGradient>
+          </defs>
+          <g class="contribute-section__spectrum-lines">
+            <path pathLength="100" d="M0 130 C100 130 120 130 170 130 C220 130 226 92 276 92 C326 92 334 178 390 178 C446 178 456 48 520 48 C566 48 574 212 600 212 C626 212 634 48 680 48 C744 48 754 178 810 178 C866 178 874 92 924 92 C974 92 980 130 1030 130 C1080 130 1100 130 1200 130"></path>
+            <path pathLength="100" d="M0 130 C100 130 120 130 170 130 C220 130 226 92 276 92 C326 92 334 178 390 178 C446 178 456 48 520 48 C566 48 574 212 600 212 C626 212 634 48 680 48 C744 48 754 178 810 178 C866 178 874 92 924 92 C974 92 980 130 1030 130 C1080 130 1100 130 1200 130"></path>
+            <path pathLength="100" d="M0 130 C100 130 120 130 170 130 C220 130 226 92 276 92 C326 92 334 178 390 178 C446 178 456 48 520 48 C566 48 574 212 600 212 C626 212 634 48 680 48 C744 48 754 178 810 178 C866 178 874 92 924 92 C974 92 980 130 1030 130 C1080 130 1100 130 1200 130"></path>
+          </g>
+        </svg>
       </div>
       <div id="contribute" class="contribute-section__copy">
         <h2>Bring the next question.</h2>
@@ -200,7 +233,9 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
       <div class="signal-footer__console" aria-label="Tech Talks sign off">
         <span>Fri · 10:30 PM IST</span>
         <div class="signal-footer__dial" aria-hidden="true"><i></i></div>
-        <a href={site.xUrl} target="_blank" rel="noreferrer">{site.handle}</a>
+        <a class="signal-footer__x" href={site.xUrl} target="_blank" rel="noreferrer">
+          <i aria-hidden="true">X</i><span>{site.handle}</span>
+        </a>
       </div>
       <p class="signal-footer__signoff">Mic down. Questions stay open.</p>
     </footer>
@@ -237,18 +272,49 @@ const spectrumBars = Array.from({ length: 64 }, (_, index) => ({
 
     mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
 
-    const revealObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add('is-visible');
-          revealObserver.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.12 },
-    );
+    if (
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      document.querySelectorAll('.event-card').forEach((card) => {
+        const spotlight = card.querySelector('.event-card__spotlight');
+        const light = spotlight?.querySelector('i');
+        if (!(card instanceof HTMLElement) || !(spotlight instanceof HTMLElement) || !(light instanceof HTMLElement)) return;
 
-    document.querySelectorAll('.reveal-block').forEach((element) => revealObserver.observe(element));
+        let bounds: DOMRect | null = null;
+        let frame = 0;
+        let nextX = -220;
+        let nextY = -220;
+
+        const scheduleLight = () => {
+          if (frame) return;
+          frame = window.requestAnimationFrame(() => {
+            light.style.transform = `translate3d(${nextX}px, ${nextY}px, 0)`;
+            frame = 0;
+          });
+        };
+
+        card.addEventListener('pointerenter', (event) => {
+          bounds = card.getBoundingClientRect();
+          nextX = event.clientX - bounds.left - 90;
+          nextY = event.clientY - bounds.top - 90;
+          scheduleLight();
+          spotlight.style.opacity = '1';
+        });
+        card.addEventListener('pointermove', (event) => {
+          if (!bounds) return;
+          nextX = event.clientX - bounds.left - 90;
+          nextY = event.clientY - bounds.top - 90;
+          scheduleLight();
+        });
+        card.addEventListener('pointerleave', () => {
+          spotlight.style.opacity = '0';
+          bounds = null;
+          if (frame) window.cancelAnimationFrame(frame);
+          frame = 0;
+        });
+      });
+    }
 
     window.addEventListener(
       'load',
