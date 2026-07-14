@@ -20,15 +20,29 @@ const roleIcons: Record<SignalMember['roleKind'], ElementType> = {
 }
 
 const positions = [
-  ['50%', '4%'],
-  ['75%', '14%'],
-  ['88%', '43%'],
-  ['75%', '72%'],
-  ['50%', '82%'],
-  ['25%', '72%'],
-  ['12%', '43%'],
-  ['25%', '14%'],
+  ['50%', '13%'],
+  ['76%', '24%'],
+  ['87%', '50%'],
+  ['76%', '76%'],
+  ['50%', '87%'],
+  ['24%', '76%'],
+  ['13%', '50%'],
+  ['24%', '24%'],
 ]
+
+function positionPopover(target: HTMLElement) {
+  const orbit = target.closest('.crew-orbit')?.getBoundingClientRect()
+  const member = target.getBoundingClientRect()
+  if (!orbit) return
+
+  const memberX = member.left + member.width / 2
+  const memberY = member.top + member.height / 2
+  const orbitX = orbit.left + orbit.width / 2
+  const orbitY = orbit.top + orbit.height / 2
+
+  target.dataset.popoverSide = memberY >= orbitY ? 'top' : 'bottom'
+  target.dataset.popoverAlign = memberX < orbitX - orbit.width * 0.22 ? 'left' : memberX > orbitX + orbit.width * 0.22 ? 'right' : 'center'
+}
 
 function SocialLinks({ member }: { member: SignalMember }) {
   const socials = [
@@ -81,7 +95,14 @@ export default function CrewOrbitSection() {
           } as CSSProperties
 
           return (
-            <article className="crew-member" key={member.name} style={style} tabIndex={0}>
+            <article
+              className="crew-member"
+              key={member.name}
+              style={style}
+              tabIndex={0}
+              onPointerEnter={(event) => positionPopover(event.currentTarget)}
+              onFocus={(event) => positionPopover(event.currentTarget)}
+            >
               <div className="crew-member__portrait">
                 <img src={member.image} alt="" width="1254" height="1254" loading="lazy" />
                 <span className="crew-member__role-icon" aria-hidden="true">
