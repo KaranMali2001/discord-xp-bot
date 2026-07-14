@@ -6,6 +6,7 @@ import Fastify, { type FastifyInstance } from 'fastify'
 import { ValidationError } from './lib/validate'
 import { registerAuth } from './middleware/auth'
 import { adminsRoutes } from './routes/admins.routes'
+import { announcementsRoutes } from './routes/announcements.routes'
 import { badgesRoutes } from './routes/badges.routes'
 import { channelRulesRoutes } from './routes/channel-rules.routes'
 import { configRoutes } from './routes/config.routes'
@@ -52,6 +53,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       await api.register(adminsRoutes)
       await api.register(discordRoutes)
       await api.register(membersRoutes)
+      await api.register(announcementsRoutes)
     },
     { prefix: '/api' },
   )

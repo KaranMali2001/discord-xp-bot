@@ -2,7 +2,7 @@
 export { env, type Env } from './env'
 export { db, type DB } from './db/client'
 export * as schema from './db/schema'
-export { nowSec, utcDay, utcClock } from './util/time'
+export { nowSec, utcDay, utcClock, istWallClockToEpochSec, formatIst } from './util/time'
 
 // ── leveling (pure) ───────────────────────────────────────
 export {
@@ -66,3 +66,21 @@ export type { ReconcileResult } from './domains/rewards/reconcile.service'
 
 // ── auth (identity data only) ─────────────────────────────
 export { authService } from './domains/auth/auth.service'
+
+// ── announcements ─────────────────────────────────────────
+export { announcementsService } from './domains/announcements/announcements.service'
+export { scheduledAnnouncementsService } from './domains/announcements/scheduled.service'
+export { scheduledDao } from './domains/announcements/scheduled.dao'
+export type {
+  ScheduledAnnouncement,
+  ScheduledStatus,
+} from './domains/announcements/scheduled.dao'
+export {
+  announcementInput,
+  scheduledAnnouncementInput,
+  MIN_LEAD_SEC,
+} from './domains/announcements/announcements.schema'
+export type {
+  AnnouncementInput,
+  ScheduledAnnouncementInput,
+} from './domains/announcements/announcements.schema'
