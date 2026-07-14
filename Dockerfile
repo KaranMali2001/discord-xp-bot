@@ -6,7 +6,7 @@ ENV PNPM_HOME=/pnpm PATH="/pnpm:$PATH"
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 WORKDIR /app
 
-######## toolchain: native build deps (better-sqlite3 / @discordjs/opus compile here) ########
+######## toolchain: native build deps (libsql / better-sqlite3 / @discordjs/opus compile here) ########
 # Lives only in intermediate stages — never copied into a runtime image.
 FROM base AS toolchain
 RUN apt-get update \
@@ -54,12 +54,12 @@ COPY . .
 EXPOSE 8090
 # The actual command (api / bot) is set per-service in docker-compose.
 
-######## migrate: one-shot schema push (needs drizzle-kit) ########
+######## migrate: one-shot schema migrate (needs drizzle-kit) ########
 FROM base AS migrate
 ENV NODE_ENV=production
 COPY --from=deps-migrate /app/ ./
 COPY . .
-# Command (pnpm --filter @xp/core db:push) is set in docker-compose.
+# Command (pnpm --filter @xp/core db:migrate) is set in docker-compose.
 
 ######## web: static bundle served by nginx ########
 FROM nginx:alpine AS web

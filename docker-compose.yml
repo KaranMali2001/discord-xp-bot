@@ -1,21 +1,18 @@
 name: discord-xp-bot
 
 # One `docker compose up --build` runs the whole stack: schema migration → api + bot →
-# web dashboard. The SQLite file lives on a shared named volume so api & bot see the
-# same data. Secrets come from .env (never baked into the image).
+# web dashboard. The database is Turso (libsql) — DATABASE_URL + DATABASE_AUTH_TOKEN come
+# from .env, so api & bot share the same cloud DB (no local volume needed). Captured audio
+# still uses a local named volume. Secrets come from .env (never baked into the image).
 
 services:
-  # One-shot: apply the SQLite schema to the shared volume, then exit.
+  # One-shot: apply pending migrations to the Turso DB, then exit.
   migrate:
     build:
       context: .
       target: migrate
-    command: pnpm --filter @xp/core db:push
+    command: pnpm --filter @xp/core db:migrate
     env_file: .env
-    environment:
-      DATABASE_URL: file:/data/xp.db
-    volumes:
-      - db:/data
 
   api:
     build:
@@ -24,13 +21,10 @@ services:
     command: pnpm --filter @xp/api start
     env_file: .env
     environment:
-      DATABASE_URL: file:/data/xp.db
       API_PORT: "8090"
       WEB_URL: ${WEB_URL:-http://localhost:5173}
     ports:
       - "8090:8090"
-    volumes:
-      - db:/data
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -43,13 +37,11 @@ services:
     command: pnpm --filter @xp/bot start
     env_file: .env
     environment:
-      DATABASE_URL: file:/data/xp.db
       # Transcript capture (Part 1). Off unless set true in .env. WAVs land on the
-      # shared `audio` volume so a separate Whisper worker can mount + read them.
+      # local `audio` volume so a separate Whisper worker can mount + read them.
       TRANSCRIPTS_ENABLED: ${TRANSCRIPTS_ENABLED:-false}
       AUDIO_ROOT: /data/audio
     volumes:
-      - db:/data
       - audio:/data/audio
     depends_on:
       migrate:
@@ -74,6 +66,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  db:
   # Captured utterance WAVs + sidecar JSON. Mount this read-only into the Whisper worker.
   audio:

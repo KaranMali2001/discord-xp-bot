@@ -21,7 +21,10 @@ const schema = z.object({
   DISCORD_CLIENT_SECRET: z.string().default(''),
   DISCORD_GUILD_ID: z.string().default(''),
 
+  // Local dev: file:./dev.db. Production: a Turso libsql:// URL (+ DATABASE_AUTH_TOKEN).
   DATABASE_URL: z.string().default('file:./dev.db'),
+  // Turso auth token — required only when DATABASE_URL is a libsql:// URL.
+  DATABASE_AUTH_TOKEN: z.string().default(''),
 
   API_PORT: z.coerce.number().default(8080),
   // Public origin the API is reachable at (used for the Discord OAuth redirect URI).
