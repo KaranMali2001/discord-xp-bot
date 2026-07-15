@@ -15,6 +15,7 @@ import { eventsRoutes } from './routes/events.routes'
 import { leaderboardRoutes } from './routes/leaderboard.routes'
 import { levelRewardsRoutes } from './routes/level-rewards.routes'
 import { membersRoutes } from './routes/members.routes'
+import { ticketsRoutes } from './routes/tickets.routes'
 import { wsRoutes } from './routes/ws.routes'
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -54,6 +55,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       await api.register(discordRoutes)
       await api.register(membersRoutes)
       await api.register(announcementsRoutes)
+      await api.register(ticketsRoutes)
     },
     { prefix: '/api' },
   )

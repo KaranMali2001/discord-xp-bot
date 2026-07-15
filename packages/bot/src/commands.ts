@@ -1,5 +1,6 @@
 import {
   MIN_LEAD_SEC,
+  applyTicketSetup,
   authService,
   badgesService,
   formatIst,
@@ -299,6 +300,60 @@ const announce: Command = {
   },
 }
 
+const ticketSetup: Command = {
+  data: new SlashCommandBuilder()
+    .setName('ticket-setup')
+    .setDescription('Set up the ticket system (Manage Server) — bot applies all permissions')
+    .addChannelOption((o) =>
+      o
+        .setName('panel_channel')
+        .setDescription('PUBLIC channel where the “Raise a ticket” button is posted')
+        .addChannelTypes(ChannelType.GuildText)
+        .setRequired(true),
+    )
+    .addChannelOption((o) =>
+      o
+        .setName('ticket_channel')
+        .setDescription('Channel to host ticket threads (bot will hide it from @everyone)')
+        .addChannelTypes(ChannelType.GuildText)
+        .setRequired(true),
+    )
+    .addRoleOption((o) =>
+      o
+        .setName('staff_role')
+        .setDescription('Role that can see all tickets + pull others in')
+        .setRequired(true),
+    )
+    .toJSON(),
+  async execute(i) {
+    if (!i.guildId || (await denyIfNotManager(i))) return
+    const panel = i.options.getChannel('panel_channel', true)
+    const ticket = i.options.getChannel('ticket_channel', true)
+    const staff = i.options.getRole('staff_role', true)
+
+    await i.deferReply({ flags: MessageFlags.Ephemeral })
+    try {
+      await applyTicketSetup(i.guildId, {
+        panelChannelId: panel.id,
+        ticketChannelId: ticket.id,
+        staffRoleId: staff.id,
+      })
+      await i.editReply(
+        [
+          '✅ Ticket system ready.',
+          `• Panel posted in <#${panel.id}>`,
+          `• Tickets open as private threads in <#${ticket.id}> (now hidden from @everyone)`,
+          `• <@&${staff.id}> can see all tickets and pull others in`,
+        ].join('\n'),
+      )
+    } catch (err) {
+      await i.editReply(
+        `⚠️ Setup failed: ${(err as Error).message}\nMake sure the bot’s role is **above** the staff role and has **Manage Roles** + **Manage Channels**.`,
+      )
+    }
+  },
+}
+
 export const commands: Command[] = [
   rank,
   leaderboard,
@@ -308,5 +363,6 @@ export const commands: Command[] = [
   friday,
   setLevelRole,
   announce,
+  ticketSetup,
 ]
 export const commandMap = new Map(commands.map((c) => [c.data.name, c]))

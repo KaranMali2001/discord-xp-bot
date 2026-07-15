@@ -205,6 +205,22 @@ export type ScheduledAnnouncement = {
 
 const g = (guildId: string) => `/api/guilds/${encodeURIComponent(guildId)}`
 
+export type TicketConfig = {
+  guildId: string
+  panelChannelId: string | null
+  ticketChannelId: string | null
+  staffRoleId: string | null
+  panelMessageId: string | null
+  enabled: boolean
+  updatedAt: number
+}
+
+export type TicketSetupBody = {
+  panelChannelId: string
+  ticketChannelId: string
+  staffRoleId: string
+}
+
 export const endpoints = {
   auth: {
     me: () => apiFetch<AuthUser | null>('/auth/me'),
@@ -305,5 +321,10 @@ export const endpoints = {
       apiFetch<{ ok: boolean }>(`${g(guildId)}/scheduled-announcements/${id}`, {
         method: 'DELETE',
       }),
+  },
+  tickets: {
+    get: (guildId: string) => apiFetch<TicketConfig | null>(`${g(guildId)}/tickets`),
+    save: (guildId: string, body: TicketSetupBody) =>
+      apiFetch<TicketConfig>(`${g(guildId)}/tickets`, { method: 'PUT', body }),
   },
 }

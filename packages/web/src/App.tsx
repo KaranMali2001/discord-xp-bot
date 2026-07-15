@@ -8,6 +8,7 @@ import { EventsTab } from '@/features/EventsTab'
 import { Header } from '@/features/Header'
 import { LeaderboardTab } from '@/features/LeaderboardTab'
 import { LevelRewardsTab } from '@/features/LevelRewardsTab'
+import { TicketsTab } from '@/features/TicketsTab'
 import { VoiceCaptureCard } from '@/features/VoiceCaptureCard'
 import { useGuildId } from '@/hooks/useGuildId'
 
@@ -19,6 +20,7 @@ const TABS = [
   { value: 'badges', label: 'Badges' },
   { value: 'leaderboard', label: 'Leaderboard' },
   { value: 'announcements', label: 'Announcements' },
+  { value: 'tickets', label: 'Tickets' },
   { value: 'admins', label: 'Admins' },
 ] as const
 
@@ -62,6 +64,9 @@ export default function App() {
               </TabsContent>
               <TabsContent value="announcements">
                 <AnnouncementsTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="tickets">
+                <TicketsTab guildId={guildId} />
               </TabsContent>
               <TabsContent value="admins">
                 <AdminsTab guildId={guildId} />
