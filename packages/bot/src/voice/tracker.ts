@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import {
   type VoiceConnection,
   VoiceConnectionStatus,
@@ -7,6 +8,7 @@ import {
 import { nowSec } from '@xp/core'
 import type { VoiceBasedChannel } from 'discord.js'
 import { log } from '../lib/log'
+import { onSpeakingStart } from './capture'
 
 /** Per-member voice session, held in memory between XP ticks. */
 export interface VoiceSession {
@@ -23,8 +25,12 @@ export interface VoiceSession {
 }
 
 const sessions = new Map<string, VoiceSession>()
-/** One connection per guild (Discord limit). Tracks WHICH channel we're in. */
-const connections = new Map<string, { conn: VoiceConnection; channelId: string }>()
+/** One connection per guild (Discord limit). Tracks WHICH channel we're in, plus a
+ * per-join `sessionId` so captured utterances can be grouped into one conversation. */
+const connections = new Map<
+  string,
+  { conn: VoiceConnection; channelId: string; sessionId: string }
+>()
 
 const key = (guildId: string, userId: string) => `${guildId}:${userId}`
 
@@ -89,6 +95,9 @@ export const tracker = {
     if (existing?.channelId === channel.id) return
     if (existing) existing.conn.destroy()
 
+    // New capture window: every utterance recorded on this connection shares this id.
+    const sessionId = randomUUID()
+
     const conn = joinVoiceChannel({
       channelId: channel.id,
       guildId: channel.guild.id,
@@ -126,13 +135,22 @@ export const tracker = {
     conn.receiver.speaking.on('start', (userId) => {
       log.debug('voice', `🗣️ speaking: ${userId}`)
       tracker.markSpoke(channel.guild.id, userId)
+      // Record this utterance for transcription (no-op unless TRANSCRIPTS_ENABLED).
+      onSpeakingStart({
+        receiver: conn.receiver,
+        guildId: channel.guild.id,
+        channelId: channel.id,
+        sessionId,
+        userId,
+        username: channel.guild.members.cache.get(userId)?.displayName ?? userId,
+      })
     })
     conn.on(VoiceConnectionStatus.Destroyed, () => {
       if (connections.get(channel.guild.id)?.channelId === channel.id) {
         connections.delete(channel.guild.id)
       }
     })
-    connections.set(channel.guild.id, { conn, channelId: channel.id })
+    connections.set(channel.guild.id, { conn, channelId: channel.id, sessionId })
   },
 
   disconnect(guildId: string): void {

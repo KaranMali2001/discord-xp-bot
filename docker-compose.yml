@@ -9,7 +9,7 @@ services:
   migrate:
     build:
       context: .
-      target: server
+      target: migrate
     command: pnpm --filter @xp/core db:push
     env_file: .env
     environment:
@@ -44,8 +44,13 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: file:/data/xp.db
+      # Transcript capture (Part 1). Off unless set true in .env. WAVs land on the
+      # shared `audio` volume so a separate Whisper worker can mount + read them.
+      TRANSCRIPTS_ENABLED: ${TRANSCRIPTS_ENABLED:-false}
+      AUDIO_ROOT: /data/audio
     volumes:
       - db:/data
+      - audio:/data/audio
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -70,3 +75,5 @@ services:
 
 volumes:
   db:
+  # Captured utterance WAVs + sidecar JSON. Mount this read-only into the Whisper worker.
+  audio:

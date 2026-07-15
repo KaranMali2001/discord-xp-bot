@@ -18,6 +18,10 @@ dist/
 *.sqlite-shm
 *.sqlite-wal
 
+# captured audio (transcript pipeline, part 1)
+data/audio/
+*.wav
+
 # misc
 .DS_Store
 .turbo/
