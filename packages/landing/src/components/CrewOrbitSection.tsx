@@ -32,12 +32,19 @@ function SocialLinks({ member }: { member: SignalMember }) {
     <div className="crew-member__socials" aria-label={`${member.name} links`}>
       {socials.map(({ label, href, Icon }) =>
         href ? (
-          <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={`${member.name} on ${label}`}>
+          <a
+            key={label}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${member.name} on ${label} (opens in a new tab)`}
+          >
             <Icon size={16} weight="light" aria-hidden="true" />
           </a>
         ) : (
-          <span key={label} aria-label={`${label} link pending`} title={`${label} link pending`}>
+          <span className="crew-member__social-pending" key={label} aria-label={`${label} coming soon`}>
             <Icon size={16} weight="light" aria-hidden="true" />
+            <small>Coming soon</small>
           </span>
         ),
       )}
@@ -153,7 +160,7 @@ export default function CrewOrbitSection() {
               }}
               onClick={(event) => {
                 event.stopPropagation()
-                if (event.target instanceof HTMLElement && event.target.closest('a')) return
+                if (event.target instanceof Element && event.target.closest('a')) return
                 setSelectedIndex(index)
                 setFocusedIndex(index)
               }}

@@ -36,6 +36,10 @@ export const signalMembers: SignalMember[] = [
     hue: '#d89b55',
     image: '/signal/member-priyanshu.webp',
     imagePosition: '50% 50%',
+    socials: {
+      x: 'https://x.com/priyanshup7363',
+      github: 'https://github.com/priyanshupandey12',
+    },
   },
   {
     name: 'Karan',
@@ -46,6 +50,11 @@ export const signalMembers: SignalMember[] = [
     hue: '#6f82aa',
     image: '/signal/member-karan.webp',
     imagePosition: '50% 50%',
+    socials: {
+      x: 'https://x.com/karanM5599',
+      github: 'https://github.com/KaranMali2001',
+      portfolio: 'https://www.karan5599.in',
+    },
   },
   {
     name: 'Saumya',
@@ -56,6 +65,11 @@ export const signalMembers: SignalMember[] = [
     hue: '#cb766f',
     image: '/signal/member-saumya.webp',
     imagePosition: '50% 50%',
+    socials: {
+      x: 'https://x.com/saumyagrawal',
+      github: 'https://github.com/idreamfyrei',
+      portfolio: 'https://me.saumyagrawal.in/',
+    },
   },
   {
     name: 'Atharv',
@@ -66,6 +80,11 @@ export const signalMembers: SignalMember[] = [
     hue: '#aa8d61',
     image: '/signal/member-atharv.webp',
     imagePosition: '50% 50%',
+    socials: {
+      x: 'https://x.com/atharvdangedev',
+      github: 'https://github.com/atharvdange618',
+      portfolio: 'https://www.atharvdangedev.in/',
+    },
   },
   {
     name: 'Mohammad Saif',
@@ -76,6 +95,11 @@ export const signalMembers: SignalMember[] = [
     hue: '#8e80aa',
     image: '/signal/member-mohammad-saif.webp',
     imagePosition: '50% 50%',
+    socials: {
+      x: 'https://x.com/_beast0',
+      github: 'https://github.com/Thebeast01',
+      portfolio: 'https://www.besaif.in/',
+    },
   },
   {
     name: 'Affan',
@@ -86,6 +110,10 @@ export const signalMembers: SignalMember[] = [
     hue: '#b97f97',
     image: '/signal/member-affan.webp',
     imagePosition: '50% 50%',
+    socials: {
+      x: 'https://x.com/affancodez',
+      github: 'https://github.com/mohdaffankhan',
+    },
   },
   {
     name: 'Saurav',
@@ -96,6 +124,11 @@ export const signalMembers: SignalMember[] = [
     hue: '#6f9186',
     image: '/signal/member-saurav.webp',
     imagePosition: '50% 28%',
+    socials: {
+      x: 'https://x.com/J_srv001',
+      github: 'https://github.com/srvjha',
+      portfolio: 'https://srvjha.in/',
+    },
   },
   {
     name: 'Hayat',
@@ -106,6 +139,10 @@ export const signalMembers: SignalMember[] = [
     hue: '#6991a3',
     image: '/signal/member-hayat.webp',
     imagePosition: '50% 50%',
+    socials: {
+      x: 'https://x.com/6116hayat',
+      github: 'https://github.com/6116hayat',
+    },
   },
 ]
 
@@ -128,7 +165,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Saumya', 'Hayat', 'Saurav'],
     image: '/signal/friday-circle.webp',
     alt: 'Developers gathered around a classic microphone during a late-night discussion',
-    duration: '42 min',
+    duration: '0:52',
     sampleProgress: 38,
   },
   {
@@ -138,7 +175,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Priyanshu', 'Affan', 'Karan'],
     image: '/signal/community-session.webp',
     alt: 'A small developer community discussing systems around a shared table',
-    duration: '38 min',
+    duration: '0:47',
     sampleProgress: 61,
   },
   {
@@ -148,7 +185,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Mohammad Saif', 'Karan', 'Hayat'],
     image: '/signal/brand-spectrum.webp',
     alt: 'Tech Talks microphone on a muted multicolor spectrum background',
-    duration: '46 min',
+    duration: '0:58',
     sampleProgress: 24,
   },
   {
@@ -158,7 +195,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Saumya', 'Mohammad Saif', 'Atharv'],
     image: '/signal/friday-circle.webp',
     alt: 'A developer discussion gathered around a microphone',
-    duration: '41 min',
+    duration: '0:44',
     sampleProgress: 47,
   },
 ]
