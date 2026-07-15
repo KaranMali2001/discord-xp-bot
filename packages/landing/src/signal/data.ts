@@ -165,7 +165,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Saumya', 'Hayat', 'Saurav'],
     image: '/signal/friday-circle.webp',
     alt: 'Developers gathered around a classic microphone during a late-night discussion',
-    duration: '42 min',
+    duration: '0:52',
     sampleProgress: 38,
   },
   {
@@ -175,7 +175,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Priyanshu', 'Affan', 'Karan'],
     image: '/signal/community-session.webp',
     alt: 'A small developer community discussing systems around a shared table',
-    duration: '38 min',
+    duration: '0:47',
     sampleProgress: 61,
   },
   {
@@ -185,7 +185,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Mohammad Saif', 'Karan', 'Hayat'],
     image: '/signal/brand-spectrum.webp',
     alt: 'Tech Talks microphone on a muted multicolor spectrum background',
-    duration: '46 min',
+    duration: '0:58',
     sampleProgress: 24,
   },
   {
@@ -195,7 +195,7 @@ export const audioSessions: AudioSession[] = [
     listeners: ['Saumya', 'Mohammad Saif', 'Atharv'],
     image: '/signal/friday-circle.webp',
     alt: 'A developer discussion gathered around a microphone',
-    duration: '41 min',
+    duration: '0:44',
     sampleProgress: 47,
   },
 ]

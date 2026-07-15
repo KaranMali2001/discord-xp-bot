@@ -14,7 +14,7 @@ export function AudioCarousel() {
   const [active, setActive] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [progress, setProgress] = useState(audioSessions[0].sampleProgress)
-  const [notice, setNotice] = useState('Recording preview')
+  const [notice, setNotice] = useState('One-minute clip')
   const session = audioSessions[active]
 
   const chooseSession = (index: number) => {
@@ -22,7 +22,7 @@ export function AudioCarousel() {
     setPlaying(false)
     setActive(index)
     setProgress(audioSessions[index].sampleProgress)
-    setNotice('Recording preview')
+    setNotice('One-minute clip')
   }
 
   const shuffleSession = () => {
@@ -60,7 +60,7 @@ export function AudioCarousel() {
         <i /><i /><i />
       </div>
 
-      <div className="audio-stage__clips" aria-label="Choose a Friday recording">
+      <div className="audio-stage__clips" aria-label="Choose a Friday clip">
         {audioSessions.map((item, index) => (
           <button
             className={index === active ? 'is-active' : ''}
@@ -73,7 +73,7 @@ export function AudioCarousel() {
             {item.topic}
           </button>
         ))}
-        <button className="audio-stage__shuffle" type="button" onClick={shuffleSession} aria-label="Show the next recording">
+        <button className="audio-stage__shuffle" type="button" onClick={shuffleSession} aria-label="Show the next clip">
           <ShuffleIcon size={16} weight="light" aria-hidden="true" />
         </button>
       </div>
@@ -103,12 +103,12 @@ export function AudioCarousel() {
                 <span>Clip position</span>
                 <span>{session.duration}</span>
               </div>
-              <div className="audio-stage__track" role="progressbar" aria-label="Recording progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
+              <div className="audio-stage__track" role="progressbar" aria-label="Clip progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}>
                 <i style={{ '--clip-progress': Math.max(0, Math.min(1, progress / 100)) } as CSSProperties} />
               </div>
             </div>
 
-            <div className="audio-stage__listeners" aria-label="People in this recording">
+            <div className="audio-stage__listeners" aria-label="People in this clip">
               {session.listeners.map((listener) => (
                 <span key={listener} title={listener}>{listener.slice(0, 2).toUpperCase()}</span>
               ))}
@@ -125,7 +125,7 @@ export function AudioCarousel() {
               }}
               onEnded={() => {
                 setPlaying(false)
-                setNotice('Recording finished')
+                setNotice('Clip finished')
                 setProgress(100)
               }}
             >
