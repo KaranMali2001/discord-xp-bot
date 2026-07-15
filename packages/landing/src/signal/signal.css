@@ -1002,11 +1002,25 @@ button {
   transition: opacity 160ms var(--ease-out), transform 180ms var(--ease-out), visibility 0ms 180ms;
 }
 
+.crew-member__popover::before {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: 0.8rem;
+  content: '';
+}
+
 .crew-member[data-popover-side="top"] .crew-member__popover {
   --popover-y: -8px;
   top: auto;
   bottom: calc(100% + 0.8rem);
   transform-origin: 50% 100%;
+}
+
+.crew-member[data-popover-side="top"] .crew-member__popover::before {
+  top: 100%;
+  bottom: auto;
 }
 
 .crew-member[data-popover-align="left"] .crew-member__popover {
@@ -1069,16 +1083,17 @@ button {
 
 .crew-member__socials {
   display: flex;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 0.45rem;
   margin-top: 0.9rem;
 }
 
-.crew-member__socials a,
-.crew-member__socials span {
+.crew-member__socials > a,
+.crew-member__socials > span {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--signal-line);
   border-radius: 50%;
   background: var(--signal-surface);
@@ -1086,8 +1101,22 @@ button {
   transition: transform 140ms var(--ease-out), color 180ms var(--ease-out), background-color 180ms var(--ease-out);
 }
 
-.crew-member__socials span {
-  opacity: 0.42;
+.crew-member__socials > .crew-member__social-pending {
+  grid-template-columns: auto auto;
+  gap: 0.35rem;
+  width: auto;
+  padding-inline: 0.65rem;
+  border-radius: 999px;
+  opacity: 0.58;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.crew-member__social-pending small {
+  font-size: 0.65rem;
+  font-weight: 560;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .crew-member:focus-visible .crew-member__portrait {
@@ -1114,14 +1143,10 @@ button {
 
 .crew-member.is-active .crew-member__popover {
   opacity: 1;
-  pointer-events: none;
+  pointer-events: auto;
   visibility: visible;
   transform: translate3d(var(--popover-x), 0, 0) scale(1);
   transition-delay: 0ms;
-}
-
-.crew-member.is-active .crew-member__socials a {
-  pointer-events: auto;
 }
 
 .bezel {
@@ -2215,6 +2240,9 @@ button {
   .crew-member__popover-heading > span,
   .crew-member__popover-heading strong { display: none; }
   .crew-member__popover-heading small { font-size: 0.7rem; }
+  .crew-member__socials > a,
+  .crew-member__socials > span { height: 44px; }
+  .crew-member__socials > a { width: 44px; }
   .event-bento { display: flex; height: min(50svh, 410px); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
   .event-bento::-webkit-scrollbar { display: none; }
   .event-card { flex: 0 0 min(84vw, 520px); min-height: 0; scroll-snap-align: center; }
