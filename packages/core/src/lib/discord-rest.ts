@@ -117,10 +117,19 @@ export const discordRest = {
     })
   },
 
-  sendMessage(channelId: string, content: string): Promise<unknown> {
+  /**
+   * Post a message to a channel. By default only user mentions ping (matches the
+   * level-up announcer). Pass `allowedMentions` to control exactly who is pinged —
+   * announcements use explicit user/role lists so free-text `@everyone` can't leak.
+   */
+  sendMessage(
+    channelId: string,
+    content: string,
+    opts?: { allowedMentions?: Record<string, unknown> },
+  ): Promise<unknown> {
     return request('POST', `/channels/${channelId}/messages`, {
       content,
-      allowed_mentions: { parse: ['users'] },
+      allowed_mentions: opts?.allowedMentions ?? { parse: ['users'] },
     })
   },
 }

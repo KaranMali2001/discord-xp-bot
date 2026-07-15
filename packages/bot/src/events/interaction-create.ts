@@ -1,18 +1,46 @@
-import { type Client, Events, MessageFlags } from 'discord.js'
+import { type Client, Events, type Interaction, MessageFlags } from 'discord.js'
 import { commandMap } from '../commands'
+import {
+  ANNOUNCE_IDS,
+  handleAnnounceComponent,
+  handleAnnounceModal,
+  isAnnounceComponent,
+} from '../features/announce'
 import { log } from '../lib/log'
 
-export function registerInteractionCreate(client: Client): void {
-  client.on(Events.InteractionCreate, async (interaction) => {
-    if (!interaction.isChatInputCommand()) return
+async function dispatch(interaction: Interaction): Promise<void> {
+  // Slash commands.
+  if (interaction.isChatInputCommand()) {
     const command = commandMap.get(interaction.commandName)
     if (!command) return
     log.info('cmd', `/${interaction.commandName} by ${interaction.user.username}`)
+    await command.execute(interaction)
+    return
+  }
+
+  // Modal submits.
+  if (interaction.isModalSubmit()) {
+    if (interaction.customId === ANNOUNCE_IDS.modal) await handleAnnounceModal(interaction)
+    return
+  }
+
+  // Select menus + buttons from the announce flow.
+  if (
+    (interaction.isUserSelectMenu() || interaction.isRoleSelectMenu() || interaction.isButton()) &&
+    isAnnounceComponent(interaction.customId)
+  ) {
+    await handleAnnounceComponent(interaction)
+  }
+}
+
+export function registerInteractionCreate(client: Client): void {
+  client.on(Events.InteractionCreate, async (interaction) => {
     try {
-      await command.execute(interaction)
+      await dispatch(interaction)
     } catch (err) {
-      console.error(`Command /${interaction.commandName} failed:`, err)
-      const content = '⚠️ Something went wrong running that command.'
+      console.error('Interaction handler failed:', err)
+      if (!interaction.isRepliable()) return
+      const content = '⚠️ Something went wrong.'
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({ content, flags: MessageFlags.Ephemeral }).catch(() => {})
       } else {

@@ -171,6 +171,36 @@ export type DiscordMember = {
   displayName: string
 }
 
+export type AnnouncementInput = {
+  channelId: string
+  message: string
+  memberIds: string[]
+  roleIds: string[]
+  mentionEveryone: boolean
+}
+
+export type AnnouncementResult = {
+  ok: true
+  content: string
+}
+
+export type ScheduleAnnouncementInput = AnnouncementInput & { fireAt: number }
+
+export type ScheduledAnnouncement = {
+  id: number
+  guildId: string
+  channelId: string
+  message: string
+  memberIds: string[]
+  roleIds: string[]
+  mentionEveryone: boolean
+  fireAt: number
+  status: 'pending' | 'sent' | 'missed' | 'cancelled'
+  createdBy: string
+  createdAt: number
+  sentAt: number | null
+}
+
 // ── endpoint helpers ──────────────────────────────────────────────────
 
 const g = (guildId: string) => `/api/guilds/${encodeURIComponent(guildId)}`
@@ -258,6 +288,22 @@ export const endpoints = {
       apiFetch<XpBoostResult>(`${g(guildId)}/members/${encodeURIComponent(userId)}/xp`, {
         method: 'POST',
         body,
+      }),
+  },
+
+  announcements: {
+    send: (guildId: string, body: AnnouncementInput) =>
+      apiFetch<AnnouncementResult>(`${g(guildId)}/announcements`, { method: 'POST', body }),
+    listScheduled: (guildId: string) =>
+      apiFetch<ScheduledAnnouncement[]>(`${g(guildId)}/scheduled-announcements`),
+    schedule: (guildId: string, body: ScheduleAnnouncementInput) =>
+      apiFetch<ScheduledAnnouncement>(`${g(guildId)}/scheduled-announcements`, {
+        method: 'POST',
+        body,
+      }),
+    cancelScheduled: (guildId: string, id: number) =>
+      apiFetch<{ ok: boolean }>(`${g(guildId)}/scheduled-announcements/${id}`, {
+        method: 'DELETE',
       }),
   },
 }

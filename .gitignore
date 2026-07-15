@@ -22,6 +22,10 @@ dist/
 data/audio/
 *.wav
 
+# astro (landing) build output
+.astro/
+**/.astro/
+
 # misc
 .DS_Store
 .turbo/

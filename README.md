@@ -27,7 +27,7 @@ same core services. Layering: **Zod → controller → service → DAO → DB**.
 ```bash
 pnpm install
 cp .env.sample .env          # fill DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_GUILD_ID
-pnpm db:push                 # create the SQLite schema (dev.db)
+pnpm db:migrate              # create the SQLite schema (dev.db) from migrations
 
 # leave DISCORD_CLIENT_SECRET blank locally to use the dashboard dev-login bypass
 # set XP_TICK_SECONDS=2 locally so voice XP lands fast
@@ -38,6 +38,16 @@ pnpm dev:web                 # start the dashboard on :5173
 pnpm dev:landing             # start the landing site on :4321
 ```
 
+### Changing the database schema
+Migrations are the source of truth (`packages/core/drizzle`). After editing
+`packages/core/src/db/schema.ts`:
+```bash
+pnpm db:generate             # write a new migration from the schema diff
+pnpm db:migrate              # apply pending migrations (records them in the journal)
+```
+Commit the generated `drizzle/*.sql` + `meta/` files. `db:push` (schema diff without a
+migration file) is fine for throwaway experiments, but don't use it on a DB with real data.
+
 ### Discord setup
 1. Create an application + bot at <https://discord.com/developers>.
 2. Enable **Server Members** and **Message Content** privileged intents.
@@ -46,7 +56,8 @@ pnpm dev:landing             # start the landing site on :4321
 
 ## Slash commands
 `/rank` · `/leaderboard` · `/badges` — everyone.
-`/setmessagexp` · `/setchannel` · `/friday` — Manage Server. (The dashboard covers full config.)
+`/setmessagexp` · `/setchannel` · `/friday` · `/announce` — Manage Server. (The dashboard covers full config.)
+`/announce` posts or schedules an announcement (member + role mentions); add a `time` (IST) to schedule.
 
 ## How XP works
 - **Chat** — `messageCreate` → base XP × channel × active events, with a per-user cooldown.
