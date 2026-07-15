@@ -1,178 +1,391 @@
 ---
-import Base from '../layouts/Base.astro';
-import Logo from '../components/Logo.astro';
-import { site } from '../data/site';
+import { site } from '../data/site'
+import Base from '../layouts/Base.astro'
+import CrewOrbitSection from '../components/CrewOrbitSection'
+import { AudioCarousel } from '../signal/AudioCarousel'
+import { LiveMic } from '../signal/LiveMic'
+import '../signal/signal.css'
 
-const concepts = [
-  {
-    slug: 'signal',
-    name: 'Signal Room',
-    tag: 'Expressive',
-    thesis: 'The live Tech Talks room. Fluid sound fields, a broadcasting crew orbit, responsive event cards and Friday recordings in one focused world.',
-    palette: ['#0D0F13', '#DC7966', '#8776AD', '#F0F0EB'],
-    accent: '#DC7966',
-  },
-  {
-    slug: 'after-hours',
-    name: 'After Hours',
-    tag: 'Expressive',
-    thesis: 'A late-night dev radio station. Nocturnal and warm, with a glow that follows your cursor, a pulsing ON AIR bar, and film grain.',
-    palette: ['#0A0713', '#FF6B4A', '#F0567C', '#F6EFE8'],
-    accent: '#FF6B4A',
-  },
-  {
-    slug: 'clubhouse',
-    name: 'The Clubhouse',
-    tag: 'Expressive',
-    thesis: 'A dev block-party flyer. Rotated, taped, overlapping cards on warm paper — halftone, sticker badges, loud condensed type.',
-    palette: ['#F2EEE4', '#2B4AFF', '#FF5B1E', '#141210'],
-    accent: '#2B4AFF',
-  },
-  {
-    slug: 'kinetic',
-    name: 'Kinetic',
-    tag: 'Expressive',
-    thesis: 'Broadcast with taste. Oversized type that scales and tightens as you scroll, near-black with one punchy yellow accent, buttery motion.',
-    palette: ['#0B0B0C', '#FFE14D', '#F4F4F2', '#7A7A7E'],
-    accent: '#FFE14D',
-  },
-  {
-    slug: 'cosmic',
-    name: 'Cosmic',
-    tag: 'Expressive',
-    thesis: 'Nights and weekends, in space. A starfield, floating orbs, and the crew arranged in a slow orbit around a glowing sun.',
-    palette: ['#120B2E', '#FFC24B', '#FF8FB1', '#7FE7FF'],
-    accent: '#FFC24B',
-  },
-  {
-    slug: 'mixtape',
-    name: 'Mixtape',
-    tag: 'Expressive',
-    thesis: 'The community as a cassette. Spinning reels, a Side A / Side B tracklist of sessions, and a photocopied zine texture.',
-    palette: ['#EDE6D6', '#E23B2E', '#E0A32E', '#1C1A17'],
-    accent: '#E23B2E',
-  },
-  {
-    slug: 'whiteroom',
-    name: 'Whiteroom',
-    tag: 'Minimal',
-    thesis: 'Swiss / Vercel-clean and light. Near-white, near-black ink, a faint dot-grid and hairline rules. Typography does all the work; one whisper of color.',
-    palette: ['#FCFCFB', '#17171A', '#E6E6E2', '#FF4D2E'],
-    accent: '#FF4D2E',
-  },
-  {
-    slug: 'blackout',
-    name: 'Blackout',
-    tag: 'Minimal',
-    thesis: 'Linear-style dark minimal. A single centered headline with nothing else above the fold, huge negative space, near-monochrome calm.',
-    palette: ['#0A0A0B', '#ECECEF', '#83838C', '#8AA0FF'],
-    accent: '#8AA0FF',
-  },
-];
+const signalBarHalf = Array.from({ length: 20 }, (_, index) => ({
+  base: (0.2 + ((index * 5) % 8) * 0.085).toFixed(2),
+  peak: (0.38 + ((index * 3) % 6) * 0.105).toFixed(2),
+}))
+const signalBars = [...signalBarHalf, ...signalBarHalf.slice().reverse()].map((bar, index) => ({ ...bar, index }))
+const applicationUrl = 'https://t.co/Tvx2yICikK'
+const applicationsPaused = true
 ---
 
-<Base title="Concept Gallery" description="Eight landing-page worlds for the Tech Talks community.">
-  <main class="gallery">
-    <header class="gallery__head">
-      <a href="/" class="gallery__logo"><Logo size={30} /></a>
-      <p class="gallery__eyebrow">Concept gallery · placeholder data</p>
-      <h1 class="gallery__title">Eight worlds for {site.name}.</h1>
-      <p class="gallery__sub">
-        Six expressive, two minimal — each a distinct atmosphere with its own structure, texture,
-        and motion. Same crew and sessions underneath. Click in, then tell me which one to take further.
-      </p>
-    </header>
+<Base
+  title="Signal Room"
+  description="Tech Talks is a beginner-friendly developer community for Friday discussions, mock interviews and shared reading."
+>
+  <script is:inline>
+    (() => {
+      const saved = localStorage.getItem('tech-talks-theme');
+      const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = saved || (dark ? 'dark' : 'light');
+    })();
+  </script>
 
-    <a class="featured" href="/broadcast">
-      <span class="featured__tag">▶ The build · merged direction</span>
-      <h2 class="featured__name">Broadcast</h2>
-      <p class="featured__desc">
-        Muted cosmic, plus the pieces you picked: the After Hours ON AIR bar, tagline and marquee;
-        Kinetic's animated session list; the revolving crew constellation — now each planet opens a
-        social-links popover; and a new community contributions section.
-      </p>
-      <span class="featured__go">Open the build <span aria-hidden="true">→</span></span>
-    </a>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
-    <p class="gallery__label">The eight explorations</p>
-    <ul class="gallery__grid">
-      {concepts.map((c) => (
-        <li>
-          <a class="card" href={`/${c.slug}`} style={`--card-accent:${c.accent}`}>
-            <span class="card__top">
-              <span class="card__swatches" aria-hidden="true">
-                {c.palette.map((p) => <i style={`background:${p}`}></i>)}
-              </span>
-              <span class:list={['card__tag', c.tag === 'Minimal' && 'card__tag--min']}>{c.tag}</span>
-            </span>
-            <h2 class="card__name">{c.name}</h2>
-            <p class="card__thesis">{c.thesis}</p>
-            <span class="card__go">Enter <span aria-hidden="true">→</span></span>
+  <aside class="signal-head" aria-label="Tech Talks is on air">
+    <span class="signal-head__status"><i aria-hidden="true"></i>ON AIR</span>
+    <span class="signal-head__episode">Friday discussion: WebSockets, SSE and the live web</span>
+    <span class="signal-head__meter" aria-hidden="true">
+      {signalBars.map((bar) => <i style={`--bar:${bar.index}; --scale:${bar.base}; --peak:${bar.peak}`}></i>)}
+    </span>
+    <span class="signal-head__time">38:24 / 42:00</span>
+  </aside>
+
+  <main id="main-content" class="signal-page">
+    <nav class="frequency-nav" aria-label="Primary navigation">
+      <a href="#top" class="frequency-nav__brand" aria-label="Tech Talks home">
+        <img src="/signal/tech-talks-mark-v2.webp" alt="" width="56" height="56" />
+        <span>TECH TALKS</span>
+      </a>
+
+      <div class="frequency-nav__links">
+        <a href="#team">Team</a>
+        <a href="#events">Events</a>
+        <a href={site.xUrl} target="_blank" rel="noreferrer">X</a>
+      </div>
+
+      <div class="frequency-nav__actions">
+        <a class="island-button island-button--small" href={applicationUrl} data-application-link={applicationsPaused ? '' : undefined} aria-haspopup={applicationsPaused ? 'dialog' : undefined}>
+          <span>Join the community</span><i aria-hidden="true">↗</i>
+        </a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch color theme">
+          <span class="theme-toggle__light" aria-hidden="true">☀</span>
+          <span class="theme-toggle__dark" aria-hidden="true">☽</span>
+        </button>
+        <button class="menu-toggle" type="button" data-menu-toggle aria-label="Open navigation" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="mobile-menu" data-mobile-menu role="dialog" aria-modal="true" aria-label="Mobile navigation" aria-hidden="true">
+      <div class="mobile-menu__links">
+        <a href="#team">Meet the team</a>
+        <a href="#events">Events</a>
+        <a href={site.xUrl} target="_blank" rel="noreferrer">Follow on X</a>
+        <a href={applicationUrl} data-application-link={applicationsPaused ? '' : undefined} aria-haspopup={applicationsPaused ? 'dialog' : undefined}>Join the community</a>
+      </div>
+    </div>
+
+    <section id="top" class="signal-hero">
+      <div class="hero-wave" aria-hidden="true">
+        <svg viewBox="0 0 900 320" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="heroSignalGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="var(--signal-violet)"></stop>
+              <stop offset="0.28" stop-color="var(--signal-blue)"></stop>
+              <stop offset="0.5" stop-color="var(--signal-accent-bright)"></stop>
+              <stop offset="0.72" stop-color="var(--signal-blue)"></stop>
+              <stop offset="1" stop-color="var(--signal-violet)"></stop>
+            </linearGradient>
+          </defs>
+          <g class="hero-wave__signal">
+            <path
+              class="hero-wave__glow"
+              pathLength="100"
+              d="M0 160 C70 160 80 160 120 160 C150 160 158 118 190 118 C222 118 230 202 266 202 C304 202 312 76 350 76 C388 76 396 244 450 244 C504 244 512 76 550 76 C588 76 596 202 634 202 C670 202 678 118 710 118 C742 118 750 160 780 160 C820 160 830 160 900 160"
+            ></path>
+            <path
+              class="hero-wave__line"
+              pathLength="100"
+              d="M0 160 C70 160 80 160 120 160 C150 160 158 118 190 118 C222 118 230 202 266 202 C304 202 312 76 350 76 C388 76 396 244 450 244 C504 244 512 76 550 76 C588 76 596 202 634 202 C670 202 678 118 710 118 C742 118 750 160 780 160 C820 160 830 160 900 160"
+            ></path>
+            <path
+              class="hero-wave__current"
+              pathLength="100"
+              d="M0 160 C70 160 80 160 120 160 C150 160 158 118 190 118 C222 118 230 202 266 202 C304 202 312 76 350 76 C388 76 396 244 450 244 C504 244 512 76 550 76 C588 76 596 202 634 202 C670 202 678 118 710 118 C742 118 750 160 780 160 C820 160 830 160 900 160"
+            ></path>
+          </g>
+        </svg>
+      </div>
+
+      <div class="signal-hero__copy reveal-block">
+        <h1>Learn out loud.<br /><span>Grow in good company.</span></h1>
+        <p>A beginner-friendly tech community for conversations, mock interviews and shared reading that help you move faster.</p>
+        <div class="signal-hero__actions">
+          <a class="island-button" href={applicationUrl} data-application-link={applicationsPaused ? '' : undefined} aria-haspopup={applicationsPaused ? 'dialog' : undefined}>
+            <span>Join the community</span><i aria-hidden="true">↗</i>
           </a>
-        </li>
-      ))}
-    </ul>
+          <a class="text-link" href="#events">Explore the room</a>
+        </div>
+      </div>
 
-    <footer class="gallery__foot">
-      <span>{site.name}</span>
-      <span>{site.cadence}</span>
-      <a href={site.xUrl}>{site.handle}</a>
+      <div class="signal-hero__studio reveal-block">
+        <LiveMic client:load />
+      </div>
+
+      <p class="signal-hero__frequency" aria-hidden="true">FRIDAY FREQUENCY 88.7</p>
+    </section>
+
+    <section class="team-section section-shell reveal-block">
+      <div id="team" class="section-heading section-heading--center">
+        <h2>Every voice shapes the room.</h2>
+        <p>Hover or focus a signal to meet the people who keep each conversation welcoming and useful.</p>
+      </div>
+      <CrewOrbitSection client:visible />
+    </section>
+
+    <section class="events-section section-shell reveal-block">
+      <div id="events" class="section-heading">
+        <p class="section-kicker">What happens here</p>
+        <h2>Three ways to get better together.</h2>
+      </div>
+
+      <div class="event-bento">
+        <article class="bezel event-card event-card--friday">
+          <span class="event-card__spotlight" aria-hidden="true"><i></i></span>
+          <div class="bezel__core">
+            <div class="event-card__illustration" aria-hidden="true">
+              <svg viewBox="0 0 680 440" role="presentation">
+                <g class="event-card__diagram-signal">
+                  <path d="M122 188c54-50 118-76 194-78 83-2 160 24 232 78"></path>
+                  <path d="M154 190c48-34 105-51 170-51 70 0 136 17 198 51"></path>
+                </g>
+                <g class="event-card__diagram-ui">
+                  <rect x="74" y="66" width="114" height="68" rx="18"></rect>
+                  <path d="M102 103h10l9-18 12 34 11-25 9 9h9"></path>
+                  <rect x="250" y="44" width="180" height="98" rx="18"></rect>
+                  <path d="M282 78h116M282 104h76M282 124h48"></path>
+                  <path d="M488 72h112a16 16 0 0 1 16 16v48a16 16 0 0 1-16 16h-44l-28 24v-24h-40a16 16 0 0 1-16-16V88a16 16 0 0 1 16-16Z"></path>
+                  <path d="M500 106h84M500 128h54"></path>
+                </g>
+                <g class="event-card__diagram-people">
+                  <circle cx="154" cy="238" r="25"></circle>
+                  <circle cx="276" cy="214" r="26"></circle>
+                  <circle cx="404" cy="214" r="26"></circle>
+                  <circle cx="526" cy="238" r="25"></circle>
+                  <path d="M102 344c4-58 18-88 52-88 25 0 42 16 49 48M222 344c3-72 18-108 54-108 37 0 52 36 55 108M349 344c3-72 18-108 55-108 36 0 51 36 54 108M477 304c8-32 24-48 49-48 34 0 48 30 52 88"></path>
+                  <path d="M154 282c29 3 54 15 77 35M526 282c-29 3-54 15-77 35"></path>
+                  <path d="M276 276c19 18 40 28 64 28s45-10 64-28"></path>
+                  <path d="M242 306l-36-24M438 306l36-24"></path>
+                </g>
+                <g class="event-card__diagram-table">
+                  <path d="M72 344h536l-46 52H118Z"></path>
+                  <path d="M248 344l18-56h78l18 56M276 316h58"></path>
+                  <path d="M390 344l14-44h62l14 44"></path>
+                  <path d="M206 344v-28M194 316h24M198 304h16"></path>
+                  <circle cx="206" cy="298" r="8"></circle>
+                </g>
+              </svg>
+            </div>
+            <div class="event-card__copy">
+              <span>Every Friday</span>
+              <h3>Friday discussions</h3>
+              <p>One technical question, unpacked by people at different stages of the same journey.</p>
+              <a href="#listen">Hear a session <i aria-hidden="true">↘</i></a>
+            </div>
+          </div>
+        </article>
+
+        <article class="bezel event-card event-card--mock">
+          <span class="event-card__spotlight" aria-hidden="true"><i></i></span>
+          <div class="bezel__core">
+            <div class="event-card__interview" aria-hidden="true">
+              <span class="event-card__interview-speaker event-card__interview-speaker--left">
+                <i class="event-card__interview-person">
+                  <span class="event-card__voice-wave"><i></i><i></i><i></i></span>
+                </i>
+              </span>
+              <span class="event-card__interview-speaker event-card__interview-speaker--right">
+                <i class="event-card__interview-person">
+                  <span class="event-card__voice-wave"><i></i><i></i><i></i></span>
+                </i>
+              </span>
+            </div>
+            <div class="event-card__copy">
+              <span>Now refining</span>
+              <h3>Mock interviews</h3>
+              <p>Practice live. Leave with a useful debrief.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="bezel event-card event-card--reading">
+          <span class="event-card__spotlight" aria-hidden="true"><i></i></span>
+          <div class="bezel__core">
+            <div class="reading-stack" aria-hidden="true">
+              <i><span></span><span></span><span></span><span></span></i>
+              <i><span></span><span></span><span></span><span></span></i>
+              <i><span></span><span></span><span></span><span></span></i>
+            </div>
+            <div class="event-card__copy">
+              <span>Starting next</span>
+              <h3>Blog reading</h3>
+              <p>Read one strong article. Compare notes and keep what matters.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="listen-section section-shell reveal-block">
+      <div id="listen" class="section-heading">
+        <p class="section-kicker">Friday recordings</p>
+        <h2>Press play. Join the circle.</h2>
+        <p>Move between WebSockets, Redis, frontend and networking conversations without leaving the room.</p>
+      </div>
+      <AudioCarousel client:visible />
+    </section>
+
+    <section class="contribute-section section-shell reveal-block">
+      <div class="contribute-section__spectrum" aria-hidden="true">
+        <svg viewBox="0 0 1200 260" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="ctaSignalGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="var(--signal-violet)"></stop>
+              <stop offset="0.34" stop-color="var(--signal-blue)"></stop>
+              <stop offset="0.5" stop-color="var(--signal-accent-bright)"></stop>
+              <stop offset="0.66" stop-color="var(--signal-blue)"></stop>
+              <stop offset="1" stop-color="var(--signal-violet)"></stop>
+            </linearGradient>
+          </defs>
+          <g class="contribute-section__spectrum-lines">
+            <path pathLength="100" d="M0 130 C100 130 120 130 170 130 C220 130 226 92 276 92 C326 92 334 178 390 178 C446 178 456 48 520 48 C566 48 574 212 600 212 C626 212 634 48 680 48 C744 48 754 178 810 178 C866 178 874 92 924 92 C974 92 980 130 1030 130 C1080 130 1100 130 1200 130"></path>
+            <path pathLength="100" d="M0 130 C100 130 120 130 170 130 C220 130 226 92 276 92 C326 92 334 178 390 178 C446 178 456 48 520 48 C566 48 574 212 600 212 C626 212 634 48 680 48 C744 48 754 178 810 178 C866 178 874 92 924 92 C974 92 980 130 1030 130 C1080 130 1100 130 1200 130"></path>
+            <path pathLength="100" d="M0 130 C100 130 120 130 170 130 C220 130 226 92 276 92 C326 92 334 178 390 178 C446 178 456 48 520 48 C566 48 574 212 600 212 C626 212 634 48 680 48 C744 48 754 178 810 178 C866 178 874 92 924 92 C974 92 980 130 1030 130 C1080 130 1100 130 1200 130"></path>
+          </g>
+        </svg>
+      </div>
+      <div id="contribute" class="contribute-section__copy">
+        <h2>Bring the next question.</h2>
+        <p>Join the room, suggest a Friday topic or help turn a community idea into a session.</p>
+        <a class="island-button contribute-section__cta" href={applicationUrl} data-application-link={applicationsPaused ? '' : undefined} aria-haspopup={applicationsPaused ? 'dialog' : undefined}>
+          <span>Join the community</span><i aria-hidden="true">↗</i>
+        </a>
+      </div>
+    </section>
+
+    <footer class="signal-footer">
+      <div class="signal-footer__brand">
+        <img src="/signal/tech-talks-mark-v2.webp" alt="" width="70" height="70" />
+        <div>
+          <strong>TECH TALKS</strong>
+          <p>Beginners connect here, learn together and grow faster.</p>
+        </div>
+      </div>
+      <div class="signal-footer__console" aria-label="Tech Talks sign off">
+        <span>Fri · 10:30 PM IST</span>
+        <div class="signal-footer__dial" aria-hidden="true"><i></i></div>
+        <a class="signal-footer__x" href={site.xUrl} target="_blank" rel="noreferrer">
+          <i aria-hidden="true">X</i><span>Follow {site.handle}</span>
+        </a>
+      </div>
+      <p class="signal-footer__signoff">Mic down. Questions stay open.</p>
     </footer>
   </main>
+
+  <dialog class="application-dialog" data-application-dialog aria-labelledby="application-dialog-title">
+    <div class="application-dialog__panel">
+      <form method="dialog">
+        <button class="application-dialog__close" type="submit" aria-label="Close applications update">×</button>
+      </form>
+      <p class="section-kicker">Community update</p>
+      <h2 id="application-dialog-title">Applications are coming back soon.</h2>
+      <p>We have temporarily halted new applications while we prepare the next community intake. We’ll reopen the same form soon.</p>
+      <div class="application-dialog__actions">
+        <a class="text-link" href={site.xUrl} target="_blank" rel="noreferrer">Follow updates on X</a>
+        <form method="dialog"><button class="island-button" type="submit"><span>Got it</span><i aria-hidden="true">✓</i></button></form>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="signal-grain" aria-hidden="true"></div>
+
+  <script>
+    const root = document.documentElement;
+    const themeToggle = document.querySelector('[data-theme-toggle]');
+    const menuToggle = document.querySelector('[data-menu-toggle]');
+    const mobileMenu = document.querySelector('[data-mobile-menu]');
+    const applicationDialog = document.querySelector('[data-application-dialog]');
+
+    themeToggle?.addEventListener('click', () => {
+      const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      root.dataset.theme = next;
+      localStorage.setItem('tech-talks-theme', next);
+    });
+
+    const closeMenu = () => {
+      menuToggle?.setAttribute('aria-expanded', 'false');
+      menuToggle?.setAttribute('aria-label', 'Open navigation');
+      mobileMenu?.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('menu-open');
+    };
+
+    menuToggle?.addEventListener('click', () => {
+      const open = menuToggle.getAttribute('aria-expanded') !== 'true';
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
+      mobileMenu?.setAttribute('aria-hidden', String(!open));
+      document.body.classList.toggle('menu-open', open);
+    });
+
+    mobileMenu?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+
+    document.querySelectorAll('[data-application-link]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        closeMenu();
+        if (applicationDialog instanceof HTMLDialogElement) applicationDialog.showModal();
+      });
+    });
+
+    applicationDialog?.addEventListener('click', (event) => {
+      if (event.target === applicationDialog && applicationDialog instanceof HTMLDialogElement) applicationDialog.close();
+    });
+
+    if (
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      const cards = Array.from(document.querySelectorAll('.event-card')).flatMap((card) => {
+        const spotlight = card.querySelector('.event-card__spotlight');
+        const light = spotlight?.querySelector('i');
+        return card instanceof HTMLElement && spotlight instanceof HTMLElement && light instanceof HTMLElement
+          ? [{ card, spotlight, light }]
+          : [];
+      });
+      let frame = 0;
+      let pointerX = -999;
+      let pointerY = -999;
+
+      const renderSpotlights = () => {
+        cards.forEach(({ card, spotlight, light }) => {
+          const bounds = card.getBoundingClientRect();
+          const nearby =
+            pointerX >= bounds.left - 24 && pointerX <= bounds.right + 24 &&
+            pointerY >= bounds.top - 24 && pointerY <= bounds.bottom + 24;
+
+          spotlight.style.opacity = nearby ? '1' : '0';
+          if (!nearby) return;
+
+          const x = Math.max(0, Math.min(bounds.width, pointerX - bounds.left));
+          const y = Math.max(0, Math.min(bounds.height, pointerY - bounds.top));
+          light.style.transform = `translate3d(${x - 90}px, ${y - 90}px, 0)`;
+        });
+        frame = 0;
+      };
+
+      document.addEventListener('pointermove', (event) => {
+        pointerX = event.clientX;
+        pointerY = event.clientY;
+        if (!frame) frame = window.requestAnimationFrame(renderSpotlights);
+      });
+    }
+
+    window.addEventListener(
+      'load',
+      () => {
+        if (!window.location.hash) return;
+        document.getElementById(window.location.hash.slice(1))?.scrollIntoView({ block: 'start' });
+      },
+      { once: true },
+    );
+  </script>
 </Base>
-
-<style is:global>
-  :root {
-    --bg: #08090d;
-    --surface: #101218;
-    --text: #eceef4;
-    --muted: #8b8fa3;
-    --border: rgba(255, 255, 255, 0.09);
-    --accent: #ff6b4a;
-    --accent-ink: #08090d;
-    --radius: 16px;
-    --font-display: var(--font-geist);
-    --font-mono: var(--font-geist-mono);
-  }
-  body {
-    background:
-      radial-gradient(120% 80% at 15% -10%, rgba(255, 107, 74, 0.1), transparent 52%),
-      radial-gradient(90% 70% at 90% 0%, rgba(127, 231, 255, 0.06), transparent 55%),
-      var(--bg);
-    color: var(--text);
-  }
-</style>
-
-<style>
-  .gallery { max-width: 1120px; margin: 0 auto; padding: clamp(2rem, 5vw, 5rem) clamp(1.2rem, 4vw, 2.5rem) 3rem; }
-  .gallery__logo { display: inline-block; color: var(--text); margin-bottom: 3rem; }
-  .gallery__eyebrow { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.9rem; }
-  .gallery__title { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; max-width: 16ch; }
-  .gallery__sub { margin-top: 1.1rem; max-width: 60ch; color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
-  .featured { position: relative; display: block; margin: clamp(2.5rem, 6vw, 4rem) 0 0; padding: clamp(1.6rem, 4vw, 2.6rem); border-radius: 20px; border: 1px solid color-mix(in srgb, #ddb472 40%, transparent); background: radial-gradient(120% 120% at 90% -10%, rgba(206,143,164,0.16), transparent 55%), radial-gradient(90% 90% at 0% 110%, rgba(124,108,200,0.18), transparent 55%), linear-gradient(165deg, #181430, #100c22); overflow: hidden; transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s ease; }
-  .featured:hover { transform: translateY(-3px); border-color: #ddb472; }
-  .featured__tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: #ddb472; }
-  .featured__name { font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; letter-spacing: -0.03em; margin: 0.8rem 0 0; }
-  .featured__desc { margin-top: 0.9rem; max-width: 64ch; color: var(--muted); line-height: 1.6; font-size: 1rem; }
-  .featured__go { display: inline-block; margin-top: 1.3rem; font-family: var(--font-mono); font-size: 0.82rem; color: #ddb472; }
-  .featured__go span { display: inline-block; transition: transform 0.2s ease; }
-  .featured:hover .featured__go span { transform: translateX(4px); }
-  .gallery__label { margin: 2.6rem 0 0; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-  .gallery__grid { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1rem; }
-  .card { position: relative; display: flex; flex-direction: column; gap: 0.75rem; height: 100%; padding: 1.6rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease; overflow: hidden; }
-  .card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--card-accent); transform: scaleX(0); transform-origin: left; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-  .card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--card-accent) 55%, transparent); box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8); }
-  .card:hover::before { transform: scaleX(1); }
-  .card__top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-  .card__swatches { display: flex; gap: 5px; }
-  .card__swatches i { width: 26px; height: 26px; border-radius: 7px; border: 1px solid rgba(255, 255, 255, 0.14); }
-  .card__tag { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0.22rem 0.6rem; }
-  .card__tag--min { color: var(--card-accent); border-color: color-mix(in srgb, var(--card-accent) 45%, transparent); }
-  .card__name { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; }
-  .card__thesis { color: var(--muted); line-height: 1.55; font-size: 0.96rem; flex: 1; }
-  .card__go { font-family: var(--font-mono); font-size: 0.8rem; color: var(--card-accent); letter-spacing: 0.02em; }
-  .card__go span { transition: transform 0.2s ease; display: inline-block; }
-  .card:hover .card__go span { transform: translateX(4px); }
-  .gallery__foot { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
-  .gallery__foot a:hover { color: var(--accent); }
-</style>
