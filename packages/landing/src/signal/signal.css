@@ -859,36 +859,12 @@ button {
 .crew-orbit__field i:nth-child(3) { --orbit-start: -24deg; inset: 21%; opacity: 0.24; }
 .crew-orbit__field i:nth-child(4) { display: none; }
 
-@keyframes crew-members-rotate {
-  to { transform: rotate(360deg); }
-}
-
-@keyframes crew-member-upright {
-  from { transform: translate3d(-50%, -50%, 0) rotate(0); }
-  to { transform: translate3d(-50%, -50%, 0) rotate(-360deg); }
-}
-
-@keyframes crew-member-depth {
-  0%, 100% { opacity: 0.68; transform: scale(0.88); }
-  25%, 75% { opacity: 0.86; transform: scale(0.97); }
-  50% { opacity: 1; transform: scale(1.06); }
-}
-
-@keyframes crew-member-layer {
-  0%, 100% { z-index: 5; }
-  25%, 75% { z-index: 9; }
-  50% { z-index: 14; }
-}
-
 @keyframes crew-core-ripple {
   0% { opacity: 0; transform: scale(0.9); }
   14% { opacity: 0.44; }
   100% { opacity: 0; transform: scale(3.4); }
 }
 
-.crew-orbit:has(.crew-member:is(:hover, :focus-within)) .crew-orbit__members,
-.crew-orbit:has(.crew-member:is(:hover, :focus-within)) .crew-member,
-.crew-orbit:has(.crew-member:is(:hover, :focus-within)) .crew-member__presence,
 .crew-orbit:has(.crew-member:is(:hover, :focus-within)) .crew-orbit__core::before {
   animation-play-state: paused;
 }
@@ -940,30 +916,28 @@ button {
   position: absolute;
   inset: 0;
   z-index: 6;
-  transform-origin: 50% 50%;
-  animation: crew-members-rotate 52s linear infinite;
+  perspective: 1000px;
 }
 
 .crew-member {
   position: absolute;
-  left: var(--member-left);
-  top: var(--member-top);
-  z-index: 8;
+  left: 50%;
+  top: 50%;
+  z-index: var(--member-layer, 8);
   display: grid;
   justify-items: center;
   width: 116px;
   border-radius: 18px;
   outline: none;
-  animation: crew-member-upright 52s linear infinite, crew-member-layer 52s linear infinite;
-  animation-delay: 0s, calc(var(--member-index) * -6.5s);
+  cursor: pointer;
+  opacity: var(--member-opacity, 1);
+  transform: translate3d(calc(-50% + var(--member-x, 0px)), calc(-50% + var(--member-y, 0px)), 0) scale(var(--member-scale, 1));
+  transition: transform 100ms linear, opacity 180ms var(--ease-out);
 }
 
 .crew-member__presence {
   display: grid;
   justify-items: center;
-  transform-origin: center;
-  animation: crew-member-depth 52s linear infinite;
-  animation-delay: calc(var(--member-index) * -6.5s);
 }
 
 .crew-member__portrait {
@@ -1021,6 +995,7 @@ button {
   background: var(--signal-surface-strong);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--signal-ink) 7%, transparent), var(--signal-shadow);
   opacity: 0;
+  pointer-events: none;
   visibility: hidden;
   transform: translate3d(var(--popover-x), var(--popover-y), 0) scale(0.97);
   transform-origin: 50% 0;
@@ -1119,8 +1094,34 @@ button {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal-accent) 42%, transparent), var(--signal-shadow-soft);
 }
 
-.crew-member:is(:hover, :focus-within) {
-  z-index: 30;
+.crew-member.is-active {
+  z-index: 500 !important;
+}
+
+.crew-member.is-active .crew-member__portrait {
+  transform: translate3d(0, -3px, 0);
+}
+
+.crew-member.is-active .crew-member__portrait img {
+  opacity: 0.14;
+  transform: scale(1.08);
+}
+
+.crew-member.is-active .crew-member__role-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.crew-member.is-active .crew-member__popover {
+  opacity: 1;
+  pointer-events: none;
+  visibility: visible;
+  transform: translate3d(var(--popover-x), 0, 0) scale(1);
+  transition-delay: 0ms;
+}
+
+.crew-member.is-active .crew-member__socials a {
+  pointer-events: auto;
 }
 
 .bezel {
@@ -1307,23 +1308,41 @@ button {
 
 .event-card__interview {
   position: relative;
-  display: grid;
-  grid-template-columns: 32px minmax(38px, 1fr) 32px;
+  display: flex;
   align-items: center;
+  justify-content: center;
   justify-self: center;
   align-self: stretch;
-  gap: 0.45rem;
-  width: min(100%, 156px);
+  gap: 2.9rem;
+  width: min(100%, 196px);
   min-height: 0;
   padding: 1rem 0.75rem;
   overflow: hidden;
 }
 
+.event-card__interview::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 26%;
+  bottom: 26%;
+  width: 1px;
+  background: linear-gradient(transparent, color-mix(in srgb, var(--signal-ink) 13%, transparent), transparent);
+}
+
+.event-card__interview-speaker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 92px;
+}
+
 .event-card__interview-person {
   position: relative;
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: 1.5px solid color-mix(in srgb, var(--signal-blue) 72%, var(--signal-ink));
   border-radius: 50%;
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--signal-blue) 8%, transparent);
@@ -1333,87 +1352,87 @@ button {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -17px;
-  width: 44px;
-  height: 22px;
+  bottom: -19px;
+  width: 46px;
+  height: 23px;
   border: 1.5px solid color-mix(in srgb, var(--signal-blue) 72%, var(--signal-ink));
   border-bottom: 0;
   border-radius: 999px 999px 0 0;
   transform: translateX(-50%);
 }
 
-.event-card__interview-turn {
-  position: relative;
-  display: block;
+.event-card__voice-wave {
+  position: absolute;
+  top: 50%;
+  width: 1px;
   height: 1px;
-  background: color-mix(in srgb, var(--signal-blue) 34%, transparent);
+  pointer-events: none;
 }
 
-.event-card__interview-turn::before,
-.event-card__interview-turn::after {
-  content: "";
+.event-card__interview-speaker--left .event-card__voice-wave { left: calc(100% + 2px); }
+.event-card__interview-speaker--right .event-card__voice-wave { right: calc(100% + 2px); }
+
+.event-card__voice-wave i {
+  --wave-size: 14px;
+  --wave-opacity: 0.9;
+  --wave-delay: 0ms;
+  --wave-mid: 4px;
+  --wave-out: 10px;
+  --wave-exit: 16px;
   position: absolute;
-  top: 50%;
-  width: 4px;
-  height: 4px;
+  top: 0;
+  width: var(--wave-size);
+  height: var(--wave-size);
+  border: 2px solid transparent;
   border-radius: 50%;
-  background: var(--signal-blue);
-  transform: translateY(-50%);
+  opacity: 0;
+  transform-origin: center;
 }
 
-.event-card__interview-turn::before { left: 0; }
-.event-card__interview-turn::after { right: 0; }
+.event-card__voice-wave i:nth-child(2) {
+  --wave-size: 26px;
+  --wave-opacity: 0.65;
+  --wave-delay: 110ms;
+  --wave-mid: 7px;
+  --wave-out: 18px;
+  --wave-exit: 27px;
+}
 
-.event-card__interview-turn b {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 18px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--signal-accent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--signal-accent) 48%, transparent);
+.event-card__voice-wave i:nth-child(3) {
+  --wave-size: 38px;
+  --wave-opacity: 0.42;
+  --wave-delay: 220ms;
+  --wave-mid: 11px;
+  --wave-out: 28px;
+  --wave-exit: 40px;
+}
+
+.event-card__interview-speaker--left .event-card__voice-wave i {
+  left: calc(0px - var(--wave-size));
+  border-right-color: var(--signal-blue);
   transform: translate3d(0, -50%, 0);
-  animation: interview-turn 3.8s var(--ease-in-out) infinite alternate;
+  animation: interview-voice-left 4.8s var(--ease-out) var(--wave-delay) infinite;
 }
 
-.event-card__interview-prompt,
-.event-card__interview-response {
-  position: absolute;
-  width: 44px;
-  height: 24px;
-  border: 1px solid color-mix(in srgb, var(--signal-ink) 18%, transparent);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--signal-surface-strong) 88%, transparent);
-  opacity: 0.28;
+.event-card__interview-speaker--right .event-card__voice-wave i {
+  right: calc(0px - var(--wave-size));
+  border-left-color: var(--signal-blue);
+  transform: translate3d(0, -50%, 0);
+  animation: interview-voice-right 4.8s var(--ease-out) var(--wave-delay) infinite;
 }
 
-.event-card__interview-prompt {
-  left: 0.25rem;
-  top: 18%;
-  animation: interview-prompt 4.8s var(--ease-out) infinite;
+@keyframes interview-voice-left {
+  0%, 8%, 50%, 100% { opacity: 0; transform: translate3d(0, -50%, 0); }
+  14% { opacity: 0.3; transform: translate3d(var(--wave-mid), -50%, 0); }
+  23%, 35% { opacity: var(--wave-opacity); transform: translate3d(var(--wave-out), -50%, 0); }
+  44% { opacity: 0; transform: translate3d(var(--wave-exit), -50%, 0); }
 }
 
-.event-card__interview-response {
-  right: 0.25rem;
-  bottom: 17%;
-  animation: interview-response 4.8s var(--ease-out) -2.4s infinite;
-}
-
-@keyframes interview-turn {
-  to { transform: translate3d(calc(100% + 30px), -50%, 0); }
-}
-
-@keyframes interview-prompt {
-  0%, 18%, 100% { opacity: 0.24; transform: translate3d(0, 4px, 0) scale(0.96); }
-  28%, 58% { opacity: 0.86; transform: translate3d(0, 0, 0) scale(1); }
-  72% { opacity: 0.34; transform: translate3d(0, -2px, 0) scale(0.985); }
-}
-
-@keyframes interview-response {
-  0%, 18%, 100% { opacity: 0.24; transform: translate3d(0, 4px, 0) scale(0.96); }
-  28%, 58% { opacity: 0.86; transform: translate3d(0, 0, 0) scale(1); }
-  72% { opacity: 0.34; transform: translate3d(0, -2px, 0) scale(0.985); }
+@keyframes interview-voice-right {
+  0%, 50%, 58%, 100% { opacity: 0; transform: translate3d(0, -50%, 0); }
+  64% { opacity: 0.3; transform: translate3d(calc(0px - var(--wave-mid)), -50%, 0); }
+  73%, 85% { opacity: var(--wave-opacity); transform: translate3d(calc(0px - var(--wave-out)), -50%, 0); }
+  94% { opacity: 0; transform: translate3d(calc(0px - var(--wave-exit)), -50%, 0); }
 }
 
 .event-card--reading .bezel__core {
@@ -2111,19 +2130,6 @@ button {
   .island-button:hover { transform: translate3d(0, -2px, 0); background: var(--signal-accent-bright); }
   .island-button:hover i { transform: translate3d(2px, -2px, 0) scale(1.04); }
   .text-link:hover::after { transform: scaleX(1); }
-  .crew-member:hover .crew-member__portrait,
-  .crew-member:focus-within .crew-member__portrait { transform: translate3d(0, -3px, 0); }
-  .crew-member:hover .crew-member__portrait img,
-  .crew-member:focus-within .crew-member__portrait img { opacity: 0.14; transform: scale(1.08); }
-  .crew-member:hover .crew-member__role-icon,
-  .crew-member:focus-within .crew-member__role-icon { opacity: 1; transform: scale(1); }
-  .crew-member:hover .crew-member__popover,
-  .crew-member:focus-within .crew-member__popover {
-    opacity: 1;
-    visibility: visible;
-    transform: translate3d(var(--popover-x), 0, 0) scale(1);
-    transition-delay: 0ms;
-  }
   .crew-member__socials a:hover { transform: translate3d(0, -2px, 0); background: var(--signal-ink); color: var(--signal-bg); }
   .event-card__copy a:hover i { transform: translate3d(3px, 3px, 0); }
   .audio-stage__clips button:hover { color: var(--signal-ink); }
@@ -2202,6 +2208,7 @@ button {
     background: transparent;
     box-shadow: none;
     opacity: 1;
+    pointer-events: auto;
     visibility: visible;
     transform: none;
   }
@@ -2279,9 +2286,7 @@ button {
   .crew-member,
   .crew-member__presence,
   .crew-orbit__core::before,
-  .event-card__interview-turn b,
-  .event-card__interview-prompt,
-  .event-card__interview-response,
+  .event-card__voice-wave i,
   .reading-stack span,
   .audio-stage__mesh i,
   .contribute-section__spectrum path,
@@ -2296,6 +2301,9 @@ button {
   }
   .reading-stack span { opacity: 0.65; transform: scaleX(1); }
   .crew-orbit__field i:first-child { opacity: 0.58; transform: rotate(-8deg); }
+  .event-card__voice-wave i { opacity: 0.42; }
+  .event-card__interview-speaker--left .event-card__voice-wave i,
+  .event-card__interview-speaker--right .event-card__voice-wave i { transform: translate3d(0, -50%, 0); }
 
   .mobile-menu {
     transform: none;
@@ -2327,15 +2335,13 @@ button {
   .island-button:hover,
   .island-button:active,
   .island-button:hover i,
-  .crew-member:hover .crew-member__portrait,
-  .crew-member:focus-within .crew-member__portrait,
+  .crew-member.is-active .crew-member__portrait,
   .crew-member__socials a:hover,
   .event-card__copy a:hover i,
   .audio-stage__clips button:active {
     transform: none;
   }
-  .crew-member:hover .crew-member__portrait img,
-  .crew-member:focus-within .crew-member__portrait img {
+  .crew-member.is-active .crew-member__portrait img {
     transform: scale(1.02);
   }
   .audio-stage__play:hover,
