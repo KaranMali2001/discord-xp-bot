@@ -1,0 +1,189 @@
+.spotlight-wrap {
+  min-height: 100dvh;
+  background: #030304;
+  color: white;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+
+/* ── Light mode ── */
+.spotlight-wrap[data-mode="light"] {
+  background: #f0f2f5;
+  color: #0f172a;
+}
+
+/* controls row */
+.spotlight-controls {
+  position: fixed;
+  z-index: 10;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.spotlight-controls select,
+.spotlight-mode-btn {
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #0f1014;
+  color: #f6f7fb;
+  padding: 0 12px;
+  outline: none;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.spotlight-controls select {
+  min-width: 150px;
+}
+
+.spotlight-wrap[data-mode="light"] .spotlight-controls select,
+.spotlight-wrap[data-mode="light"] .spotlight-mode-btn {
+  background: white;
+  color: #0f172a;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.spotlight-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 4vw, 40px);
+  padding: 24px;
+  cursor: crosshair;
+}
+
+/* ── Card ── */
+.spotlight-card {
+  --base: 210;
+  --spread: 120;
+  --x: 0;
+  --y: 0;
+  --xp: 0;
+  --radius: 16;
+  --border: 3;
+  --size: 220;
+  --hue: calc(var(--base) + (var(--xp) * var(--spread)));
+  position: relative;
+  width: 256px;
+  height: 320px;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+  border: calc(var(--border) * 1px) solid rgba(255, 255, 255, 0.08);
+  border-radius: calc(var(--radius) * 1px);
+  background:
+    radial-gradient(
+      calc(var(--size) * 1px) calc(var(--size) * 1px) at calc(var(--x) * 1px) calc(var(--y) * 1px),
+      hsl(var(--hue) 100% 66% / 0.16),
+      transparent 68%
+    ),
+    rgba(255, 255, 255, 0.055);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.42);
+  isolation: isolate;
+  transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
+}
+
+.spotlight-wrap[data-mode="light"] .spotlight-card {
+  border-color: rgba(0, 0, 0, 0.07);
+  background:
+    radial-gradient(
+      calc(var(--size) * 1px) calc(var(--size) * 1px) at calc(var(--x) * 1px) calc(var(--y) * 1px),
+      hsl(var(--hue) 100% 60% / 0.14),
+      transparent 68%
+    ),
+    rgba(255, 255, 255, 0.85);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+}
+
+.spotlight-card::before,
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 3px;
+  background: radial-gradient(
+    160px 160px at calc(var(--x) * 1px) calc(var(--y) * 1px),
+    hsl(var(--hue) 100% 62% / 0.96),
+    transparent 72%
+  );
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.9;
+}
+
+.spotlight-card::after {
+  filter: blur(18px);
+  opacity: 0.55;
+}
+
+.spotlight-wrap[data-mode="light"] .spotlight-card::before {
+  opacity: 0.6;
+}
+
+.spotlight-wrap[data-mode="light"] .spotlight-card::after {
+  opacity: 0.3;
+}
+
+/* ── Orb ── */
+.spotlight-orb {
+  margin: 42px auto 0;
+  width: 114px;
+  height: 114px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.95), transparent 0 14%, transparent 15%),
+    radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--hue) 95% 62%),
+      hsl(calc(var(--hue) + 60) 85% 45%) 52%,
+      transparent 68%
+    );
+  box-shadow: 0 0 44px hsl(var(--hue) 95% 55% / 0.5);
+}
+
+/* ── Caption ── */
+.spotlight-caption {
+  padding: 22px;
+}
+
+.spotlight-caption h2 {
+  margin: 0 0 8px;
+  font-size: 23px;
+  letter-spacing: -0.04em;
+  color: white;
+  transition: color 0.3s;
+}
+
+.spotlight-wrap[data-mode="light"] .spotlight-caption h2 {
+  color: #0f172a;
+}
+
+.spotlight-caption p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 13px;
+  line-height: 1.55;
+  transition: color 0.3s;
+}
+
+.spotlight-wrap[data-mode="light"] .spotlight-caption p {
+  color: rgba(15, 23, 42, 0.6);
+}
+
+@media (max-width: 860px) {
+  .spotlight-stage {
+    flex-direction: column;
+    padding-top: 72px;
+  }
+}

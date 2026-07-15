@@ -1,0 +1,64 @@
+---
+// Placeholder crew "photo": a duotone tile with a monoline portrait silhouette
+// and initials. Fully offline, on-brand, and obviously swappable for real headshots.
+interface Props {
+  name: string;
+  initials: string;
+  tint?: string;
+  ratio?: number; // width/height; 1 = square, 0.8 = portrait
+}
+const { name, initials, tint = 'var(--accent)', ratio = 1 } = Astro.props;
+---
+<div class="avatar" style={`--tint:${tint}; --ratio:${ratio};`} role="img" aria-label={`${name} — placeholder portrait`}>
+  <svg class="avatar__art" viewBox="0 0 100 100" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+    <circle class="avatar__head" cx="50" cy="40" r="16" />
+    <path class="avatar__body" d="M22 100 v-8 a28 28 0 0 1 56 0 v8 Z" />
+  </svg>
+  <span class="avatar__initials">{initials}</span>
+  <span class="avatar__grain" aria-hidden="true"></span>
+</div>
+
+<style>
+  .avatar {
+    position: relative;
+    width: 100%;
+    aspect-ratio: var(--ratio) / 1;
+    border-radius: var(--avatar-radius, 14px);
+    overflow: hidden;
+    background:
+      radial-gradient(120% 120% at 30% 0%, color-mix(in srgb, var(--tint) 42%, transparent), transparent 60%),
+      linear-gradient(160deg, color-mix(in srgb, var(--tint) 22%, var(--surface, #16182a)), var(--surface, #16182a));
+    isolation: isolate;
+  }
+  .avatar__art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .avatar__head,
+  .avatar__body {
+    fill: color-mix(in srgb, var(--tint) 55%, #ffffff 12%);
+    opacity: 0.5;
+  }
+  .avatar__initials {
+    position: absolute;
+    left: 0.7rem;
+    bottom: 0.55rem;
+    font-family: var(--font-mono, var(--font-geist-mono));
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--text, #fff) 85%, transparent);
+    z-index: 2;
+  }
+  .avatar__grain {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+</style>

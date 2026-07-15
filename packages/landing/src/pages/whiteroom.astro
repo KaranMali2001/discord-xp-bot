@@ -1,0 +1,526 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Avatar from '../components/Avatar.astro';
+import SessionShot from '../components/SessionShot.astro';
+import SignupForm from '../components/SignupForm.astro';
+import { site, crew, sessions, nextSession } from '../data/site';
+
+const steps = [
+  { n: '01', t: 'Book a slot', d: 'Pick an open time. No résumé screen, no gatekeeping.' },
+  { n: '02', t: 'Sit the round', d: '45 minutes of real pressure — DSA or system design with someone who has run the loop.' },
+  { n: '03', t: 'Get the notes', d: 'Written feedback the same weekend, plus a recording of your own thinking.' },
+];
+---
+
+<Base title="Whiteroom">
+  <a href="/" class="back">&larr; all concepts</a>
+
+  <main id="hero" class="wr">
+    <div class="wrap">
+      <!-- HERO -->
+      <section class="hero">
+        <header class="hero__nav">
+          <Logo size={22} />
+          <span class="hero__meta">Est. {site.since}</span>
+        </header>
+
+        <p class="eyebrow">{site.cadence}</p>
+        <h1 class="hero__title">We talk code, every Friday.</h1>
+        <p class="hero__sub">{site.blurb}</p>
+
+        <div class="hero__actions">
+          <a href="#join" class="btn">Subscribe</a>
+          <a href="#sessions" class="link">Read the changelog &rarr;</a>
+        </div>
+
+        <p class="hero__next">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="hero__next-label">Next</span>
+          EP.{nextSession.ep} — {nextSession.title}
+          <time datetime={nextSession.iso}>{nextSession.date}</time>
+        </p>
+      </section>
+
+      <!-- CREW -->
+      <section id="crew" class="block">
+        <div class="block__head">
+          <span class="num">01</span>
+          <p class="eyebrow">Crew</p>
+        </div>
+        <h2 class="block__h">A small team runs the room.</h2>
+        <ul class="crew">
+          {crew.map((m) => (
+            <li class="crew__row">
+              <span class="crew__pic"><Avatar name={m.name} initials={m.initials} tint="var(--accent)" ratio={1} /></span>
+              <span class="crew__name">{m.name}</span>
+              <span class="crew__role">{m.role}</span>
+              <span class="crew__blurb">{m.blurb}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- FRIDAY SESSIONS -->
+      <section id="sessions" class="block">
+        <div class="block__head">
+          <span class="num">02</span>
+          <p class="eyebrow">Sessions</p>
+        </div>
+        <h2 class="block__h">One topic. Forty-five minutes. Every Friday.</h2>
+        <p class="block__lead">
+          Live and unscripted — internals, systems, the real work. The recording lands by Monday.
+        </p>
+        <div class="table" role="table" aria-label="Recent Friday sessions">
+          <div class="table__head" role="row">
+            <span role="columnheader">Ep.</span>
+            <span role="columnheader">Session</span>
+            <span role="columnheader">Topic</span>
+            <span role="columnheader">Date</span>
+          </div>
+          {sessions.map((s, i) => (
+            <div class:list={['table__row', i === 0 && 'is-next']} role="row">
+              <span class="table__ep" role="cell">{s.ep}</span>
+              <span class="table__title" role="cell">
+                {i === 0 && <span class="dot" aria-hidden="true"></span>}{s.title}
+              </span>
+              <span class="table__topic" role="cell">{s.topic}</span>
+              <time class="table__date" datetime={s.iso} role="cell">{s.date}</time>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- MOCK -->
+      <section id="mock" class="block">
+        <div class="block__head">
+          <span class="num">03</span>
+          <p class="eyebrow">Mock interviews</p>
+        </div>
+        <h2 class="block__h">Make the real interview feel like a rerun.</h2>
+        <ol class="steps">
+          {steps.map((s) => (
+            <li class="steps__row">
+              <span class="steps__n">{s.n}</span>
+              <div class="steps__body">
+                <h3 class="steps__t">{s.t}</h3>
+                <p class="steps__d">{s.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <!-- ARCHIVE -->
+      <section id="archive" class="block">
+        <div class="block__head">
+          <span class="num">04</span>
+          <p class="eyebrow">Archive</p>
+        </div>
+        <h2 class="block__h">A recent night, mid-session.</h2>
+        <figure class="proof">
+          <div class="proof__frame"><SessionShot /></div>
+          <figcaption class="proof__cap">Placeholder — EP.{nextSession.ep}, {nextSession.title}.</figcaption>
+        </figure>
+      </section>
+
+      <!-- JOIN -->
+      <section id="join" class="block block--last">
+        <div class="block__head">
+          <span class="num">05</span>
+          <p class="eyebrow">Join</p>
+        </div>
+        <h2 class="block__h">One reminder before each Friday.</h2>
+        <p class="block__lead">No feed, no noise. Just the next session, in your inbox.</p>
+        <SignupForm cta="Subscribe" />
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__wrap">
+      <Logo size={20} />
+      <span class="foot__meta">{site.cadence}</span>
+      <a href={site.xUrl} class="foot__link">{site.handle}</a>
+    </div>
+  </footer>
+</Base>
+
+<style is:global>
+  :root {
+    --bg: #FCFCFB;
+    --surface: #FFFFFF;
+    --surface-2: #F4F4F2;
+    --text: #17171A;
+    --muted: #75757E;
+    --border: #E6E6E2;
+    --accent: #17171A;
+    --accent-2: #75757E;
+    --accent-ink: #FFFFFF;
+    --live: #FF4D2E;
+    --radius: 8px;
+    --font-display: var(--font-geist);
+    --font-mono: var(--font-geist-mono);
+  }
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    background-image: radial-gradient(color-mix(in srgb, var(--text) 6%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: -1px -1px;
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .block, .hero {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 14%;
+      }
+      @keyframes rise { to { opacity: 1; transform: none; } }
+    }
+  }
+</style>
+
+<style>
+  .back {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 80;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.7rem;
+    border-radius: 999px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .back:hover { color: var(--text); border-color: var(--muted); }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 clamp(1.2rem, 5vw, 2.5rem);
+  }
+
+  /* shared label / type primitives */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
+  .dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--live);
+    flex: none;
+  }
+
+  /* HERO */
+  .hero {
+    padding: clamp(3.5rem, 9vw, 6.5rem) 0 clamp(4rem, 9vw, 7rem);
+  }
+  .hero__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: clamp(3rem, 10vw, 6rem);
+  }
+  .hero__meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .hero__title {
+    margin-top: 1.2rem;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+    max-width: 18ch;
+  }
+  .hero__sub {
+    margin-top: 1.4rem;
+    max-width: 62ch;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+  .hero__actions {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 0.62rem 1.2rem;
+    transition: opacity 0.2s ease;
+  }
+  .btn:hover { opacity: 0.85; }
+  .link {
+    font-size: 0.92rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1px;
+    transition: border-color 0.2s ease;
+  }
+  .link:hover { border-color: var(--text); }
+  .hero__next {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    margin-top: 2.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+  .hero__next-label {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .hero__next time { color: var(--muted); }
+
+  /* SECTION BLOCKS */
+  .block {
+    padding: clamp(4rem, 9vw, 7rem) 0;
+    border-top: 1px solid var(--border);
+  }
+  .block--last { border-bottom: 1px solid var(--border); }
+  .block__head {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.4rem;
+  }
+  .block__h {
+    font-size: clamp(1.6rem, 3.2vw, 2.2rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    max-width: 22ch;
+  }
+  .block__lead {
+    margin-top: 1rem;
+    max-width: 62ch;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  /* CREW — hairline list */
+  .crew {
+    list-style: none;
+    padding: 0;
+    margin: 2.6rem 0 0;
+  }
+  .crew__row {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    grid-template-areas:
+      'pic name'
+      'pic role'
+      'blurb blurb';
+    column-gap: 1.2rem;
+    row-gap: 0.2rem;
+    align-items: baseline;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .crew__row:first-child { border-top: none; padding-top: 0; }
+  .crew__pic {
+    grid-area: pic;
+    width: 52px;
+    --avatar-radius: var(--radius);
+    align-self: center;
+  }
+  .crew__name {
+    grid-area: name;
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .crew__role {
+    grid-area: role;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .crew__blurb {
+    grid-area: blurb;
+    margin-top: 0.6rem;
+    color: var(--muted);
+    line-height: 1.55;
+    max-width: 62ch;
+  }
+  @media (min-width: 720px) {
+    .crew__row {
+      grid-template-columns: 56px minmax(0, 15rem) 1fr;
+      grid-template-areas:
+        'pic name blurb'
+        'pic role blurb';
+      column-gap: 1.6rem;
+      align-items: center;
+    }
+    .crew__pic { width: 56px; }
+    .crew__blurb { margin-top: 0; align-self: center; }
+  }
+
+  /* SESSIONS — changelog table */
+  .table {
+    margin-top: 2.6rem;
+    font-size: 0.95rem;
+  }
+  .table__head,
+  .table__row {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr 8rem 5rem;
+    gap: 1rem;
+    align-items: baseline;
+  }
+  .table__head {
+    padding-bottom: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .table__row {
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+    transition: background 0.2s ease;
+  }
+  .table__row:hover { background: var(--surface-2); }
+  .table__ep {
+    font-family: var(--font-mono);
+    color: var(--muted);
+  }
+  .table__title {
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .table__topic {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .table__date {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-align: right;
+  }
+  @media (max-width: 640px) {
+    .table__head { display: none; }
+    .table__row {
+      grid-template-columns: 2.6rem 1fr auto;
+    }
+    .table__topic { display: none; }
+  }
+
+  /* MOCK — restrained numbered list */
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 2.6rem 0 0;
+  }
+  .steps__row {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: 1rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .steps__row:first-child { border-top: none; padding-top: 0; }
+  .steps__n {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .steps__t {
+    font-size: 1.1rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .steps__d {
+    margin-top: 0.4rem;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 62ch;
+  }
+
+  /* ARCHIVE */
+  .proof { margin: 2.6rem 0 0; }
+  .proof__frame {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    /* keep the archive calm: no color inside the frame, only ink + gray */
+    --surface: var(--surface-2);
+    --accent: var(--accent-2);
+    --live: var(--accent-2);
+  }
+  .proof__cap {
+    margin-top: 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  /* FOOTER */
+  .foot {
+    padding: 2.5rem 0 5rem;
+  }
+  .foot__wrap {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+  }
+  .foot__meta,
+  .foot__link {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .foot__link { margin-left: auto; transition: color 0.2s ease; }
+  .foot__link:hover { color: var(--text); }
+</style>

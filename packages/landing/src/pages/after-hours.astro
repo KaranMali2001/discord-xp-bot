@@ -1,0 +1,246 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Avatar from '../components/Avatar.astro';
+import Waveform from '../components/Waveform.astro';
+import SessionShot from '../components/SessionShot.astro';
+import SignupForm from '../components/SignupForm.astro';
+import { site, crew, sessions, nextSession } from '../data/site';
+
+const steps = [
+  { n: '01', t: 'Book a slot', d: 'Grab an open time on the sheet. No résumé screen, no gatekeeping.' },
+  { n: '02', t: 'Sit the round', d: '45 minutes of real pressure — DSA or system design with someone who has run the loop.' },
+  { n: '03', t: 'Get the tape', d: 'Written notes the same weekend, plus the recording of your own thinking.' },
+];
+---
+
+<Base title="After Hours">
+  <a href="/" class="back">← all concepts</a>
+
+  <!-- persistent now-playing bar -->
+  <aside class="nowbar">
+    <span class="nowbar__on"><span class="nowbar__dot"></span>ON AIR</span>
+    <Waveform bars={16} class="nowbar__wave" />
+    <span class="nowbar__title">EP.{nextSession.ep} — {nextSession.title}</span>
+    <a href="#join" class="nowbar__cta">tune in</a>
+  </aside>
+
+  <main id="top" class="ah">
+    <!-- HERO: centered radio dial -->
+    <section class="hero" data-glow>
+      <header class="hero__nav">
+        <Logo size={26} />
+        <span class="hero__freq">{site.station}</span>
+      </header>
+      <div class="hero__center">
+        <p class="hero__kick">broadcasting every friday night · since {site.since}</p>
+        <h1 class="hero__title">The mic's warm.<br /><em>Pull up a chair.</em></h1>
+        <p class="hero__sub">{site.blurb}</p>
+        <div class="hero__dial" aria-hidden="true">
+          <span class="hero__dialline"></span>
+          <span class="hero__dialknob"></span>
+        </div>
+      </div>
+      <div class="hero__marquee" aria-hidden="true">
+        <div class="hero__mtrack">
+          {[...sessions, ...sessions].map((s) => (
+            <span>{s.title}<b>·</b></span>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <div class="ah__wrap">
+      <!-- CREW -->
+      <section id="crew" class="block">
+        <p class="eyebrow">the voices</p>
+        <h2 class="block__h">A small crew keeps the frequency alive.</h2>
+        <ul class="voices">
+          {crew.map((m) => (
+            <li class="voice">
+              <span class="voice__pic"><Avatar name={m.name} initials={m.initials} tint={m.tint} ratio={1} /></span>
+              <span class="voice__on">on air</span>
+              <div>
+                <h3 class="voice__name">{m.name}</h3>
+                <p class="voice__role">{m.role}</p>
+                <p class="voice__blurb">{m.blurb}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- FRIDAY SESSIONS -->
+      <section id="sessions" class="block">
+        <p class="eyebrow">the show</p>
+        <h2 class="block__h">One topic. Forty-five minutes. <em>Every Friday.</em></h2>
+        <p class="block__lead">
+          Live and unscripted — internals, systems, the messy real stuff. Come with questions.
+          The recording lands by Monday so nothing said at night gets lost.
+        </p>
+        <ul class="setlist">
+          {sessions.map((s, i) => (
+            <li class:list={['setlist__row', i === 0 && 'is-next']}>
+              <span class="setlist__ep">{s.ep}</span>
+              <span class="setlist__title">{s.title}</span>
+              <span class="setlist__topic">{s.topic}</span>
+              <time class="setlist__date" datetime={s.iso}>{i === 0 ? 'up next' : s.date}</time>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- MOCK -->
+      <section id="mock" class="block">
+        <p class="eyebrow">the hot seat</p>
+        <h2 class="block__h">Make the real interview feel like a rerun.</h2>
+        <ol class="steps">
+          {steps.map((s) => (
+            <li><span class="steps__n">{s.n}</span><div><h3>{s.t}</h3><p>{s.d}</p></div></li>
+          ))}
+        </ol>
+      </section>
+
+      <!-- ARCHIVE PROOF -->
+      <section id="archive" class="block">
+        <p class="eyebrow">from the booth</p>
+        <h2 class="block__h">A recent night, mid-flight.</h2>
+        <div class="proof"><SessionShot /><p class="proof__cap">Placeholder screenshot.</p></div>
+      </section>
+
+      <!-- JOIN -->
+      <section id="join" class="join">
+        <p class="eyebrow"><span class="nowbar__dot"></span>tune in</p>
+        <h2 class="join__h">Don't miss a Friday.</h2>
+        <p class="block__lead">One quiet reminder before we go live. That's the whole deal.</p>
+        <SignupForm cta="Tune in" />
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot"><Logo size={22} /><span>{site.cadence}</span><a href={site.xUrl}>{site.handle}</a></footer>
+  <div class="grain" aria-hidden="true"></div>
+</Base>
+
+<style is:global>
+  :root {
+    --bg: #0a0713;
+    --surface: #150e22;
+    --surface-2: #1d1330;
+    --text: #f6efe8;
+    --muted: #9a8ba6;
+    --border: rgba(255, 240, 230, 0.1);
+    --accent: #ff6b4a;
+    --accent-2: #f0567c;
+    --accent-ink: #1a0d08;
+    --live: #f0567c;
+    --radius: 16px;
+    --font-display: var(--font-geist);
+    --font-mono: var(--font-geist-mono);
+  }
+  body { background: var(--bg); color: var(--text); }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .block, .join { opacity: 0; transform: translateY(22px); animation: rise linear both; animation-timeline: view(); animation-range: entry 0% cover 20%; }
+      @keyframes rise { to { opacity: 1; transform: none; } }
+    }
+  }
+</style>
+
+<style>
+  .back { position: fixed; left: 1rem; bottom: 1rem; z-index: 80; font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--border); padding: 0.4rem 0.7rem; border-radius: 999px; }
+  .back:hover { color: var(--accent); }
+
+  /* PERSISTENT NOW-PLAYING BAR */
+  .nowbar { position: fixed; top: 0; left: 0; right: 0; z-index: 70; display: flex; align-items: center; gap: 0.9rem; padding: 0.55rem clamp(1rem, 4vw, 2rem); background: color-mix(in srgb, var(--surface) 78%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.74rem; }
+  .nowbar__on { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--live); letter-spacing: 0.12em; font-weight: 600; }
+  .nowbar__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 12px 2px color-mix(in srgb, var(--live) 70%, transparent); animation: throb 1.8s ease-in-out infinite; }
+  @keyframes throb { 50% { opacity: 0.35; } }
+  .nowbar__wave { width: 60px; --wave-h: 16px; --wave-color: color-mix(in srgb, var(--accent) 80%, transparent); }
+  .nowbar__title { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nowbar__cta { margin-left: auto; color: var(--accent-ink); background: var(--accent); padding: 0.35rem 0.9rem; border-radius: 999px; letter-spacing: 0.06em; }
+  .nowbar__cta:hover { filter: brightness(1.1); }
+  @media (max-width: 620px) { .nowbar__wave, .nowbar__title { display: none; } }
+
+  /* HERO */
+  .hero { position: relative; min-height: 100dvh; display: flex; flex-direction: column; padding: 3.2rem clamp(1.2rem, 4vw, 3rem) 0; overflow: hidden; --mx: 50%; --my: 34%; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(46rem 46rem at var(--mx) var(--my), color-mix(in srgb, var(--accent) 26%, transparent), transparent 60%), radial-gradient(40rem 30rem at 82% 8%, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 62%); transition: background-position 0.2s ease; pointer-events: none; }
+  .hero > * { position: relative; z-index: 1; }
+  .hero__nav { display: flex; align-items: center; justify-content: space-between; color: var(--text); }
+  .hero__freq { font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.16em; color: var(--accent); }
+  .hero__center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem 0; }
+  .hero__kick { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+  .hero__title { font-size: clamp(3rem, 10vw, 8rem); font-weight: 600; letter-spacing: -0.04em; line-height: 0.92; margin: 1.3rem 0 0; }
+  .hero__title em { font-style: italic; font-weight: 300; color: var(--accent); }
+  .hero__sub { margin-top: 1.6rem; max-width: 44ch; color: var(--muted); font-size: 1.15rem; line-height: 1.6; }
+  .hero__dial { position: relative; width: min(420px, 80%); height: 2px; margin-top: 3rem; background: linear-gradient(90deg, transparent, var(--border), transparent); }
+  .hero__dialline { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, var(--muted) 0 1px, transparent 1px 22px); opacity: 0.4; }
+  .hero__dialknob { position: absolute; top: 50%; left: 68%; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); transform: translate(-50%, -50%); box-shadow: 0 0 20px 4px color-mix(in srgb, var(--accent) 60%, transparent); animation: tune 6s ease-in-out infinite; }
+  @keyframes tune { 0%, 100% { left: 62%; } 50% { left: 74%; } }
+  .hero__marquee { border-top: 1px solid var(--border); overflow: hidden; padding: 1rem 0; }
+  .hero__mtrack { display: inline-flex; gap: 0; white-space: nowrap; width: max-content; animation: slide 40s linear infinite; font-size: clamp(1.4rem, 3vw, 2.2rem); font-weight: 300; font-style: italic; color: color-mix(in srgb, var(--text) 55%, transparent); }
+  .hero__mtrack span { padding: 0 0.4rem; } .hero__mtrack b { color: var(--accent); padding: 0 1rem; }
+  @keyframes slide { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .hero__mtrack, .hero__dialknob { animation: none; } }
+
+  .ah__wrap { max-width: 1000px; margin: 0 auto; padding: 0 clamp(1.2rem, 4vw, 3rem); }
+  .block { padding: clamp(3.5rem, 8vw, 6rem) 0; border-bottom: 1px solid var(--border); }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
+  .block__h { font-size: clamp(1.9rem, 5vw, 3.2rem); font-weight: 600; letter-spacing: -0.035em; line-height: 1.02; margin-top: 1rem; max-width: 20ch; }
+  .block__h em { font-style: italic; font-weight: 300; color: var(--accent); }
+  .block__lead { margin-top: 1.2rem; max-width: 52ch; color: var(--muted); font-size: 1.1rem; line-height: 1.65; }
+
+  /* VOICES */
+  .voices { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: 1.5rem; }
+  .voice { position: relative; display: grid; grid-template-columns: 96px 1fr; gap: 1.5rem; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+  .voice:last-child { border-bottom: none; padding-bottom: 0; }
+  .voice__pic { width: 96px; --avatar-radius: 50%; }
+  .voice__on { position: absolute; left: 0; top: 0; font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--live); opacity: 0; }
+  .voice:hover .voice__on { opacity: 1; }
+  .voice__name { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; }
+  .voice__role { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); margin-top: 0.3rem; }
+  .voice__blurb { color: var(--muted); line-height: 1.55; margin-top: 0.6rem; max-width: 54ch; }
+
+  /* SETLIST */
+  .setlist { list-style: none; padding: 0; margin: 2.5rem 0 0; }
+  .setlist__row { display: grid; grid-template-columns: 3rem 1fr auto auto; gap: 1.2rem; align-items: baseline; padding: 1.1rem 0; border-top: 1px solid var(--border); transition: padding-left 0.25s ease, color 0.25s ease; }
+  .setlist__row:hover { padding-left: 0.8rem; }
+  .setlist__ep { font-family: var(--font-mono); color: var(--muted); }
+  .setlist__title { font-size: 1.3rem; font-weight: 500; }
+  .setlist__row.is-next .setlist__title { color: var(--accent); }
+  .setlist__topic { font-family: var(--font-mono); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .setlist__date { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent-2); }
+  @media (max-width: 640px) { .setlist__row { grid-template-columns: 2rem 1fr auto; } .setlist__topic { display: none; } }
+
+  /* STEPS */
+  .steps { list-style: none; padding: 0; margin: 2.5rem 0 0; display: grid; gap: 0; }
+  .steps li { display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; padding: 1.5rem 0; border-top: 1px solid var(--border); }
+  .steps li:first-child { border-top: none; }
+  .steps__n { font-family: var(--font-mono); color: var(--accent); font-size: 1.05rem; }
+  .steps h3 { font-size: 1.3rem; font-weight: 600; }
+  .steps p { color: var(--muted); line-height: 1.6; margin-top: 0.4rem; max-width: 52ch; }
+
+  .proof { margin-top: 2.5rem; }
+  .proof__cap { margin-top: 0.8rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+
+  .join { padding: clamp(3.5rem, 8vw, 6rem) 0; }
+  .join__h { font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 600; letter-spacing: -0.04em; margin: 1rem 0 0; }
+  .join .block__lead { margin-bottom: 1.8rem; }
+
+  .foot { max-width: 1000px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 1.5rem; padding: 2.5rem clamp(1.2rem, 4vw, 3rem) 5rem; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+  .foot a:hover { color: var(--accent); }
+
+  /* film grain */
+  .grain { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0.05; mix-blend-mode: screen; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E"); }
+</style>
+
+<script>
+  const hero = document.querySelector<HTMLElement>('[data-glow]');
+  if (hero && matchMedia('(pointer: fine)').matches && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect();
+      hero.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
+      hero.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
+    });
+  }
+</script>

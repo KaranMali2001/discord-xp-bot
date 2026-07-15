@@ -1,0 +1,331 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import Avatar from '../components/Avatar.astro';
+import SessionShot from '../components/SessionShot.astro';
+import SignupForm from '../components/SignupForm.astro';
+import { site, crew, sessions, nextSession } from '../data/site';
+
+// How to sit a mock round — friendly, low-pressure copy.
+const steps = [
+  { n: '01', t: 'Grab a chair', d: 'Pick an open slot on the calendar. No résumé screen, no gatekeeping — just come as you are.' },
+  { n: '02', t: 'Talk it through', d: 'Forty-five warm minutes with someone who has run the loop. DSA or system design, out loud, together.' },
+  { n: '03', t: 'Take the notes home', d: 'Written feedback the same weekend, plus a recording of your own thinking to replay.' },
+];
+
+// Fixed positions on the orbit ring (desktop only). Angles spread the ~5 members
+// evenly around the central sun; --a drives the CSS transform.
+const orbit = crew.map((m, i) => ({ ...m, angle: (360 / crew.length) * i - 90 }));
+---
+
+<Base title="Cosmic">
+  <a href="/" class="back">&#8592; all concepts</a>
+
+  <main id="top" class="cz">
+    <!-- decorative space layers: fixed & non-interactive -->
+    <div class="stars stars--far" aria-hidden="true"></div>
+    <div class="stars stars--near" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="hero__orbs" aria-hidden="true">
+        <span class="orb orb--gold"></span>
+        <span class="orb orb--pink"></span>
+        <span class="orb orb--cyan"></span>
+      </div>
+      <header class="hero__nav">
+        <Logo size={26} />
+        <span class="hero__badge">{site.cadence}</span>
+      </header>
+      <div class="hero__center">
+        <p class="hero__kick"><span class="spark" aria-hidden="true"></span>nights &amp; weekends, in orbit since {site.since}</p>
+        <h1 class="hero__title">Come build with us on <em>nights &amp; weekends.</em></h1>
+        <p class="hero__sub">{site.blurb} Pull up a chair in orbit — the good stuff happens after dark.</p>
+        <div class="hero__cta">
+          <a href="#join" class="btn btn--primary">Come build with us</a>
+          <a href="#crew" class="btn btn--ghost">Meet the crew</a>
+        </div>
+      </div>
+      <div class="hero__scroll" aria-hidden="true"><span>drift down</span></div>
+    </section>
+
+    <div class="cz__wrap">
+      <!-- CREW — the orbit -->
+      <section id="crew" class="block block--crew">
+        <p class="eyebrow"><span class="spark" aria-hidden="true"></span>the constellation</p>
+        <h2 class="block__h">A small crew keeps the lights on. <em>Say hi.</em></h2>
+        <p class="block__lead">Five people who love this stuff enough to show up every Friday. Founder Atharv keeps the desk warm; the rest keep the galaxy friendly.</p>
+
+        <div class="orbit" role="presentation">
+          <div class="orbit__sun" aria-hidden="true">
+            <Logo size={40} wordmark={false} />
+          </div>
+          <ul class="orbit__ring">
+            {orbit.map((m) => (
+              <li class="planet" style={`--a:${m.angle}deg;`}>
+                <div class="planet__inner">
+                  <span class="planet__pic"><Avatar name={m.name} initials={m.initials} tint={m.tint} ratio={1} /></span>
+                  <div class="planet__meta">
+                    <h3 class="planet__name">{m.name}</h3>
+                    <p class="planet__role">{m.role}</p>
+                    <p class="planet__blurb">{m.blurb}</p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <!-- FRIDAY SESSIONS -->
+      <section id="sessions" class="block">
+        <p class="eyebrow"><span class="spark" aria-hidden="true"></span>the friday signal</p>
+        <h2 class="block__h">One topic. Forty-five minutes. <em>Every Friday night.</em></h2>
+        <p class="block__lead">
+          Live and unscripted — internals, systems, the messy real stuff. Bring questions.
+          Every session lands in the archive by Monday, so nothing said in orbit gets lost to the void.
+        </p>
+        <ul class="signal">
+          {sessions.map((s, i) => (
+            <li class:list={['signal__row', i === 0 && 'is-next']}>
+              <span class="signal__ep">EP.{s.ep}</span>
+              <span class="signal__title">{s.title}</span>
+              <span class="signal__topic">{s.topic}</span>
+              <time class="signal__date" datetime={s.iso}>{i === 0 ? 'up next' : s.date}</time>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- MOCK INTERVIEWS -->
+      <section id="mock" class="block">
+        <p class="eyebrow"><span class="spark" aria-hidden="true"></span>the practice run</p>
+        <h2 class="block__h">Make the real interview feel like a rerun.</h2>
+        <p class="block__lead">Low stakes, warm room, honest notes. Practice with the crew until the real loop feels like Friday.</p>
+        <ol class="steps">
+          {steps.map((s) => (
+            <li class="card">
+              <span class="steps__n">{s.n}</span>
+              <div><h3>{s.t}</h3><p>{s.d}</p></div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <!-- ARCHIVE -->
+      <section id="archive" class="block">
+        <p class="eyebrow"><span class="spark" aria-hidden="true"></span>from the archive</p>
+        <h2 class="block__h">A recent night, mid-flight.</h2>
+        <p class="block__lead">Missed a Friday? Every session is saved and re-runnable. Here's one from the booth.</p>
+        <div class="proof card"><SessionShot /><p class="proof__cap">Placeholder screenshot &mdash; EP.{nextSession.ep}, {nextSession.title}.</p></div>
+      </section>
+
+      <!-- JOIN -->
+      <section id="join" class="join">
+        <p class="eyebrow"><span class="spark" aria-hidden="true"></span>come aboard</p>
+        <h2 class="join__h">Pull up a chair in orbit.</h2>
+        <p class="block__lead">One quiet reminder before we go live each Friday. That's the whole deal — no noise, just a nudge.</p>
+        <SignupForm cta="Come build with us" />
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot"><Logo size={22} /><span>{site.cadence}</span><a href={site.xUrl}>{site.handle}</a></footer>
+</Base>
+
+<style is:global>
+  :root {
+    --bg: #120b2e;
+    --surface: #1b1240;
+    --surface-2: #241653;
+    --text: #f3eeff;
+    --muted: #a99fcf;
+    --border: rgba(255, 255, 255, 0.12);
+    --accent: #ffc24b;
+    --accent-2: #ff8fb1;
+    --accent-ink: #1a1140;
+    --live: #7fe7ff;
+    --radius: 20px;
+    --font-display: var(--font-geist);
+    --font-mono: var(--font-geist-mono);
+  }
+  body {
+    color: var(--text);
+    /* layered radial space scene: indigo -> violet -> near-black */
+    background:
+      radial-gradient(60rem 44rem at 78% -6%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 60%),
+      radial-gradient(52rem 40rem at 12% 8%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 58%),
+      radial-gradient(80rem 70rem at 50% 22%, #2e1a5e, transparent 62%),
+      linear-gradient(180deg, var(--bg) 0%, #150c33 45%, #08040f 100%);
+    background-attachment: fixed;
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .block, .join { opacity: 0; transform: translateY(24px); animation: rise linear both; animation-timeline: view(); animation-range: entry 0% cover 22%; }
+      @keyframes rise { to { opacity: 1; transform: none; } }
+    }
+  }
+</style>
+
+<style>
+  .back { position: fixed; left: 1rem; bottom: 1rem; z-index: 80; font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--border); padding: 0.4rem 0.7rem; border-radius: 999px; }
+  .back:hover { color: var(--accent); }
+
+  .cz { position: relative; overflow: clip; }
+
+  /* STARFIELD — cheap: two fixed layers of box-shadow star clusters */
+  .stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .stars::before, .stars::after { content: ''; position: absolute; border-radius: 50%; }
+  .stars--far::before {
+    top: 8%; left: 12%; width: 1px; height: 1px; background: transparent;
+    box-shadow:
+      40vw 6vh 0 0 #fff, 12vw 22vh 0 0 #d9d0ff, 68vw 14vh 0 0 #fff, 84vw 30vh 0 0 #cfe9ff,
+      6vw 44vh 0 0 #fff, 30vw 58vh 0 0 #e7dcff, 52vw 40vh 0 0 #fff, 92vw 52vh 0 0 #fff,
+      22vw 74vh 0 0 #d9d0ff, 74vw 66vh 0 0 #fff, 44vw 86vh 0 0 #cfe9ff, 60vw 92vh 0 0 #fff,
+      16vw 96vh 0 0 #fff, 88vw 82vh 0 0 #e7dcff;
+    opacity: 0.7;
+  }
+  .stars--far::after {
+    top: 2%; left: 4%; width: 1px; height: 1px; background: transparent;
+    box-shadow:
+      24vw 12vh 0 0 #fff, 58vw 4vh 0 0 #fff, 80vw 20vh 0 0 #d9d0ff, 8vw 34vh 0 0 #fff,
+      36vw 48vh 0 0 #cfe9ff, 66vw 54vh 0 0 #fff, 96vw 42vh 0 0 #fff, 48vw 70vh 0 0 #fff,
+      18vw 64vh 0 0 #e7dcff, 78vw 78vh 0 0 #fff, 4vw 88vh 0 0 #fff, 54vw 96vh 0 0 #d9d0ff;
+    opacity: 0.55;
+  }
+  /* the near layer holds the brighter, twinkling stars */
+  .stars--near::before {
+    top: 5%; left: 8%; width: 2px; height: 2px; background: transparent;
+    box-shadow:
+      18vw 10vh 0 0 var(--accent), 62vw 8vh 0 0 #fff, 34vw 30vh 0 0 var(--live),
+      82vw 24vh 0 0 #fff, 10vw 52vh 0 0 var(--accent-2), 50vw 46vh 0 0 #fff,
+      90vw 60vh 0 0 var(--live), 28vw 78vh 0 0 #fff, 70vw 84vh 0 0 var(--accent);
+    animation: twinkle 4.2s ease-in-out infinite;
+  }
+  .stars--near::after {
+    top: 3%; left: 3%; width: 2px; height: 2px; background: transparent;
+    box-shadow:
+      44vw 6vh 0 0 #fff, 76vw 40vh 0 0 var(--accent-2), 14vw 40vh 0 0 #fff,
+      58vw 68vh 0 0 var(--live), 30vw 90vh 0 0 #fff, 88vw 88vh 0 0 var(--accent),
+      6vw 74vh 0 0 #fff, 96vw 12vh 0 0 #fff;
+    animation: twinkle 5.6s ease-in-out infinite 1.4s;
+  }
+  @keyframes twinkle { 0%, 100% { opacity: 0.9; } 45% { opacity: 0.25; } }
+
+  /* film grain */
+  .grain { position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0.045; mix-blend-mode: screen; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  /* sparkle bullet used in eyebrows/kicker */
+  .spark { display: inline-block; width: 9px; height: 9px; flex: none; background: var(--accent); clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); }
+
+  /* HERO */
+  .hero { position: relative; z-index: 1; min-height: 100dvh; display: flex; flex-direction: column; padding: 3.2rem clamp(1.2rem, 4vw, 3rem) 2rem; overflow: hidden; }
+  .hero__orbs { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+  .orb { position: absolute; border-radius: 50%; filter: blur(48px); opacity: 0.55; }
+  .orb--gold { width: 30rem; height: 30rem; top: -6rem; left: -4rem; background: radial-gradient(circle, var(--accent), transparent 68%); animation: floatA 13s ease-in-out infinite; }
+  .orb--pink { width: 26rem; height: 26rem; top: 20%; right: -6rem; background: radial-gradient(circle, var(--accent-2), transparent 68%); animation: floatB 17s ease-in-out infinite; }
+  .orb--cyan { width: 20rem; height: 20rem; bottom: -4rem; left: 30%; background: radial-gradient(circle, var(--live), transparent 70%); opacity: 0.35; animation: floatA 20s ease-in-out infinite 2s; }
+  @keyframes floatA { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(2rem, -2.5rem); } }
+  @keyframes floatB { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-2.5rem, 2rem); } }
+
+  .hero__nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .hero__badge { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.14em; color: var(--accent); border: 1px solid var(--border); border-radius: 999px; padding: 0.35rem 0.85rem; background: color-mix(in srgb, var(--surface) 60%, transparent); backdrop-filter: blur(8px); }
+  .hero__center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem 0; }
+  .hero__kick { display: inline-flex; align-items: center; gap: 0.55rem; font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  .hero__title { font-size: clamp(2.8rem, 9vw, 7rem); font-weight: 600; letter-spacing: -0.04em; line-height: 0.98; margin: 1.4rem 0 0; max-width: 16ch; }
+  .hero__title em { font-style: normal; background: linear-gradient(100deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero__sub { margin-top: 1.6rem; max-width: 46ch; color: var(--muted); font-size: 1.15rem; line-height: 1.65; }
+  .hero__cta { display: flex; flex-wrap: wrap; gap: 0.9rem; justify-content: center; margin-top: 2.4rem; }
+  .btn { font-family: var(--font-display); font-weight: 600; font-size: 0.98rem; padding: 0.85rem 1.7rem; border-radius: 999px; border: 1px solid transparent; transition: transform 0.12s ease, filter 0.2s ease, border-color 0.2s ease; }
+  .btn:active { transform: translateY(1px) scale(0.99); }
+  .btn--primary { color: var(--accent-ink); background: linear-gradient(100deg, var(--accent), var(--accent-2)); box-shadow: 0 10px 40px -12px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .btn--primary:hover { filter: brightness(1.06); }
+  .btn--ghost { color: var(--text); border-color: var(--border); background: color-mix(in srgb, var(--surface) 55%, transparent); backdrop-filter: blur(8px); }
+  .btn--ghost:hover { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+  .hero__scroll { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); text-align: center; }
+  .hero__scroll span { display: inline-block; animation: bob 2.6s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(6px); opacity: 1; } }
+
+  .cz__wrap { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 0 clamp(1.2rem, 4vw, 3rem); }
+  .block { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
+  .block + .block, .join { border-top: 1px solid var(--border); }
+  .eyebrow { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); }
+  .block__h { font-size: clamp(1.9rem, 5vw, 3.2rem); font-weight: 600; letter-spacing: -0.035em; line-height: 1.04; margin-top: 1rem; max-width: 20ch; }
+  .block__h em { font-style: normal; background: linear-gradient(100deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .block__lead { margin-top: 1.2rem; max-width: 54ch; color: var(--muted); font-size: 1.1rem; line-height: 1.7; }
+
+  /* soft floating card look */
+  .card { position: relative; background: color-mix(in srgb, var(--surface) 70%, transparent); border: 1px solid var(--border); border-radius: var(--radius); backdrop-filter: blur(10px); box-shadow: 0 24px 60px -34px rgba(0, 0, 0, 0.8); }
+
+  /* ORBIT (crew) */
+  .orbit { position: relative; margin: 3.5rem auto 0; width: min(560px, 92vw); aspect-ratio: 1; display: grid; place-items: center; }
+  .orbit__sun { position: absolute; inset: 0; margin: auto; width: 120px; height: 120px; display: grid; place-items: center; color: var(--accent); border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 55%, transparent), color-mix(in srgb, var(--accent-2) 22%, transparent) 60%, transparent 72%); box-shadow: 0 0 60px -6px color-mix(in srgb, var(--accent) 65%, transparent); }
+  .orbit__sun::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 1px dashed color-mix(in srgb, var(--accent) 45%, transparent); }
+  .orbit__ring { position: absolute; inset: 0; list-style: none; padding: 0; margin: 0; animation: spin 60s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* radius = half the ring minus a bit; --a is per-member angle */
+  .planet { position: absolute; top: 50%; left: 50%; width: 168px; margin: -84px 0 0 -84px; transform: rotate(var(--a)) translate(min(230px, 39vw)) rotate(calc(-1 * var(--a))); }
+  .planet__inner { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.6rem; animation: counterspin 60s linear infinite, planetfloat 7s ease-in-out infinite; }
+  @keyframes counterspin { to { transform: rotate(-360deg); } }
+  @keyframes planetfloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+  .planet__pic { width: 84px; --avatar-radius: 50%; border-radius: 50%; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent), 0 12px 30px -12px rgba(0, 0, 0, 0.8); }
+  .planet__meta { max-width: 168px; }
+  .planet__name { font-size: 1.02rem; font-weight: 600; letter-spacing: -0.01em; }
+  .planet__role { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-2); margin-top: 0.2rem; }
+  .planet__blurb { display: none; color: var(--muted); font-size: 0.82rem; line-height: 1.5; margin-top: 0.4rem; }
+
+  /* SIGNAL (sessions) */
+  .signal { list-style: none; padding: 0; margin: 2.8rem 0 0; }
+  .signal__row { display: grid; grid-template-columns: 4rem 1fr auto auto; gap: 1.2rem; align-items: baseline; padding: 1.15rem 0; border-top: 1px solid var(--border); transition: padding-left 0.25s ease; }
+  .signal__row:last-child { border-bottom: 1px solid var(--border); }
+  .signal__row:hover { padding-left: 0.8rem; }
+  .signal__ep { font-family: var(--font-mono); font-size: 0.82rem; color: var(--muted); }
+  .signal__title { font-size: 1.28rem; font-weight: 500; }
+  .signal__row.is-next .signal__title { background: linear-gradient(100deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .signal__topic { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  .signal__date { font-family: var(--font-mono); font-size: 0.82rem; color: var(--live); }
+  @media (max-width: 640px) { .signal__row { grid-template-columns: 3rem 1fr auto; } .signal__topic { display: none; } }
+
+  /* STEPS */
+  .steps { list-style: none; padding: 0; margin: 2.8rem 0 0; display: grid; gap: 1.1rem; grid-template-columns: repeat(3, 1fr); }
+  .steps li { display: flex; flex-direction: column; gap: 0.9rem; padding: 1.7rem 1.5rem; animation: planetfloat 9s ease-in-out infinite; }
+  .steps li:nth-child(2) { animation-delay: -3s; }
+  .steps li:nth-child(3) { animation-delay: -6s; }
+  .steps__n { font-family: var(--font-mono); color: var(--accent); font-size: 1.05rem; }
+  .steps h3 { font-size: 1.2rem; font-weight: 600; }
+  .steps p { color: var(--muted); line-height: 1.6; margin-top: 0.4rem; }
+  @media (max-width: 720px) { .steps { grid-template-columns: 1fr; } .steps li { animation: none; } }
+
+  /* PROOF */
+  .proof { margin-top: 2.8rem; padding: 0.6rem; }
+  .proof__cap { padding: 0.4rem 0.8rem 0.7rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); }
+
+  /* JOIN */
+  .join { padding: clamp(3.5rem, 8vw, 6.5rem) 0; }
+  .join__h { font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 600; letter-spacing: -0.04em; margin: 1rem 0 0; }
+  .join .block__lead { margin-bottom: 1.8rem; }
+
+  .foot { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 1.5rem; padding: 2.5rem clamp(1.2rem, 4vw, 3rem) 5rem; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+  .foot a:hover { color: var(--accent); }
+
+  /* MOBILE: orbit collapses to a clean vertical column */
+  @media (max-width: 760px) {
+    .orbit { display: block; width: 100%; aspect-ratio: auto; margin-top: 2.4rem; }
+    .orbit__sun { position: relative; inset: auto; margin: 0 auto 2rem; }
+    .orbit__sun::after { display: none; }
+    .orbit__ring { position: static; animation: none; display: grid; gap: 1.1rem; }
+    .planet { position: static; width: auto; margin: 0; transform: none; }
+    .planet__inner { flex-direction: row; align-items: center; text-align: left; gap: 1.1rem; animation: none; padding: 1.1rem 1.2rem; background: color-mix(in srgb, var(--surface) 70%, transparent); border: 1px solid var(--border); border-radius: var(--radius); }
+    .planet__pic { width: 64px; flex: none; }
+    .planet__meta { max-width: none; }
+    .planet__blurb { display: block; }
+  }
+
+  /* MOTION OFF: stop float / orbit / twinkle, keep everything visible */
+  @media (prefers-reduced-motion: reduce) {
+    .orb, .stars--near::before, .stars--near::after, .hero__scroll span,
+    .orbit__ring, .planet__inner, .steps li { animation: none !important; }
+    .planet__inner { transform: none; }
+  }
+</style>

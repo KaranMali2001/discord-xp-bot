@@ -1,0 +1,188 @@
+---
+// Placeholder "session screenshot": a stylised live-stage window (host tile +
+// participant grid + waveform). Themed via CSS variables so it fits any concept.
+import { nextSession, crew } from '../data/site';
+interface Props {
+  title?: string;
+  ep?: string;
+}
+const { title = nextSession.title, ep = nextSession.ep } = Astro.props;
+const tiles = crew.slice(0, 5);
+---
+<figure class="shot" aria-label={`Placeholder screenshot of session EP.${ep} — ${title}`}>
+  <div class="shot__bar">
+    <span class="shot__live"><span class="shot__dot"></span>LIVE</span>
+    <span class="shot__title">EP.{ep} · {title}</span>
+    <span class="shot__timer">44:12</span>
+  </div>
+  <div class="shot__stage">
+    <div class="shot__host">
+      <div class="shot__face" style={`--tint:${tiles[0].tint}`}></div>
+      <span class="shot__name">{tiles[0].name} · host</span>
+    </div>
+    <div class="shot__grid">
+      {tiles.slice(1).map((c) => (
+        <div class="shot__tile">
+          <div class="shot__face shot__face--sm" style={`--tint:${c.tint}`}></div>
+          <span class="shot__tag">{c.initials}</span>
+        </div>
+      ))}
+      <div class="shot__tile shot__tile--more"><span>+12</span></div>
+    </div>
+  </div>
+  <div class="shot__foot">
+    <span class="shot__wave" aria-hidden="true">
+      {Array.from({ length: 28 }).map((_, i) => <i style={`--i:${i}`}></i>)}
+    </span>
+    <span class="shot__ctrl" aria-hidden="true"><i></i><i></i><i></i></span>
+  </div>
+</figure>
+
+<style>
+  .shot {
+    margin: 0;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    border-radius: calc(var(--radius, 12px) + 2px);
+    background: var(--surface, #12152a);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+  }
+  .shot__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+    font-family: var(--font-mono, var(--font-geist-mono));
+    font-size: 0.72rem;
+  }
+  .shot__live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--live, #f0567c);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+  .shot__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--live, #f0567c);
+    animation: shotpulse 1.8s ease-in-out infinite;
+  }
+  .shot__title {
+    color: var(--muted, #8a8da3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .shot__timer {
+    margin-left: auto;
+    color: var(--muted, #8a8da3);
+  }
+  .shot__stage {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 0.6rem;
+    padding: 0.7rem;
+  }
+  .shot__host {
+    position: relative;
+    border-radius: var(--radius, 10px);
+    overflow: hidden;
+    min-height: 190px;
+  }
+  .shot__face {
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(90% 90% at 40% 20%, color-mix(in srgb, var(--tint) 55%, transparent), transparent 60%),
+      linear-gradient(150deg, color-mix(in srgb, var(--tint) 30%, #14172b), #14172b);
+  }
+  .shot__name,
+  .shot__tag {
+    position: absolute;
+    left: 0.5rem;
+    bottom: 0.45rem;
+    font-family: var(--font-mono, var(--font-geist-mono));
+    font-size: 0.66rem;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 0.12rem 0.4rem;
+    border-radius: 6px;
+  }
+  .shot__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .shot__tile {
+    position: relative;
+    border-radius: var(--radius, 10px);
+    overflow: hidden;
+    min-height: 88px;
+  }
+  .shot__face--sm {
+    position: absolute;
+    inset: 0;
+  }
+  .shot__tile--more {
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--text, #fff) 8%, transparent);
+    font-family: var(--font-mono, var(--font-geist-mono));
+    font-size: 0.85rem;
+    color: var(--muted, #8a8da3);
+  }
+  .shot__foot {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.55rem 0.9rem 0.75rem;
+    border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  }
+  .shot__wave {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 22px;
+    flex: 1;
+  }
+  .shot__wave i {
+    flex: 1;
+    background: color-mix(in srgb, var(--accent) 75%, transparent);
+    border-radius: 2px;
+    height: 30%;
+    animation: shotwave 1.1s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.07s);
+  }
+  .shot__ctrl {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .shot__ctrl i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--text, #fff) 22%, transparent);
+  }
+  @keyframes shotwave {
+    0%, 100% { height: 25%; }
+    50% { height: 95%; }
+  }
+  @keyframes shotpulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @media (max-width: 560px) {
+    .shot__stage { grid-template-columns: 1fr; }
+    .shot__host { min-height: 150px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .shot__wave i, .shot__dot { animation: none; }
+    .shot__wave i { height: 55%; }
+  }
+</style>

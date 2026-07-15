@@ -1,0 +1,178 @@
+---
+import Base from '../layouts/Base.astro';
+import Logo from '../components/Logo.astro';
+import { site } from '../data/site';
+
+const concepts = [
+  {
+    slug: 'signal',
+    name: 'Signal Room',
+    tag: 'Expressive',
+    thesis: 'The live Tech Talks room. Fluid sound fields, a broadcasting crew orbit, responsive event cards and Friday recordings in one focused world.',
+    palette: ['#0D0F13', '#DC7966', '#8776AD', '#F0F0EB'],
+    accent: '#DC7966',
+  },
+  {
+    slug: 'after-hours',
+    name: 'After Hours',
+    tag: 'Expressive',
+    thesis: 'A late-night dev radio station. Nocturnal and warm, with a glow that follows your cursor, a pulsing ON AIR bar, and film grain.',
+    palette: ['#0A0713', '#FF6B4A', '#F0567C', '#F6EFE8'],
+    accent: '#FF6B4A',
+  },
+  {
+    slug: 'clubhouse',
+    name: 'The Clubhouse',
+    tag: 'Expressive',
+    thesis: 'A dev block-party flyer. Rotated, taped, overlapping cards on warm paper — halftone, sticker badges, loud condensed type.',
+    palette: ['#F2EEE4', '#2B4AFF', '#FF5B1E', '#141210'],
+    accent: '#2B4AFF',
+  },
+  {
+    slug: 'kinetic',
+    name: 'Kinetic',
+    tag: 'Expressive',
+    thesis: 'Broadcast with taste. Oversized type that scales and tightens as you scroll, near-black with one punchy yellow accent, buttery motion.',
+    palette: ['#0B0B0C', '#FFE14D', '#F4F4F2', '#7A7A7E'],
+    accent: '#FFE14D',
+  },
+  {
+    slug: 'cosmic',
+    name: 'Cosmic',
+    tag: 'Expressive',
+    thesis: 'Nights and weekends, in space. A starfield, floating orbs, and the crew arranged in a slow orbit around a glowing sun.',
+    palette: ['#120B2E', '#FFC24B', '#FF8FB1', '#7FE7FF'],
+    accent: '#FFC24B',
+  },
+  {
+    slug: 'mixtape',
+    name: 'Mixtape',
+    tag: 'Expressive',
+    thesis: 'The community as a cassette. Spinning reels, a Side A / Side B tracklist of sessions, and a photocopied zine texture.',
+    palette: ['#EDE6D6', '#E23B2E', '#E0A32E', '#1C1A17'],
+    accent: '#E23B2E',
+  },
+  {
+    slug: 'whiteroom',
+    name: 'Whiteroom',
+    tag: 'Minimal',
+    thesis: 'Swiss / Vercel-clean and light. Near-white, near-black ink, a faint dot-grid and hairline rules. Typography does all the work; one whisper of color.',
+    palette: ['#FCFCFB', '#17171A', '#E6E6E2', '#FF4D2E'],
+    accent: '#FF4D2E',
+  },
+  {
+    slug: 'blackout',
+    name: 'Blackout',
+    tag: 'Minimal',
+    thesis: 'Linear-style dark minimal. A single centered headline with nothing else above the fold, huge negative space, near-monochrome calm.',
+    palette: ['#0A0A0B', '#ECECEF', '#83838C', '#8AA0FF'],
+    accent: '#8AA0FF',
+  },
+];
+---
+
+<Base title="Concept Gallery" description="Eight landing-page worlds for the Tech Talks community.">
+  <main class="gallery">
+    <header class="gallery__head">
+      <a href="/" class="gallery__logo"><Logo size={30} /></a>
+      <p class="gallery__eyebrow">Concept gallery · placeholder data</p>
+      <h1 class="gallery__title">Eight worlds for {site.name}.</h1>
+      <p class="gallery__sub">
+        Six expressive, two minimal — each a distinct atmosphere with its own structure, texture,
+        and motion. Same crew and sessions underneath. Click in, then tell me which one to take further.
+      </p>
+    </header>
+
+    <a class="featured" href="/broadcast">
+      <span class="featured__tag">▶ The build · merged direction</span>
+      <h2 class="featured__name">Broadcast</h2>
+      <p class="featured__desc">
+        Muted cosmic, plus the pieces you picked: the After Hours ON AIR bar, tagline and marquee;
+        Kinetic's animated session list; the revolving crew constellation — now each planet opens a
+        social-links popover; and a new community contributions section.
+      </p>
+      <span class="featured__go">Open the build <span aria-hidden="true">→</span></span>
+    </a>
+
+    <p class="gallery__label">The eight explorations</p>
+    <ul class="gallery__grid">
+      {concepts.map((c) => (
+        <li>
+          <a class="card" href={`/${c.slug}`} style={`--card-accent:${c.accent}`}>
+            <span class="card__top">
+              <span class="card__swatches" aria-hidden="true">
+                {c.palette.map((p) => <i style={`background:${p}`}></i>)}
+              </span>
+              <span class:list={['card__tag', c.tag === 'Minimal' && 'card__tag--min']}>{c.tag}</span>
+            </span>
+            <h2 class="card__name">{c.name}</h2>
+            <p class="card__thesis">{c.thesis}</p>
+            <span class="card__go">Enter <span aria-hidden="true">→</span></span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <footer class="gallery__foot">
+      <span>{site.name}</span>
+      <span>{site.cadence}</span>
+      <a href={site.xUrl}>{site.handle}</a>
+    </footer>
+  </main>
+</Base>
+
+<style is:global>
+  :root {
+    --bg: #08090d;
+    --surface: #101218;
+    --text: #eceef4;
+    --muted: #8b8fa3;
+    --border: rgba(255, 255, 255, 0.09);
+    --accent: #ff6b4a;
+    --accent-ink: #08090d;
+    --radius: 16px;
+    --font-display: var(--font-geist);
+    --font-mono: var(--font-geist-mono);
+  }
+  body {
+    background:
+      radial-gradient(120% 80% at 15% -10%, rgba(255, 107, 74, 0.1), transparent 52%),
+      radial-gradient(90% 70% at 90% 0%, rgba(127, 231, 255, 0.06), transparent 55%),
+      var(--bg);
+    color: var(--text);
+  }
+</style>
+
+<style>
+  .gallery { max-width: 1120px; margin: 0 auto; padding: clamp(2rem, 5vw, 5rem) clamp(1.2rem, 4vw, 2.5rem) 3rem; }
+  .gallery__logo { display: inline-block; color: var(--text); margin-bottom: 3rem; }
+  .gallery__eyebrow { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.9rem; }
+  .gallery__title { font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.02; max-width: 16ch; }
+  .gallery__sub { margin-top: 1.1rem; max-width: 60ch; color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
+  .featured { position: relative; display: block; margin: clamp(2.5rem, 6vw, 4rem) 0 0; padding: clamp(1.6rem, 4vw, 2.6rem); border-radius: 20px; border: 1px solid color-mix(in srgb, #ddb472 40%, transparent); background: radial-gradient(120% 120% at 90% -10%, rgba(206,143,164,0.16), transparent 55%), radial-gradient(90% 90% at 0% 110%, rgba(124,108,200,0.18), transparent 55%), linear-gradient(165deg, #181430, #100c22); overflow: hidden; transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.25s ease; }
+  .featured:hover { transform: translateY(-3px); border-color: #ddb472; }
+  .featured__tag { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: #ddb472; }
+  .featured__name { font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; letter-spacing: -0.03em; margin: 0.8rem 0 0; }
+  .featured__desc { margin-top: 0.9rem; max-width: 64ch; color: var(--muted); line-height: 1.6; font-size: 1rem; }
+  .featured__go { display: inline-block; margin-top: 1.3rem; font-family: var(--font-mono); font-size: 0.82rem; color: #ddb472; }
+  .featured__go span { display: inline-block; transition: transform 0.2s ease; }
+  .featured:hover .featured__go span { transform: translateX(4px); }
+  .gallery__label { margin: 2.6rem 0 0; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+  .gallery__grid { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 1rem; }
+  .card { position: relative; display: flex; flex-direction: column; gap: 0.75rem; height: 100%; padding: 1.6rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease; overflow: hidden; }
+  .card::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--card-accent); transform: scaleX(0); transform-origin: left; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+  .card:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--card-accent) 55%, transparent); box-shadow: 0 24px 50px -30px rgba(0, 0, 0, 0.8); }
+  .card:hover::before { transform: scaleX(1); }
+  .card__top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .card__swatches { display: flex; gap: 5px; }
+  .card__swatches i { width: 26px; height: 26px; border-radius: 7px; border: 1px solid rgba(255, 255, 255, 0.14); }
+  .card__tag { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0.22rem 0.6rem; }
+  .card__tag--min { color: var(--card-accent); border-color: color-mix(in srgb, var(--card-accent) 45%, transparent); }
+  .card__name { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; }
+  .card__thesis { color: var(--muted); line-height: 1.55; font-size: 0.96rem; flex: 1; }
+  .card__go { font-family: var(--font-mono); font-size: 0.8rem; color: var(--card-accent); letter-spacing: 0.02em; }
+  .card__go span { transition: transform 0.2s ease; display: inline-block; }
+  .card:hover .card__go span { transform: translateX(4px); }
+  .gallery__foot { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+  .gallery__foot a:hover { color: var(--accent); }
+</style>

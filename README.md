@@ -18,6 +18,7 @@ packages/
   bot/    # discord.js gateway: chat XP, voice tick, speaking detection, slash commands
   api/    # Fastify: Discord OAuth + config CRUD + leaderboard (+ ws)
   web/    # React dashboard
+  landing/ # Astro marketing site (Tech Talks landing page)
 ```
 One core, two front doors: the bot (Discord events) and the API (dashboard) both call the
 same core services. Layering: **Zod → controller → service → DAO → DB**.
@@ -34,6 +35,7 @@ pnpm db:migrate              # create the SQLite schema (dev.db) from migrations
 pnpm dev:bot                 # start the bot (auto-deploys guild slash commands)
 pnpm dev:api                 # start the dashboard API on :8080
 pnpm dev:web                 # start the dashboard on :5173
+pnpm dev:landing             # start the landing site on :4321
 ```
 
 ### Changing the database schema

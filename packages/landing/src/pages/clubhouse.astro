@@ -1,0 +1,815 @@
+---
+import Base from '../layouts/Base.astro';
+import Avatar from '../components/Avatar.astro';
+import SessionShot from '../components/SessionShot.astro';
+import SignupForm from '../components/SignupForm.astro';
+import { site, crew, sessions, nextSession } from '../data/site';
+
+// Hand-picked rotations so the collage feels taped-up, not tidy.
+const crewTilt = ['-3deg', '2deg', '-1.5deg', '3deg', '-2.5deg'];
+const lineupTilt = ['-2deg', '1.5deg', '-1deg', '2.5deg', '-1.5deg', '1deg'];
+
+// Mock-interview house rules — loud, plain-spoken.
+const rules = [
+  { n: '01', t: 'Grab a slot', d: 'Pick an open Friday. No résumé screen, no bouncer at the door.' },
+  { n: '02', t: 'Sit the round', d: '45 minutes of real heat — DSA or system design with someone who has run the loop.' },
+  { n: '03', t: 'Walk out with tape', d: 'Written notes the same weekend, plus the recording of your own brain working.' },
+];
+---
+
+<Base title="The Clubhouse">
+  <a href="/" class="back">&larr; all concepts</a>
+
+  <main id="top" class="club">
+    <!-- HERO: the big flyer stapled to the wall -->
+    <section class="hero" data-reveal>
+      <div class="hero__flyer">
+        <span class="tape tape--tl" aria-hidden="true"></span>
+        <span class="tape tape--tr" aria-hidden="true"></span>
+        <span class="tape tape--bl" aria-hidden="true"></span>
+        <span class="tape tape--br" aria-hidden="true"></span>
+
+        <p class="hero__kick">{site.name} presents &mdash; a Friday block party for people who ship</p>
+
+        <h1 class="hero__title">Every<br />Friday.<br /><span class="hero__title--o">No suits.</span><br />Bring code.</h1>
+
+        <p class="hero__sub">{site.blurb}</p>
+
+        <div class="hero__meta">
+          <span class="hero__freq">{site.station}</span>
+          <span class="hero__dotmark" aria-hidden="true"></span>
+          <span>Since {site.since}</span>
+          <span class="hero__dotmark" aria-hidden="true"></span>
+          <span>{site.membersCount}+ regulars</span>
+        </div>
+
+        <a href="#join" class="hero__cta">RSVP for Friday</a>
+
+        <!-- starburst sticker: FRI 19:00 IST -->
+        <span class="sticker sticker--burst" role="img" aria-label={`Sessions ${site.cadence}`}>
+          <svg class="sticker__star" viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M50 2 58 26 82 18 74 42 98 50 74 58 82 82 58 74 50 98 42 74 18 82 26 58 2 50 26 42 18 18 42 26Z" />
+          </svg>
+          <span class="sticker__text">FRI<br />19:00<br />IST</span>
+        </span>
+
+        <!-- round sticker: current episode -->
+        <span class="sticker sticker--ep" role="img" aria-label={`Latest episode ${nextSession.ep}`}>
+          <span class="sticker__ring" aria-hidden="true"></span>
+          <span class="sticker__eptext">EP.<b>{nextSession.ep}</b></span>
+        </span>
+      </div>
+    </section>
+
+    <!-- TAPE-STRIP MARQUEE -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        {[...Array(2)].map(() => (
+          <span class="marquee__seg">
+            code night &bull; mock interviews &bull; no gatekeeping &bull; free coffee &bull; talk shop &bull; bring a laptop &bull; friday &bull;
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <div class="club__wrap">
+      <!-- CREW: the polaroid wall -->
+      <section id="crew" class="block" data-reveal>
+        <header class="block__head">
+          <span class="sticker sticker--pin" aria-hidden="true"></span>
+          <p class="eyebrow">the regulars</p>
+          <h2 class="block__h">The faces you&rsquo;ll see at the door.</h2>
+        </header>
+
+        <ul class="wall">
+          {crew.map((m, i) => (
+            <li class="polaroid" style={`--tilt:${crewTilt[i % crewTilt.length]}`}>
+              <span class="tape tape--strip" aria-hidden="true"></span>
+              <div class="polaroid__pic"><Avatar name={m.name} initials={m.initials} tint={m.tint} ratio={1} /></div>
+              <div class="polaroid__cap">
+                <p class="polaroid__name">{m.name}</p>
+                <p class="polaroid__role">{m.role} &middot; {m.handle}</p>
+                <p class="polaroid__note">{m.blurb}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- FRIDAY SESSIONS: pinned lineup flyers -->
+      <section id="sessions" class="block" data-reveal>
+        <header class="block__head">
+          <span class="sticker sticker--pin" aria-hidden="true"></span>
+          <p class="eyebrow">the lineup</p>
+          <h2 class="block__h">One topic. Forty-five minutes. <span class="ul">Every Friday.</span></h2>
+          <p class="block__lead">
+            Live and unscripted &mdash; internals, systems, the messy real stuff. Come with
+            questions. The tape lands by Monday so nothing said on Friday gets lost.
+          </p>
+        </header>
+
+        <ul class="lineup">
+          {sessions.map((s, i) => (
+            <li
+              class:list={['flyer', i === 0 && 'is-next']}
+              style={`--tilt:${lineupTilt[i % lineupTilt.length]}`}
+            >
+              <span class="tape tape--strip" aria-hidden="true"></span>
+              {i === 0 && <span class="flyer__flag">up next</span>}
+              <span class="flyer__ep">EP.{s.ep}</span>
+              <h3 class="flyer__title">{s.title}</h3>
+              <p class="flyer__topic">{s.topic}</p>
+              <div class="flyer__foot">
+                <time datetime={s.iso}>{s.date}</time>
+                <span>{s.speaker}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <!-- MOCK INTERVIEWS -->
+      <section id="mock" class="block" data-reveal>
+        <header class="block__head">
+          <span class="sticker sticker--pin" aria-hidden="true"></span>
+          <p class="eyebrow">the hot seat</p>
+          <h2 class="block__h">Make the real interview feel like a rerun.</h2>
+        </header>
+
+        <ol class="rules">
+          {rules.map((r) => (
+            <li class="rule">
+              <span class="rule__n">{r.n}</span>
+              <div>
+                <h3 class="rule__t">{r.t}</h3>
+                <p class="rule__d">{r.d}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <!-- ARCHIVE: photo taped to the wall -->
+      <section id="archive" class="block" data-reveal>
+        <header class="block__head">
+          <span class="sticker sticker--pin" aria-hidden="true"></span>
+          <p class="eyebrow">from the wall</p>
+          <h2 class="block__h">Caught one mid-flight.</h2>
+        </header>
+
+        <figure class="snap">
+          <span class="tape tape--tl" aria-hidden="true"></span>
+          <span class="tape tape--br" aria-hidden="true"></span>
+          <div class="snap__frame"><SessionShot /></div>
+          <figcaption class="snap__cap">a recent Friday &mdash; placeholder still</figcaption>
+        </figure>
+      </section>
+
+      <!-- JOIN: the RSVP card -->
+      <section id="join" class="join" data-reveal>
+        <div class="rsvp">
+          <span class="tape tape--tl" aria-hidden="true"></span>
+          <span class="tape tape--tr" aria-hidden="true"></span>
+          <span class="sticker sticker--rsvp" role="img" aria-label="You are invited">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <path d="M50 4 60 24 84 16 76 40 98 50 76 60 84 84 60 76 50 98 40 76 16 84 24 60 2 50 24 40 16 16 40 24Z" />
+            </svg>
+            <span>YOU&rsquo;RE<br />IN</span>
+          </span>
+
+          <p class="eyebrow">the invite</p>
+          <h2 class="rsvp__h">Pull up a chair this Friday.</h2>
+          <p class="rsvp__lead">
+            Drop your name on the guest list. One quiet reminder before the doors open &mdash;
+            that&rsquo;s the whole deal.
+          </p>
+          <SignupForm cta="RSVP" />
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span class="foot__mark">{site.name}</span>
+    <span>{site.cadence}</span>
+    <a href={site.xUrl}>{site.handle}</a>
+  </footer>
+
+  <div class="grain" aria-hidden="true"></div>
+</Base>
+
+<style is:global>
+  :root {
+    --bg: #f2eee4;
+    --surface: #fbf8f1;
+    --surface-2: #e9e3d5;
+    --text: #141210;
+    --muted: #6b6455;
+    --border: #1412101a;
+    --accent: #2b4aff;
+    --accent-2: #ff5b1e;
+    --accent-ink: #fbf8f1;
+    --live: #ff5b1e;
+    --radius: 4px;
+    --font-display: var(--font-geist);
+    --font-mono: var(--font-geist-mono);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    /* warm-paper halftone dots */
+    background-image:
+      radial-gradient(color-mix(in srgb, var(--accent) 9%, transparent) 1px, transparent 1.4px),
+      radial-gradient(color-mix(in srgb, var(--accent-2) 7%, transparent) 1px, transparent 1.4px);
+    background-size: 22px 22px, 22px 22px;
+    background-position: 0 0, 11px 11px;
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-reveal] {
+        opacity: 0;
+        transform: translateY(24px) rotate(-0.6deg);
+        animation: rise linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 22%;
+      }
+      @keyframes rise {
+        to { opacity: 1; transform: none; }
+      }
+    }
+  }
+</style>
+
+<style>
+  .back {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 80;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text);
+    background: color-mix(in srgb, var(--surface) 85%, transparent);
+    backdrop-filter: blur(8px);
+    border: 2px solid var(--text);
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--radius);
+    box-shadow: 3px 3px 0 var(--accent);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+  }
+  .back:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--accent-2);
+    color: var(--accent);
+  }
+
+  .club { position: relative; z-index: 1; }
+
+  /* ---------- shared flyer furniture ---------- */
+  .tape {
+    position: absolute;
+    z-index: 5;
+    background: color-mix(in srgb, #fffdf6 55%, transparent);
+    border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+    box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 14%, transparent);
+    backdrop-filter: blur(1px);
+    pointer-events: none;
+  }
+  .tape--tl { top: -12px; left: -8px; width: 84px; height: 26px; transform: rotate(-24deg); }
+  .tape--tr { top: -12px; right: -8px; width: 84px; height: 26px; transform: rotate(21deg); }
+  .tape--bl { bottom: -12px; left: -6px; width: 74px; height: 24px; transform: rotate(18deg); }
+  .tape--br { bottom: -12px; right: -6px; width: 74px; height: 24px; transform: rotate(-16deg); }
+  .tape--strip {
+    top: -11px;
+    left: 50%;
+    width: 92px;
+    height: 24px;
+    transform: translateX(-50%) rotate(-3deg);
+  }
+
+  /* stickers / badges */
+  .sticker { display: inline-grid; place-items: center; }
+  .sticker--pin {
+    position: static;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    border: 2px solid var(--text);
+    box-shadow: 0 2px 5px color-mix(in srgb, var(--text) 30%, transparent);
+  }
+  .sticker--burst,
+  .sticker--ep,
+  .sticker--rsvp { position: absolute; z-index: 6; }
+  .sticker--burst {
+    top: -34px;
+    right: -14px;
+    width: 122px;
+    height: 122px;
+    color: var(--accent-ink);
+    transform: rotate(12deg);
+    animation: wobble 4.5s ease-in-out infinite;
+  }
+  .sticker--burst .sticker__star { position: absolute; inset: 0; width: 100%; height: 100%; fill: var(--accent-2); filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--text) 32%, transparent)); }
+  .sticker--burst .sticker__text {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .sticker--ep {
+    bottom: -26px;
+    left: -22px;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 2px solid var(--text);
+    transform: rotate(-9deg);
+    box-shadow: 0 5px 12px color-mix(in srgb, var(--text) 30%, transparent);
+    animation: wobble 5.5s ease-in-out infinite reverse;
+  }
+  .sticker--ep .sticker__ring { position: absolute; inset: 6px; border: 1.5px dashed color-mix(in srgb, var(--accent-ink) 55%, transparent); border-radius: 50%; }
+  .sticker--ep .sticker__eptext { font-family: var(--font-mono); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.05em; }
+  .sticker--ep b { display: block; font-size: 1.3rem; letter-spacing: -0.02em; }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 5.5rem clamp(1.2rem, 5vw, 3rem) 2rem;
+  }
+  .hero__flyer {
+    position: relative;
+    max-width: 720px;
+    width: 100%;
+    background: var(--surface);
+    border: 2px solid var(--text);
+    border-radius: var(--radius);
+    padding: clamp(1.8rem, 5vw, 3.4rem);
+    box-shadow: 8px 10px 0 color-mix(in srgb, var(--accent) 85%, var(--text) 10%);
+    transform: rotate(-1.4deg);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .hero__flyer:hover { transform: rotate(0deg) scale(1.01); }
+  .hero__kick {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    max-width: 40ch;
+  }
+  .hero__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(3.2rem, 13vw, 8rem);
+    line-height: 0.86;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin: 1.1rem 0 0;
+  }
+  .hero__title--o { color: var(--accent-2); }
+  .hero__sub {
+    margin-top: 1.6rem;
+    max-width: 46ch;
+    color: var(--text);
+    font-size: 1.1rem;
+    line-height: 1.55;
+  }
+  .hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .hero__freq { color: var(--accent); font-weight: 600; }
+  .hero__dotmark { width: 4px; height: 4px; border-radius: 50%; background: var(--accent-2); }
+  .hero__cta {
+    display: inline-block;
+    margin-top: 1.8rem;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: 2px solid var(--text);
+    border-radius: var(--radius);
+    padding: 0.8rem 1.7rem;
+    box-shadow: 4px 4px 0 var(--text);
+    transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.16s ease;
+  }
+  .hero__cta:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--accent-2); }
+  .hero__cta:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--text); }
+
+  /* ---------- MARQUEE (tape strip) ---------- */
+  .marquee {
+    overflow: hidden;
+    background: var(--accent-2);
+    border-top: 2px solid var(--text);
+    border-bottom: 2px solid var(--text);
+    transform: rotate(-1.5deg) scaleX(1.06);
+    margin: 1rem 0 4rem;
+    box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--text) 60%, transparent);
+  }
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    animation: scroll-tape 26s linear infinite;
+  }
+  .marquee__seg {
+    padding: 0.55rem 1rem;
+    white-space: nowrap;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+  @keyframes scroll-tape { to { transform: translateX(-50%); } }
+
+  /* ---------- layout wrap + sections ---------- */
+  .club__wrap { max-width: 1080px; margin: 0 auto; padding: 0 clamp(1.2rem, 4vw, 3rem); }
+  .block { padding: clamp(3rem, 7vw, 5.5rem) 0; }
+  .block__head { max-width: 30ch; }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 0.6rem;
+  }
+  .block__h {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2rem, 6vw, 3.6rem);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin-top: 0.7rem;
+  }
+  .block__h .ul { color: var(--accent-2); box-shadow: inset 0 -0.16em 0 color-mix(in srgb, var(--accent) 30%, transparent); }
+  .block__lead {
+    margin-top: 1.1rem;
+    max-width: 54ch;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    text-transform: none;
+  }
+
+  /* ---------- CREW: polaroid wall ---------- */
+  .wall {
+    list-style: none;
+    padding: 0;
+    margin: 2.8rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: clamp(1.6rem, 4vw, 2.8rem);
+  }
+  .polaroid {
+    position: relative;
+    background: #fffdf7;
+    border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+    padding: 0.7rem 0.7rem 0;
+    box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--text) 70%, transparent);
+    transform: rotate(var(--tilt, 0deg));
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease;
+  }
+  .polaroid:hover,
+  .polaroid:focus-within {
+    transform: rotate(0deg) scale(1.03);
+    box-shadow: 0 18px 34px -14px color-mix(in srgb, var(--text) 75%, transparent);
+    z-index: 4;
+  }
+  .polaroid__pic { --avatar-radius: 2px; overflow: hidden; }
+  .polaroid__cap { padding: 0.85rem 0.35rem 1.1rem; }
+  .polaroid__name {
+    font-family: var(--font-mono);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .polaroid__role {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-top: 0.25rem;
+  }
+  .polaroid__note {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--muted);
+    margin-top: 0.55rem;
+  }
+
+  /* ---------- SESSIONS: pinned flyers ---------- */
+  .lineup {
+    list-style: none;
+    padding: 1rem 0 0;
+    margin: 2.8rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: clamp(1.5rem, 3.5vw, 2.4rem);
+  }
+  .flyer {
+    position: relative;
+    background: var(--surface);
+    border: 2px solid var(--text);
+    border-radius: var(--radius);
+    padding: 1.6rem 1.3rem 1.2rem;
+    box-shadow: 5px 6px 0 color-mix(in srgb, var(--surface-2) 90%, var(--text) 8%);
+    transform: rotate(var(--tilt, 0deg));
+    transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease;
+  }
+  .flyer:hover {
+    transform: rotate(0deg) scale(1.03);
+    box-shadow: 8px 9px 0 var(--accent);
+    z-index: 4;
+  }
+  .flyer.is-next { background: var(--accent); color: var(--accent-ink); box-shadow: 5px 6px 0 var(--text); }
+  .flyer.is-next:hover { box-shadow: 8px 9px 0 var(--accent-2); }
+  .flyer__flag {
+    position: absolute;
+    top: -13px;
+    right: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    background: var(--accent-2);
+    border: 2px solid var(--text);
+    border-radius: var(--radius);
+    padding: 0.2rem 0.5rem;
+    transform: rotate(4deg);
+  }
+  .flyer__ep {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--accent-2);
+  }
+  .flyer.is-next .flyer__ep { color: var(--accent-ink); opacity: 0.85; }
+  .flyer__title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.4rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin-top: 0.4rem;
+  }
+  .flyer__topic {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+  .flyer.is-next .flyer__topic { color: color-mix(in srgb, var(--accent-ink) 80%, transparent); }
+  .flyer__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-top: 1.1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+  .flyer.is-next .flyer__foot { color: color-mix(in srgb, var(--accent-ink) 82%, transparent); }
+
+  /* ---------- MOCK: house rules ---------- */
+  .rules {
+    list-style: none;
+    padding: 0;
+    margin: 2.6rem 0 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.4rem;
+  }
+  .rule {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    background: var(--surface);
+    border: 2px dashed color-mix(in srgb, var(--text) 55%, transparent);
+    border-radius: var(--radius);
+    padding: 1.4rem 1.2rem;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s ease;
+  }
+  .rule:hover { transform: translateY(-4px); border-color: var(--accent); }
+  .rule__n {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.6rem;
+    letter-spacing: -0.03em;
+    color: var(--accent-2);
+    line-height: 1;
+  }
+  .rule__t { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: -0.01em; }
+  .rule__d { color: var(--muted); font-size: 0.92rem; line-height: 1.55; margin-top: 0.45rem; }
+
+  /* ---------- ARCHIVE: taped snapshot ---------- */
+  .snap {
+    position: relative;
+    max-width: 780px;
+    margin: 2.8rem auto 0;
+    background: #fffdf7;
+    padding: 0.9rem 0.9rem 0;
+    border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+    box-shadow: 0 20px 44px -22px color-mix(in srgb, var(--text) 75%, transparent);
+    transform: rotate(-1.6deg);
+    transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .snap:hover { transform: rotate(0deg) scale(1.01); }
+  .snap__frame { --radius: 2px; }
+  .snap__cap {
+    padding: 0.85rem 0.4rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  /* ---------- JOIN: RSVP card ---------- */
+  .join { padding: clamp(3rem, 7vw, 5.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .rsvp {
+    position: relative;
+    max-width: 620px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 2px solid var(--text);
+    border-radius: var(--radius);
+    padding: clamp(1.8rem, 5vw, 3rem);
+    box-shadow: 8px 10px 0 var(--accent-2);
+    transform: rotate(1deg);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .rsvp:hover { transform: rotate(0deg); }
+  .rsvp .eyebrow { margin-top: 0; }
+  .rsvp__h {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+    margin-top: 0.6rem;
+  }
+  .rsvp__lead {
+    margin: 1rem 0 1.8rem;
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+  .sticker--rsvp {
+    top: -32px;
+    right: -18px;
+    width: 104px;
+    height: 104px;
+    color: var(--accent-ink);
+    transform: rotate(14deg);
+    animation: wobble 5s ease-in-out infinite;
+  }
+  .sticker--rsvp svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: var(--accent); filter: drop-shadow(0 4px 8px color-mix(in srgb, var(--text) 30%, transparent)); }
+  .sticker--rsvp span {
+    position: relative;
+    z-index: 1;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-align: center;
+  }
+
+  /* ---------- FOOTER ---------- */
+  .foot {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    padding: 2.4rem clamp(1.2rem, 4vw, 3rem) 5rem;
+    border-top: 2px solid var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    position: relative;
+    z-index: 1;
+  }
+  .foot__mark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .foot a:hover { color: var(--accent); }
+
+  /* ---------- textures + wobble ---------- */
+  @keyframes wobble {
+    0%, 100% { rotate: 0deg; }
+    25% { rotate: -3deg; }
+    75% { rotate: 3deg; }
+  }
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- responsive: collapse the collage, kill rotations ---------- */
+  @media (max-width: 640px) {
+    .hero__flyer,
+    .polaroid,
+    .flyer,
+    .snap,
+    .rsvp,
+    .marquee { transform: none; }
+    .marquee { transform: none; }
+    .wall,
+    .lineup { grid-template-columns: 1fr; }
+    .tape--tl, .tape--tr, .tape--bl, .tape--br, .tape--strip { display: none; }
+    .sticker--burst { top: -22px; right: -6px; width: 92px; height: 92px; transform: rotate(10deg); }
+    .sticker--ep { left: -10px; bottom: -18px; width: 66px; height: 66px; }
+    .sticker--rsvp { top: -22px; right: -6px; width: 80px; height: 80px; }
+    .hero__flyer:hover,
+    .polaroid:hover,
+    .flyer:hover,
+    .snap:hover,
+    .rsvp:hover { transform: none; }
+  }
+
+  /* ---------- motion off ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .marquee__track { animation: none; }
+    .sticker--burst,
+    .sticker--ep,
+    .sticker--rsvp { animation: none; }
+    .hero__flyer,
+    .polaroid,
+    .flyer,
+    .snap,
+    .rsvp,
+    .rule,
+    .hero__cta,
+    .back { transition: none; }
+  }
+</style>
+
+<script>
+  // Tiny tactile island: nudge each flyer's tilt on pointer-move so the wall
+  // feels physical. Purely decorative, fine-pointer + motion-safe only.
+  const finePointer = matchMedia('(pointer: fine)').matches;
+  const motionOk = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wide = matchMedia('(min-width: 641px)').matches;
+
+  if (finePointer && motionOk && wide) {
+    const cards = document.querySelectorAll<HTMLElement>('.polaroid, .flyer');
+    cards.forEach((card) => {
+      card.addEventListener('pointermove', (e) => {
+        const r = card.getBoundingClientRect();
+        const dx = (e.clientX - r.left) / r.width - 0.5;
+        card.style.setProperty('--tilt', `${dx * 3}deg`);
+      });
+      card.addEventListener('pointerleave', () => {
+        card.style.removeProperty('--tilt');
+      });
+    });
+  }
+</script>
