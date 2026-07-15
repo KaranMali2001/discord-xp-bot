@@ -41,7 +41,7 @@ export function LiveMic() {
       <div className="live-mic__body">
         <img
           className="live-mic__brand-image"
-          src="/signal/brand-mic-alpha.png"
+          src="/signal/brand-mic-alpha.webp"
           alt="Tech Talks microphone shaped by flowing sound waves"
           width="900"
           height="900"

@@ -104,7 +104,7 @@ export default function CrewOrbitSection() {
       </div>
 
       <div className="crew-orbit__core" aria-label="Tech Talks microphone broadcasting to the team">
-        <img src="/signal/brand-mic-alpha.png" alt="Tech Talks microphone" width="900" height="900" />
+        <img src="/signal/brand-mic-alpha.webp" alt="Tech Talks microphone" width="900" height="900" />
       </div>
 
       <div className="crew-orbit__members">

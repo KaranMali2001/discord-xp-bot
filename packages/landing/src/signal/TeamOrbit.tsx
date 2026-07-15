@@ -23,7 +23,7 @@ export function TeamOrbit() {
         <i />
       </div>
       <div className="team-orbit__core" aria-live="polite">
-        <img src="/signal/tech-talks-mark-v2.png" alt="" width="1254" height="1254" />
+        <img src="/signal/tech-talks-mark-v2.webp" alt="" width="640" height="640" />
         <AnimatePresence mode="wait">
           <motion.div
             className="team-orbit__identity"
