@@ -111,6 +111,7 @@ const setMessageXp: Command = {
   data: new SlashCommandBuilder()
     .setName('setmessagexp')
     .setDescription('Set base XP per message (Manage Server)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addIntegerOption((o) =>
       o
         .setName('amount')
@@ -132,6 +133,7 @@ const setChannel: Command = {
   data: new SlashCommandBuilder()
     .setName('setchannel')
     .setDescription('Set a channel’s XP multiplier or disable XP there (Manage Server)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption((o) => o.setName('channel').setDescription('Channel').setRequired(true))
     .addNumberOption((o) =>
       o
@@ -165,6 +167,7 @@ const friday: Command = {
   data: new SlashCommandBuilder()
     .setName('friday')
     .setDescription('Create a recurring Friday XP boost (Manage Server)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addNumberOption((o) =>
       o
         .setName('multiplier')
@@ -220,6 +223,7 @@ const setLevelRole: Command = {
   data: new SlashCommandBuilder()
     .setName('setlevelrole')
     .setDescription('Map a level to a rank role (Manage Server)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addIntegerOption((o) =>
       o
         .setName('level')
@@ -252,6 +256,7 @@ const announce: Command = {
   data: new SlashCommandBuilder()
     .setName('announce')
     .setDescription('Post or schedule an announcement with member & role mentions (Manage Server)')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption((o) =>
       o
         .setName('channel')
@@ -304,6 +309,7 @@ const ticketSetup: Command = {
   data: new SlashCommandBuilder()
     .setName('ticket-setup')
     .setDescription('Set up the ticket system (Manage Server) — bot applies all permissions')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addChannelOption((o) =>
       o
         .setName('panel_channel')
