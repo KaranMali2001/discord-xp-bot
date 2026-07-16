@@ -1,0 +1,35 @@
+name: CI
+
+# Typecheck + lint on every PR (and manual runs). Deploys live in deploy.yml.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # reads the pnpm version from package.json "packageManager"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # --ignore-scripts: typecheck/lint don't need the native modules
+      # (libsql / better-sqlite3 / @discordjs/opus) compiled, so skip the build.
+      - name: Install
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      # The 4 app packages only — packages/landing (Astro) is excluded here.
+      - name: Typecheck
+        run: pnpm --filter @xp/core --filter @xp/api --filter @xp/bot --filter @xp/web typecheck
+
+      - name: Lint / format check
+        run: pnpm exec biome check packages/core packages/api packages/bot packages/web

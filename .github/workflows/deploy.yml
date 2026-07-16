@@ -1,0 +1,122 @@
+name: Deploy
+
+# Production pipeline: verify → migrate Turso → tear down old stack → write .env from
+# secret → rebuild & start. Runs on every push to main, or manually.
+#
+# Required GitHub secrets (Settings → Secrets and variables → Actions):
+#   PROD_ENV             full contents of the production .env (DISCORD_TOKEN, Turso creds, …)
+#   DATABASE_URL         Turso libsql URL   (used by the migrate job on the runner)
+#   DATABASE_AUTH_TOKEN  Turso auth token   (used by the migrate job on the runner)
+#   VPS_HOST             VPS IP/hostname
+#   VPS_USER             SSH user           (e.g. root)
+#   VPS_PASSWORD         SSH password
+#
+# The VPS .env is (re)written from PROD_ENV on every deploy, so it's reproducible and
+# secrets never live in git.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false # never interrupt an in-flight deploy
+
+env:
+  DEPLOY_DIR: /root/discord-xp-bot
+
+jobs:
+  # 1) Gate: same checks as CI, so a bad main push never deploys.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm --filter @xp/core --filter @xp/api --filter @xp/bot --filter @xp/web typecheck
+      - run: pnpm exec biome check packages/core packages/api packages/bot packages/web
+
+  # 2) Apply pending Drizzle migrations to Turso BEFORE new code ships.
+  #    Additive (expand pattern), so it's safe even while the old code is still up.
+  migrate:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Apply migrations to Turso
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_AUTH_TOKEN: ${{ secrets.DATABASE_AUTH_TOKEN }}
+        run: pnpm --filter @xp/core db:migrate
+
+  # 3) Tear down the old stack, refresh code + .env, rebuild and start detached.
+  deploy:
+    needs: migrate
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SSHPASS: ${{ secrets.VPS_PASSWORD }} # sshpass reads the password from here (never logged)
+      SSH_OPTS: -o StrictHostKeyChecking=accept-new
+      TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      # Cleanup: stop + remove the previous containers/network (no-op on a fresh box).
+      - name: Stop & remove previous containers
+        run: |
+          sshpass -e ssh $SSH_OPTS "$TARGET" \
+            "cd ${{ env.DEPLOY_DIR }} && (docker compose down --remove-orphans || true)"
+
+      - name: Sync code to the VPS
+        run: |
+          rsync -az --delete -e "sshpass -e ssh $SSH_OPTS" \
+            --exclude '.git' --exclude 'node_modules' --exclude 'dist' \
+            --exclude '*.db' --exclude '*.db-*' --exclude 'secrets.json' \
+            --exclude '.env' --exclude '.env.*' --exclude 'data' \
+            --exclude '.astro' --exclude 'deploy.log' \
+            ./ "$TARGET:${{ env.DEPLOY_DIR }}/"
+
+      # Write the production .env from the secret (stdin → file; value never on argv/logs).
+      - name: Write .env from PROD_ENV secret
+        env:
+          PROD_ENV: ${{ secrets.PROD_ENV }}
+        run: |
+          printf '%s' "$PROD_ENV" | sshpass -e ssh $SSH_OPTS "$TARGET" "cat > ${{ env.DEPLOY_DIR }}/.env"
+
+      - name: Build & start (detached)
+        run: |
+          sshpass -e ssh $SSH_OPTS "$TARGET" \
+            "cd ${{ env.DEPLOY_DIR }} && docker compose up -d --build"
+
+      - name: Prune old images + build cache
+        run: |
+          sshpass -e ssh $SSH_OPTS "$TARGET" \
+            "docker image prune -f && docker builder prune -af --filter until=168h"
+
+      - name: Health check
+        run: |
+          sshpass -e ssh $SSH_OPTS "$TARGET" 'set -e
+            cd ${{ env.DEPLOY_DIR }}
+            sleep 15
+            docker compose ps
+            for s in api bot web; do
+              st=$(docker inspect -f "{{.State.Status}}" "discord-xp-bot-$s-1" 2>/dev/null || echo missing)
+              rc=$(docker inspect -f "{{.RestartCount}}" "discord-xp-bot-$s-1" 2>/dev/null || echo "?")
+              echo "$s: $st (restarts=$rc)"
+              [ "$st" = running ] || { echo "::error::$s is not running"; exit 1; }
+            done'
