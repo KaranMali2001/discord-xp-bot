@@ -8,12 +8,8 @@ name: Deploy
 #   DATABASE_AUTH_TOKEN  Turso auth token
 #   VPS_HOST             VPS IP/hostname    (e.g. 72.61.239.32)
 #   VPS_USER             SSH user           (e.g. root)
-#   VPS_SSH_KEY          private key of a deploy keypair added to the VPS authorized_keys
+#   VPS_PASSWORD         SSH password
 #
-# One-time VPS setup (SSH is currently password-based — CI needs a key):
-#   ssh-keygen -t ed25519 -f deploy_key -N ""            # on your machine
-#   ssh-copy-id -i deploy_key.pub root@<VPS_HOST>        # add pubkey to the VPS
-#   → put the PRIVATE key (deploy_key) into the VPS_SSH_KEY secret
 # The VPS deploy dir (/root/discord-xp-bot) already holds the untracked .env, which
 # rsync never overwrites, so secrets stay on the box.
 
@@ -65,25 +61,25 @@ jobs:
           DATABASE_AUTH_TOKEN: ${{ secrets.DATABASE_AUTH_TOKEN }}
         run: pnpm --filter @xp/core db:migrate
 
-  # 3) Ship the working tree to the VPS and rebuild the stack.
+  # 3) Ship the working tree to the VPS and rebuild the stack (password SSH via sshpass).
   deploy:
     needs: migrate
     runs-on: ubuntu-latest
     environment: production
+    env:
+      # sshpass reads the password from $SSHPASS (never passed on the command line / logs).
+      SSHPASS: ${{ secrets.VPS_PASSWORD }}
+      SSH_OPTS: -o StrictHostKeyChecking=accept-new
     steps:
       - uses: actions/checkout@v4
 
-      - name: Load deploy SSH key
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-
-      - name: Trust the VPS host key
-        run: ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Rsync code to the VPS
         run: |
           rsync -az --delete \
+            -e "sshpass -e ssh $SSH_OPTS" \
             --exclude '.git' --exclude 'node_modules' --exclude 'dist' \
             --exclude '*.db' --exclude '*.db-*' --exclude 'secrets.json' \
             --exclude '.env' --exclude '.env.*' --exclude 'data' \
@@ -92,12 +88,12 @@ jobs:
 
       - name: Build & restart (compose migrate re-runs, idempotent)
         run: |
-          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+          sshpass -e ssh $SSH_OPTS "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
             "cd ${{ env.DEPLOY_DIR }} && docker compose up -d --build --force-recreate && docker image prune -f"
 
       - name: Health check
         run: |
-          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" '
+          sshpass -e ssh $SSH_OPTS "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" '
             set -e
             cd '"${{ env.DEPLOY_DIR }}"'
             sleep 15

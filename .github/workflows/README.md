@@ -31,19 +31,16 @@ Three sequential jobs — a bad push never deploys, and the DB is migrated befor
 | `DATABASE_AUTH_TOKEN` | Turso auth token |
 | `VPS_HOST` | VPS IP / hostname |
 | `VPS_USER` | SSH user (e.g. `root`) |
-| `VPS_SSH_KEY` | private key of a deploy keypair (see below) |
+| `VPS_PASSWORD` | SSH password |
+
+Deploy uses **username + password** over SSH (via `sshpass`), matching the VPS setup. The
+password is passed through the `SSHPASS` env var — never on the command line or in logs.
 
 An **`production` environment** is referenced by the migrate/deploy jobs — create it under
 `Settings → Environments` (optionally add required reviewers to gate production).
 
-## One-time VPS key setup
-SSH to the VPS is currently password-based; CI needs a key:
-
-```bash
-ssh-keygen -t ed25519 -f deploy_key -N ""      # generate a keypair locally
-ssh-copy-id -i deploy_key.pub root@<VPS_HOST>  # add the public key to the VPS
-# paste the contents of `deploy_key` (the PRIVATE key) into the VPS_SSH_KEY secret
-```
+> Security note: password auth works fine here. If you later want to harden it, swap
+> `VPS_PASSWORD` for a deploy SSH key (`webfactory/ssh-agent` + key auth) — no other change needed.
 
 ## Notes / future improvements
 - The VPS is small (1 CPU, disk ~80% full). Builds run **on the box** (~4 min) and the prune
