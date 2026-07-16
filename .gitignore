@@ -23,6 +23,9 @@ secrets.json
 data/audio/
 *.wav
 
+# local audio dump + transcription scratch (not for the repo)
+audio-dump/
+
 # astro (landing) build output
 .astro/
 **/.astro/
