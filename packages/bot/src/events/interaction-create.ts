@@ -6,6 +6,12 @@ import {
   handleAnnounceModal,
   isAnnounceComponent,
 } from '../features/announce'
+import {
+  TICKET_IDS,
+  handleTicketButton,
+  handleTicketModal,
+  isTicketComponent,
+} from '../features/tickets'
 import { log } from '../lib/log'
 
 async function dispatch(interaction: Interaction): Promise<void> {
@@ -21,6 +27,13 @@ async function dispatch(interaction: Interaction): Promise<void> {
   // Modal submits.
   if (interaction.isModalSubmit()) {
     if (interaction.customId === ANNOUNCE_IDS.modal) await handleAnnounceModal(interaction)
+    else if (interaction.customId === TICKET_IDS.modal) await handleTicketModal(interaction)
+    return
+  }
+
+  // Ticket buttons (open panel + staff status controls).
+  if (interaction.isButton() && isTicketComponent(interaction.customId)) {
+    await handleTicketButton(interaction)
     return
   }
 

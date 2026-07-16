@@ -84,3 +84,28 @@ export type {
   AnnouncementInput,
   ScheduledAnnouncementInput,
 } from './domains/announcements/announcements.schema'
+
+// ── ticketing ─────────────────────────────────────────────
+export { ticketsService } from './domains/ticketing/tickets.service'
+export { ticketsDao } from './domains/ticketing/tickets.dao'
+export type {
+  Ticket,
+  TicketConfig,
+  TicketAttachment,
+  TicketParticipant,
+  TicketStatus,
+  ParticipantRole,
+} from './domains/ticketing/tickets.dao'
+export {
+  ticketConfigInput,
+  ticketInput,
+  ticketAttachmentInput,
+  ticketSetupInput,
+} from './domains/ticketing/tickets.schema'
+export type {
+  TicketConfigInput,
+  TicketInput,
+  TicketAttachmentInput,
+  TicketSetupInput,
+} from './domains/ticketing/tickets.schema'
+export { applyTicketSetup, buildTicketPanelPayload } from './domains/ticketing/tickets.setup'

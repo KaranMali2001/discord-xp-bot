@@ -1,0 +1,1 @@
+ALTER TABLE `tickets` ADD `thread_id` text;

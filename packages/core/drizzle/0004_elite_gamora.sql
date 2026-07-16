@@ -1,0 +1,1 @@
+ALTER TABLE `ticket_config` ADD `staff_role_id` text;

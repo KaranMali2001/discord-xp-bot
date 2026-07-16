@@ -132,4 +132,31 @@ export const discordRest = {
       allowed_mentions: opts?.allowedMentions ?? { parse: ['users'] },
     })
   },
+
+  /** Post a raw message payload (embeds/components), returning at least its id. */
+  createMessage(channelId: string, body: Record<string, unknown>): Promise<{ id: string }> {
+    return request<{ id: string }>('POST', `/channels/${channelId}/messages`, body)
+  },
+
+  /** Best-effort delete (used to replace a stale ticket panel). */
+  deleteMessage(channelId: string, messageId: string): Promise<void> {
+    return request('DELETE', `/channels/${channelId}/messages/${messageId}`)
+  },
+
+  /**
+   * Create/replace a channel permission overwrite for a role (`type: 0`) or member
+   * (`type: 1`). `allow`/`deny` are bitfield strings. Requires the bot to hold Manage
+   * Roles + the permissions it grants. See https://discord.com/developers permissions.
+   */
+  setChannelPermission(
+    channelId: string,
+    overwriteId: string,
+    opts: { allow?: bigint; deny?: bigint; type: 0 | 1 },
+  ): Promise<void> {
+    return request('PUT', `/channels/${channelId}/permissions/${overwriteId}`, {
+      allow: (opts.allow ?? 0n).toString(),
+      deny: (opts.deny ?? 0n).toString(),
+      type: opts.type,
+    })
+  },
 }

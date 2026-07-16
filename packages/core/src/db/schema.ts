@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  blob,
   index,
   integer,
   primaryKey,
@@ -216,4 +217,96 @@ export const transcriptJobs = sqliteTable(
   },
   // Worker polls by status; index keeps that cheap as the table grows.
   (t) => ({ statusIdx: index('transcript_jobs_status').on(t.status, t.startedAt) }),
+)
+
+/**
+ * Per-guild ticket system config. `panelChannelId` is the PUBLIC channel that hosts the
+ * "Raise a ticket" button (users must see it). `ticketChannelId` is the HIDDEN channel
+ * where private ticket threads live — @everyone can't view it, so mentioning an outsider
+ * in a thread there does nothing (Discord gates thread visibility on channel access). The
+ * bot grants each submitter a personal View-Channel overwrite so they can reach their own
+ * thread. `panelMessageId` lets `/ticket-setup` re-post/replace a stale panel.
+ */
+export const ticketConfig = sqliteTable('ticket_config', {
+  guildId: text('guild_id').primaryKey(),
+  panelChannelId: text('panel_channel_id'),
+  ticketChannelId: text('ticket_channel_id'),
+  // Role that can see all tickets + pull a third person into a thread. Setup grants it
+  // View Channel + Manage Threads on the ticket channel.
+  staffRoleId: text('staff_role_id'),
+  // Deprecated: superseded by ticketChannelId. Kept nullable/unused to keep the migration
+  // additive (drizzle would otherwise prompt to disambiguate a rename). Drop on Neon move.
+  modChannelId: text('mod_channel_id'),
+  panelMessageId: text('panel_message_id'),
+  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+  updatedAt: integer('updated_at').notNull().default(now),
+})
+
+/**
+ * One row per raised ticket. Metadata only — image bytes live in `ticket_attachments` so
+ * listing/queries stay light. `threadId` is the private thread created at submit time; the
+ * ticket content + conversation all live inside it.
+ */
+export const tickets = sqliteTable(
+  'tickets',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    guildId: text('guild_id').notNull(),
+    userId: text('user_id').notNull(),
+    username: text('username').notNull().default(''),
+    subject: text('subject').notNull(),
+    description: text('description').notNull().default(''),
+    threadId: text('thread_id'),
+    // Deprecated (no separate mod-channel post anymore). Kept to keep the migration
+    // additive; drop on the Neon move.
+    modMessageId: text('mod_message_id'),
+    status: text('status', { enum: ['open', 'resolved', 'closed'] })
+      .notNull()
+      .default('open'),
+    createdAt: integer('created_at').notNull().default(now),
+    resolvedAt: integer('resolved_at'),
+  },
+  // Staff triage lists by (guild, status); index keeps that cheap.
+  (t) => ({ statusIdx: index('tickets_guild_status').on(t.guildId, t.status) }),
+)
+
+/**
+ * Who has been granted access to a ticket's private thread: the submitter (`owner`) plus
+ * anyone staff pulled in (`staff`). Each row corresponds to a per-user View-Channel
+ * overwrite on the hidden ticket channel. On close we revoke an overwrite only if that
+ * user isn't still a participant of another open ticket (overwrites are channel-wide).
+ */
+export const ticketParticipants = sqliteTable(
+  'ticket_participants',
+  {
+    guildId: text('guild_id').notNull(),
+    ticketId: integer('ticket_id').notNull(),
+    userId: text('user_id').notNull(),
+    role: text('role', { enum: ['owner', 'staff'] })
+      .notNull()
+      .default('owner'),
+    createdAt: integer('created_at').notNull().default(now),
+  },
+  (t) => ({ pk: primaryKey({ columns: [t.ticketId, t.userId] }) }),
+)
+
+/**
+ * Raw image bytes for a ticket, one row per attachment. Stored as a BLOB (source of truth)
+ * — the bot downloads each modal upload from Discord's CDN and persists it here so the
+ * image survives the staff message being deleted. Kept in its own table so the heavy
+ * binary is never dragged into ticket-list queries.
+ */
+export const ticketAttachments = sqliteTable(
+  'ticket_attachments',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    ticketId: integer('ticket_id').notNull(),
+    guildId: text('guild_id').notNull(),
+    filename: text('filename').notNull().default('image'),
+    contentType: text('content_type').notNull().default('application/octet-stream'),
+    sizeBytes: integer('size_bytes').notNull().default(0),
+    data: blob('data', { mode: 'buffer' }).notNull(),
+    createdAt: integer('created_at').notNull().default(now),
+  },
+  (t) => ({ ticketIdx: index('ticket_attachments_ticket').on(t.ticketId) }),
 )

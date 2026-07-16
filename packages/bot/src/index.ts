@@ -6,6 +6,7 @@ import { registerInteractionCreate } from './events/interaction-create'
 import { registerMessageCreate } from './events/message-create'
 import { registerVoiceStateUpdate } from './events/voice-state-update'
 import { startAnnouncementTick, sweepMissedAnnouncements } from './features/scheduled-tick'
+import { handleThreadMessage } from './features/tickets'
 import { log } from './lib/log'
 import { seedVoiceSessions, startVoiceTick } from './voice/tick'
 import { tracker } from './voice/tracker'
@@ -17,6 +18,10 @@ async function main(): Promise<void> {
   registerMessageCreate(client)
   registerVoiceStateUpdate(client)
   registerInteractionCreate(client)
+  // Guard ticket threads: let staff pull a 3rd person in via @mention; block everyone else.
+  client.on(Events.MessageCreate, (m) => {
+    void handleThreadMessage(m).catch((e) => log.error('tickets', `thread guard: ${e}`))
+  })
   log.info('boot', 'registered message / voice / interaction handlers')
 
   client.once(Events.ClientReady, async (c) => {
