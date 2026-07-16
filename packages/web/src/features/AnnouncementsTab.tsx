@@ -1,7 +1,5 @@
 import { ChannelPicker } from '@/components/ChannelPicker'
-import { MemberPicker } from '@/components/MemberPicker'
-import { RolePicker } from '@/components/RolePicker'
-import { Badge } from '@/components/ui/badge'
+import { MentionTextarea } from '@/components/MentionTextarea'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,23 +20,12 @@ import {
   useScheduledAnnouncements,
   useSendAnnouncement,
 } from '@/hooks/useAnnouncements'
-import { useDiscordMembers, useDiscordRoles } from '@/hooks/useDiscord'
+import { markupToDiscord, markupToPlain } from '@/lib/mentions'
 import { formatIst, istDateTimeLocalToEpochSec } from '@/lib/time'
-import { cn } from '@/lib/utils'
-import { Trash2, X } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import * as React from 'react'
 
-/** A removable mention chip. */
-function Chip({ label, onRemove }: { label: string; onRemove: () => void }) {
-  return (
-    <Badge variant="secondary" className="gap-1">
-      {label}
-      <button type="button" aria-label={`Remove ${label}`} onClick={onRemove}>
-        <X className="h-3 w-3" />
-      </button>
-    </Badge>
-  )
-}
+const MAX_LEN = 1900
 
 export function AnnouncementsTab({ guildId }: { guildId: string }) {
   const { toast } = useToast()
@@ -47,40 +34,17 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
   const cancel = useCancelScheduledAnnouncement(guildId)
   const upcoming = useScheduledAnnouncements(guildId)
 
-  // First page of members/roles gives us names for the selected-id chips.
-  const membersQuery = useDiscordMembers(guildId, '')
-  const rolesQuery = useDiscordRoles(guildId)
-
   const [channelId, setChannelId] = React.useState<string | null>(null)
-  const [memberIds, setMemberIds] = React.useState<string[]>([])
-  const [roleIds, setRoleIds] = React.useState<string[]>([])
-  const [message, setMessage] = React.useState('')
+  const [message, setMessage] = React.useState('') // react-mentions markup
   const [mentionEveryone, setMentionEveryone] = React.useState(false)
   const [scheduleLater, setScheduleLater] = React.useState(false)
   const [fireAtLocal, setFireAtLocal] = React.useState('')
 
-  const memberName = (id: string) => membersQuery.data?.find((m) => m.id === id)?.displayName ?? id
-  const roleName = (id: string) => rolesQuery.data?.find((r) => r.id === id)?.name ?? id
-
-  const addMember = (id: string | null) => {
-    if (id && !memberIds.includes(id)) setMemberIds((prev) => [...prev, id])
-  }
-  const addRole = (id: string | null) => {
-    if (id && !roleIds.includes(id)) setRoleIds((prev) => [...prev, id])
-  }
-
-  const mentionsLine = [
-    ...(mentionEveryone ? ['@everyone'] : []),
-    ...roleIds.map((id) => `@${roleName(id)}`),
-    ...memberIds.map((id) => `@${memberName(id)}`),
-  ].join(' ')
-  const preview = mentionsLine ? `${mentionsLine}\n\n${message}` : message
-
+  const content = markupToDiscord(message).trim() // what actually gets sent to Discord
+  const preview = `${mentionEveryone ? '@everyone\n\n' : ''}${markupToPlain(message)}`.trim()
   const busy = send.isPending || schedule.isPending
 
   const reset = () => {
-    setMemberIds([])
-    setRoleIds([])
     setMessage('')
     setMentionEveryone(false)
     setScheduleLater(false)
@@ -90,9 +54,12 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!channelId) return toast('Pick a channel', 'error')
-    if (!message.trim()) return toast('Write a message', 'error')
+    if (!content) return toast('Write a message', 'error')
+    if (content.length > MAX_LEN)
+      return toast(`Message too long (${content.length}/${MAX_LEN})`, 'error')
 
-    const payload = { channelId, message: message.trim(), memberIds, roleIds, mentionEveryone }
+    // Mentions are inline in the message; core derives allowed-mentions from it.
+    const payload = { channelId, message: content, memberIds: [], roleIds: [], mentionEveryone }
     try {
       if (scheduleLater) {
         const fireAt = istDateTimeLocalToEpochSec(fireAtLocal)
@@ -119,8 +86,8 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
         <CardHeader>
           <CardTitle>Announcements</CardTitle>
           <CardDescription>
-            Post a message to a channel and ping the members and roles you choose. Only the people
-            you pick here are notified.
+            Type <span className="font-mono">@</span> to mention a member or role anywhere in the
+            message. Only the members and roles you mention are notified.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -136,38 +103,18 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="an-members">Mention members</Label>
-                <MemberPicker id="an-members" guildId={guildId} value={null} onChange={addMember} />
-                {memberIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {memberIds.map((id) => (
-                      <Chip
-                        key={id}
-                        label={memberName(id)}
-                        onRemove={() => setMemberIds((prev) => prev.filter((x) => x !== id))}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="an-roles">Mention roles / tags</Label>
-                <RolePicker id="an-roles" guildId={guildId} value={null} onChange={addRole} />
-                {roleIds.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {roleIds.map((id) => (
-                      <Chip
-                        key={id}
-                        label={roleName(id)}
-                        onRemove={() => setRoleIds((prev) => prev.filter((x) => x !== id))}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="an-message">Message</Label>
+              <MentionTextarea
+                id="an-message"
+                guildId={guildId}
+                value={message}
+                onChange={setMessage}
+                placeholder="What do you want to announce? Type @ to mention someone…"
+              />
+              <p className="text-right text-xs text-muted-foreground">
+                {content.length}/{MAX_LEN}
+              </p>
             </div>
 
             <div className="flex items-center gap-2">
@@ -179,23 +126,6 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
               <Label htmlFor="an-everyone" className="font-normal">
                 Also ping <span className="font-mono">@everyone</span>
               </Label>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="an-message">Message</Label>
-              <textarea
-                id="an-message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                maxLength={1900}
-                placeholder="What do you want to announce?"
-                className={cn(
-                  'flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm',
-                  'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-                  'disabled:cursor-not-allowed disabled:opacity-50',
-                )}
-              />
-              <p className="text-right text-xs text-muted-foreground">{message.length}/1900</p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -223,7 +153,7 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
               )}
             </div>
 
-            {preview.trim() && (
+            {preview && (
               <div className="space-y-1.5">
                 <Label>Preview</Label>
                 <pre className="whitespace-pre-wrap rounded-md border bg-muted/50 p-3 text-sm">

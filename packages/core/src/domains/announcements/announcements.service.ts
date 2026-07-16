@@ -19,13 +19,20 @@ export const announcementsService = {
   async send(raw: AnnouncementInput): Promise<{ ok: true; content: string }> {
     const input = announcementInput.parse(raw)
     const content = this.buildContent(input)
-    // Explicit id lists: only the picked members/roles ping — a stray "@everyone"
-    // typed into the body stays inert unless mentionEveryone was ticked on purpose.
+
+    // Allow-list exactly who may ping: the explicit id lists (slash command's select
+    // menus) PLUS any mentions typed inline in the message (the dashboard's @-composer).
+    // A stray "@everyone" in the body stays inert unless mentionEveryone was set on purpose.
+    const users = new Set(input.memberIds)
+    const roles = new Set(input.roleIds)
+    for (const m of content.matchAll(/<@(\d+)>/g)) users.add(m[1] as string)
+    for (const m of content.matchAll(/<@&(\d+)>/g)) roles.add(m[1] as string)
+
     await discordRest.sendMessage(input.channelId, content, {
       allowedMentions: {
         parse: input.mentionEveryone ? ['everyone'] : [],
-        users: input.memberIds,
-        roles: input.roleIds,
+        users: [...users],
+        roles: [...roles],
       },
     })
     return { ok: true, content }
