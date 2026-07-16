@@ -1,0 +1,110 @@
+name: Deploy
+
+# Production pipeline: verify → apply DB migrations to Turso → ship code to the VPS.
+# Runs on every push to main, or manually.
+#
+# Required GitHub secrets (Settings → Secrets and variables → Actions):
+#   DATABASE_URL         Turso libsql URL   (libsql://….turso.io)
+#   DATABASE_AUTH_TOKEN  Turso auth token
+#   VPS_HOST             VPS IP/hostname    (e.g. 72.61.239.32)
+#   VPS_USER             SSH user           (e.g. root)
+#   VPS_SSH_KEY          private key of a deploy keypair added to the VPS authorized_keys
+#
+# One-time VPS setup (SSH is currently password-based — CI needs a key):
+#   ssh-keygen -t ed25519 -f deploy_key -N ""            # on your machine
+#   ssh-copy-id -i deploy_key.pub root@<VPS_HOST>        # add pubkey to the VPS
+#   → put the PRIVATE key (deploy_key) into the VPS_SSH_KEY secret
+# The VPS deploy dir (/root/discord-xp-bot) already holds the untracked .env, which
+# rsync never overwrites, so secrets stay on the box.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false # never interrupt an in-flight deploy
+
+env:
+  DEPLOY_DIR: /root/discord-xp-bot
+
+jobs:
+  # 1) Gate: same checks as CI, so a bad main push never deploys.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm --filter @xp/core --filter @xp/api --filter @xp/bot --filter @xp/web typecheck
+      - run: pnpm exec biome check packages/core packages/api packages/bot packages/web
+
+  # 2) Apply pending Drizzle migrations to Turso BEFORE new code ships.
+  #    Migrations are additive (expand pattern), so the still-running old code is unaffected.
+  migrate:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      # drizzle-kit uses @libsql/client (JS) for the turso dialect — no native build needed.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Apply migrations to Turso
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_AUTH_TOKEN: ${{ secrets.DATABASE_AUTH_TOKEN }}
+        run: pnpm --filter @xp/core db:migrate
+
+  # 3) Ship the working tree to the VPS and rebuild the stack.
+  deploy:
+    needs: migrate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load deploy SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Trust the VPS host key
+        run: ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Rsync code to the VPS
+        run: |
+          rsync -az --delete \
+            --exclude '.git' --exclude 'node_modules' --exclude 'dist' \
+            --exclude '*.db' --exclude '*.db-*' --exclude 'secrets.json' \
+            --exclude '.env' --exclude '.env.*' --exclude 'data' \
+            --exclude '.astro' --exclude 'deploy.log' \
+            ./ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{ env.DEPLOY_DIR }}/"
+
+      - name: Build & restart (compose migrate re-runs, idempotent)
+        run: |
+          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "cd ${{ env.DEPLOY_DIR }} && docker compose up -d --build --force-recreate && docker image prune -f"
+
+      - name: Health check
+        run: |
+          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" '
+            set -e
+            cd '"${{ env.DEPLOY_DIR }}"'
+            sleep 15
+            docker compose ps
+            for s in api bot web; do
+              st=$(docker inspect -f "{{.State.Status}}" "discord-xp-bot-$s-1")
+              rc=$(docker inspect -f "{{.RestartCount}}" "discord-xp-bot-$s-1")
+              echo "$s: $st (restarts=$rc)"
+              [ "$st" = "running" ] || { echo "::error::$s is not running"; exit 1; }
+            done'
