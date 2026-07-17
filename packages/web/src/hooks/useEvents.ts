@@ -1,4 +1,4 @@
-import { type EventInput, type MultiplierEvent, endpoints } from '@/lib/api'
+import { type EventAttendance, type EventInput, type MultiplierEvent, endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const key = (guildId: string) => ['events', guildId] as const
@@ -8,6 +8,16 @@ export function useEvents(guildId: string) {
     queryKey: key(guildId),
     queryFn: () => endpoints.events.list(guildId),
     enabled: guildId.length > 0,
+  })
+}
+
+/** Per-member voice-duration summary for one event. Polls so it stays live during an event. */
+export function useEventAttendance(guildId: string, eventId: number | null) {
+  return useQuery<EventAttendance>({
+    queryKey: ['event-attendance', guildId, eventId] as const,
+    queryFn: () => endpoints.events.attendance(guildId, eventId as number),
+    enabled: guildId.length > 0 && eventId != null,
+    refetchInterval: 10_000,
   })
 }
 

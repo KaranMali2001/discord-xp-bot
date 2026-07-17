@@ -1,9 +1,14 @@
-import { eventBase, eventInput, rulesDao } from '@xp/core'
+import { eventBase, eventInput, rulesDao, voiceService } from '@xp/core'
 import { parse } from '../lib/validate'
 
 export const eventsController = {
   list(guildId: string) {
     return rulesDao.listEvents(guildId)
+  },
+
+  /** Per-member voice-duration summary for one event (attendance dashboard). */
+  attendance(guildId: string, id: number) {
+    return { eventId: id, rows: voiceService.statsForEvent(guildId, id) }
   },
 
   create(guildId: string, body: unknown) {

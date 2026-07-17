@@ -101,7 +101,21 @@ export function startVoiceTick(client: Client): void {
       const spoke = s.spokeThisTick
       s.spokeThisTick = false
 
-      if (elapsed <= 0 || !present) continue
+      if (elapsed <= 0) continue
+
+      // Record per-event attendance DURATION every tick — including muted ticks that the
+      // XP grant below skips — so the dashboard can report muted vs unmuted vs talk time.
+      voiceService.recordDuration({
+        guildId: s.guildId,
+        userId: s.userId,
+        username: s.username,
+        channelId: s.channelId,
+        seconds: elapsed,
+        muted: s.muted,
+        spoke,
+      })
+
+      if (!present) continue
 
       const outcome = voiceService.grantTick({
         guildId: s.guildId,

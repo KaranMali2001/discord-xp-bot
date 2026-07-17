@@ -2,7 +2,7 @@
 export { env, type Env } from './env'
 export { db, type DB } from './db/client'
 export * as schema from './db/schema'
-export { nowSec, utcDay, utcClock, istWallClockToEpochSec, formatIst } from './util/time'
+export { nowSec, utcDay, istDay, utcClock, istWallClockToEpochSec, formatIst } from './util/time'
 
 // ── leveling (pure) ───────────────────────────────────────
 export {
@@ -38,7 +38,8 @@ export type { Member, CounterDelta } from './domains/xp/xp.dao'
 
 // ── voice ─────────────────────────────────────────────────
 export { voiceService } from './domains/voice/voice.service'
-export type { VoiceTick } from './domains/voice/voice.service'
+export type { VoiceTick, DurationTick } from './domains/voice/voice.service'
+export type { EventAttendanceRow } from './domains/voice/voice.dao'
 
 // ── transcription (Part 1: capture + store; queue for a separate Whisper worker) ──
 export { transcriptService } from './domains/transcript/transcript.service'
