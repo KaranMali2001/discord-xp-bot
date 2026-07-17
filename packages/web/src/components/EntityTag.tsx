@@ -2,7 +2,7 @@ import { useDiscordChannels, useDiscordMembers, useDiscordRoles } from '@/hooks/
 import { cn } from '@/lib/utils'
 import { AtSign, Hash, Volume2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import * as React from 'react'
+import type * as React from 'react'
 
 /**
  * Chips that turn a stored Discord snowflake into the human-readable name.
@@ -66,7 +66,9 @@ export function ChannelTag({
       icon={Icon}
       label={channel?.name ?? channelId}
       resolved={!!channel}
-      title={channel ? `#${channel.name} · ${channelId}` : isLoading ? undefined : 'Deleted channel'}
+      title={
+        channel ? `#${channel.name} · ${channelId}` : isLoading ? undefined : 'Deleted channel'
+      }
       className={className}
     />
   )

@@ -62,7 +62,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: 'cv11', 'ss01';
+    font-feature-settings: "cv11", "ss01";
     text-rendering: optimizeLegibility;
   }
   /* Numeric columns line up cleanly regardless of digit width. */

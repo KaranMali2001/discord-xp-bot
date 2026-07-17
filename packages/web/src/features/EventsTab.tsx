@@ -256,9 +256,7 @@ export function EventsTab({ guildId }: { guildId: string }) {
                 onChange={(e) => setForm({ ...form, end: e.target.value })}
                 aria-invalid={attempted && !!errors.end}
               />
-              {attempted && errors.end && (
-                <p className="text-xs text-destructive">{errors.end}</p>
-              )}
+              {attempted && errors.end && <p className="text-xs text-destructive">{errors.end}</p>}
             </div>
             <div className="sm:col-span-2">
               <Button type="submit" disabled={create.isPending}>

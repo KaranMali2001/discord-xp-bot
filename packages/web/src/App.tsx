@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/States'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AdminsTab } from '@/features/AdminsTab'
 import { AnnouncementsTab } from '@/features/AnnouncementsTab'
@@ -12,7 +13,6 @@ import { LevelRewardsTab } from '@/features/LevelRewardsTab'
 import { TicketsTab } from '@/features/TicketsTab'
 import { VoiceCaptureCard } from '@/features/VoiceCaptureCard'
 import { useGuildId } from '@/hooks/useGuildId'
-import { EmptyState } from '@/components/States'
 import { ServerCog } from 'lucide-react'
 
 const TABS = [
