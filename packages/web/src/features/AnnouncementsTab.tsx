@@ -1,8 +1,10 @@
 import { ChannelPicker } from '@/components/ChannelPicker'
+import { DateTimePicker } from '@/components/DateTimePicker'
+import { ChannelTag } from '@/components/EntityTag'
 import { MentionTextarea } from '@/components/MentionTextarea'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -22,7 +24,8 @@ import {
 } from '@/hooks/useAnnouncements'
 import { markupToDiscord, markupToPlain } from '@/lib/mentions'
 import { formatIst, istDateTimeLocalToEpochSec } from '@/lib/time'
-import { Trash2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { CalendarClock, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 const MAX_LEN = 1900
@@ -39,33 +42,49 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
   const [mentionEveryone, setMentionEveryone] = React.useState(false)
   const [scheduleLater, setScheduleLater] = React.useState(false)
   const [fireAtLocal, setFireAtLocal] = React.useState('')
+  const [attempted, setAttempted] = React.useState(false)
 
   const content = markupToDiscord(message).trim() // what actually gets sent to Discord
   const preview = `${mentionEveryone ? '@everyone\n\n' : ''}${markupToPlain(message)}`.trim()
   const busy = send.isPending || schedule.isPending
+
+  // Field-level validation, surfaced inline once the user has tried to submit.
+  const fireAt = scheduleLater ? istDateTimeLocalToEpochSec(fireAtLocal) : null
+  const errors = {
+    channel: !channelId ? 'Pick a channel.' : null,
+    message: !content
+      ? 'Write a message.'
+      : content.length > MAX_LEN
+        ? `Message is too long by ${content.length - MAX_LEN} characters.`
+        : null,
+    fireAt:
+      scheduleLater && fireAt == null
+        ? 'Pick a date and time.'
+        : scheduleLater && fireAt != null && fireAt < Math.floor(Date.now() / 1000) + 60
+          ? 'Pick a time at least a minute from now.'
+          : null,
+  }
 
   const reset = () => {
     setMessage('')
     setMentionEveryone(false)
     setScheduleLater(false)
     setFireAtLocal('')
+    setAttempted(false)
   }
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!channelId) return toast('Pick a channel', 'error')
-    if (!content) return toast('Write a message', 'error')
-    if (content.length > MAX_LEN)
-      return toast(`Message too long (${content.length}/${MAX_LEN})`, 'error')
+    setAttempted(true)
+    if (errors.channel) return toast(errors.channel, 'error')
+    if (errors.message) return toast(errors.message, 'error')
+    if (errors.fireAt) return toast(errors.fireAt, 'error')
 
+    if (!channelId) return
     // Mentions are inline in the message; core derives allowed-mentions from it.
     const payload = { channelId, message: content, memberIds: [], roleIds: [], mentionEveryone }
     try {
-      if (scheduleLater) {
-        const fireAt = istDateTimeLocalToEpochSec(fireAtLocal)
-        if (fireAt == null) return toast('Pick a valid date & time', 'error')
-        if (fireAt < Math.floor(Date.now() / 1000) + 60)
-          return toast('Pick a time at least a minute from now', 'error')
+      if (scheduleLater && fireAt != null) {
         await schedule.mutateAsync({ ...payload, fireAt })
         toast(`Scheduled for ${formatIst(fireAt)}`)
       } else {
@@ -101,6 +120,9 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
                 value={channelId}
                 onChange={setChannelId}
               />
+              {attempted && errors.channel && (
+                <p className="text-xs text-destructive">{errors.channel}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -112,9 +134,19 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
                 onChange={setMessage}
                 placeholder="What do you want to announce? Type @ to mention someone…"
               />
-              <p className="text-right text-xs text-muted-foreground">
-                {content.length}/{MAX_LEN}
-              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-destructive">
+                  {attempted && errors.message ? errors.message : ''}
+                </span>
+                <span
+                  className={cn(
+                    'text-xs text-muted-foreground',
+                    content.length > MAX_LEN && 'font-medium text-destructive',
+                  )}
+                >
+                  {content.length}/{MAX_LEN}
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -128,7 +160,7 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
               </Label>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Switch
                   id="an-schedule"
@@ -140,15 +172,11 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
                 </Label>
               </div>
               {scheduleLater && (
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="an-fireat"
-                    type="datetime-local"
-                    value={fireAtLocal}
-                    onChange={(e) => setFireAtLocal(e.target.value)}
-                    className="w-auto"
-                  />
-                  <span className="text-xs text-muted-foreground">IST</span>
+                <div className="space-y-1.5">
+                  <DateTimePicker id="an-fireat" value={fireAtLocal} onChange={setFireAtLocal} />
+                  {attempted && errors.fireAt && (
+                    <p className="text-xs text-destructive">{errors.fireAt}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -182,9 +210,13 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent>
           {upcoming.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={3} />
           ) : scheduled.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing scheduled.</p>
+            <EmptyState
+              icon={CalendarClock}
+              title="Nothing scheduled"
+              hint="Turn on “Schedule for later” above to queue an announcement."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -201,7 +233,9 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
                     <TableCell className="whitespace-nowrap text-xs">
                       {formatIst(a.fireAt)}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">&lt;#{a.channelId}&gt;</TableCell>
+                    <TableCell>
+                      <ChannelTag guildId={guildId} channelId={a.channelId} />
+                    </TableCell>
                     <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                       {a.message}
                     </TableCell>

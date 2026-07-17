@@ -3,49 +3,56 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * Warm light dashboard theme: a soft cream page (dimmed off pure-white to cut
+   * glare), warm off-white cards separated by hairline borders + a soft shadow,
+   * warm near-black text, and a single restrained indigo accent (#5e6ad2) used
+   * only on interactive elements — primary buttons, active tab, focus rings, links.
+   */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --background: 38 38% 94.5%;
+    --foreground: 30 10% 13%;
+    --card: 40 44% 98%;
+    --card-foreground: 30 10% 13%;
+    --popover: 40 44% 98%;
+    --popover-foreground: 30 10% 13%;
+    --primary: 232 55% 60%;
+    --primary-foreground: 40 44% 99%;
+    --secondary: 38 26% 90%;
+    --secondary-foreground: 30 10% 18%;
+    --muted: 38 26% 90.5%;
+    --muted-foreground: 32 8% 42%;
+    --accent: 38 28% 89%;
+    --accent-foreground: 30 10% 18%;
+    --destructive: 8 68% 50%;
+    --destructive-foreground: 40 44% 99%;
+    --border: 38 22% 85%;
+    --input: 38 22% 85%;
+    --ring: 232 55% 60%;
     --radius: 0.5rem;
   }
 
+  /* Matching warm dark variant (same indigo accent), in case the theme is ever toggled. */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --background: 30 8% 7%;
+    --foreground: 40 20% 96%;
+    --card: 30 7% 10.5%;
+    --card-foreground: 40 20% 96%;
+    --popover: 30 7% 10.5%;
+    --popover-foreground: 40 20% 96%;
+    --primary: 232 62% 66%;
+    --primary-foreground: 40 44% 99%;
+    --secondary: 30 6% 17%;
+    --secondary-foreground: 40 20% 96%;
+    --muted: 30 6% 17%;
+    --muted-foreground: 36 8% 64%;
+    --accent: 30 6% 17%;
+    --accent-foreground: 40 20% 96%;
+    --destructive: 6 62% 47%;
+    --destructive-foreground: 40 44% 99%;
+    --border: 30 6% 19%;
+    --input: 30 6% 19%;
+    --ring: 232 62% 66%;
   }
 }
 
@@ -54,6 +61,13 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+  /* Numeric columns line up cleanly regardless of digit width. */
+  table,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }

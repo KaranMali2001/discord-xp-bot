@@ -1,3 +1,4 @@
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/components/ui/table'
 import { useEventAttendance, useEvents } from '@/hooks/useEvents'
 import type { EventAttendanceRow } from '@/lib/api'
+import { CalendarClock, Mic } from 'lucide-react'
 import * as React from 'react'
 
 /** seconds → compact "1h 04m" / "4m 12s" / "38s". */
@@ -92,13 +94,19 @@ export function AttendanceTab({ guildId }: { guildId: string }) {
           {eventId != null && rows.length > 0 && <Summary rows={rows} />}
 
           {attendance.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={5} />
           ) : eventId == null ? (
-            <p className="text-sm text-muted-foreground">Pick an event to see attendance.</p>
+            <EmptyState
+              icon={CalendarClock}
+              title="No event selected"
+              hint="Pick an event above to see who showed up and for how long."
+            />
           ) : rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No voice activity recorded for this event yet.
-            </p>
+            <EmptyState
+              icon={Mic}
+              title="No voice activity yet"
+              hint="Attendance appears here once members join voice while this event is running."
+            />
           ) : (
             <Table>
               <TableHeader>

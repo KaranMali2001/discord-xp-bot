@@ -1,3 +1,4 @@
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -5,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
 import { useBadges, useDeleteBadge, useUpsertBadge } from '@/hooks/useBadges'
 import { BADGE_CRITERIA, type Badge, type BadgeCriteria } from '@/lib/api'
-import { Trash2 } from 'lucide-react'
+import { Award, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 type FormState = {
@@ -62,9 +63,13 @@ export function BadgesTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={3} />
           ) : badges.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No badges yet.</p>
+            <EmptyState
+              icon={Award}
+              title="No badges yet"
+              hint="Create a badge below to reward members when they cross a stat threshold."
+            />
           ) : (
             badges.map((badge) => (
               <div

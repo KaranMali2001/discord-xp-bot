@@ -1,4 +1,6 @@
 import { ChannelPicker } from '@/components/ChannelPicker'
+import { ChannelTag } from '@/components/EntityTag'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,7 +10,7 @@ import { useToast } from '@/components/ui/toast'
 import { useCreateEvent, useDeleteEvent, useEvents, usePatchEvent } from '@/hooks/useEvents'
 import type { EventInput } from '@/lib/api'
 import { DAY_NAMES, hhmmToMinutes, minutesToHhmm } from '@/lib/time'
-import { Trash2 } from 'lucide-react'
+import { CalendarClock, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 type FormState = {
@@ -48,13 +50,28 @@ export function EventsTab({ guildId }: { guildId: string }) {
   const patch = usePatchEvent(guildId)
   const remove = useDeleteEvent(guildId)
   const [form, setForm] = React.useState<FormState>(EMPTY)
+  const [attempted, setAttempted] = React.useState(false)
+
+  const startMinute = hhmmToMinutes(form.start)
+  const endMinute = hhmmToMinutes(form.end)
+  const errors = {
+    name: !form.name.trim() ? 'Enter an event name.' : null,
+    multiplier: form.multiplier <= 0 ? 'Multiplier must be greater than 0.' : null,
+    start: startMinute == null ? 'Enter a start time.' : null,
+    end:
+      endMinute == null
+        ? 'Enter an end time.'
+        : startMinute != null && endMinute <= startMinute
+          ? 'End must be after start.'
+          : null,
+  }
+  const firstError = errors.name ?? errors.multiplier ?? errors.start ?? errors.end
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const startMinute = hhmmToMinutes(form.start)
-    const endMinute = hhmmToMinutes(form.end)
-    if (!form.name.trim() || startMinute == null || endMinute == null) {
-      toast('Enter a name and valid HH:MM start/end times', 'error')
+    setAttempted(true)
+    if (firstError || startMinute == null || endMinute == null) {
+      if (firstError) toast(firstError, 'error')
       return
     }
     const body: EventInput = {
@@ -71,6 +88,7 @@ export function EventsTab({ guildId }: { guildId: string }) {
       onSuccess: () => {
         toast('Event created')
         setForm(EMPTY)
+        setAttempted(false)
       },
       onError: (err) => toast((err as Error).message, 'error'),
     })
@@ -87,22 +105,32 @@ export function EventsTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={3} />
           ) : events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No events yet.</p>
+            <EmptyState
+              icon={CalendarClock}
+              title="No events yet"
+              hint="Create a recurring window below — e.g. double XP every Friday night."
+            />
           ) : (
             events.map((ev) => (
               <div
                 key={ev.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
               >
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   <p className="font-medium">
                     {ev.name} <span className="text-muted-foreground">×{ev.multiplier}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                     {describeWindow(ev.dayOfWeek, ev.startMinute, ev.endMinute)}
                     {ev.countsAttendance ? ' · counts attendance' : ''}
+                    {ev.channelId ? (
+                      <>
+                        {' · '}
+                        <ChannelTag guildId={guildId} channelId={ev.channelId} />
+                      </>
+                    ) : null}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -152,7 +180,11 @@ export function EventsTab({ guildId }: { guildId: string }) {
                 id="ev-name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
+                aria-invalid={attempted && !!errors.name}
               />
+              {attempted && errors.name && (
+                <p className="text-xs text-destructive">{errors.name}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ev-mult">Multiplier</Label>
@@ -163,7 +195,11 @@ export function EventsTab({ guildId }: { guildId: string }) {
                 step="0.5"
                 value={form.multiplier}
                 onChange={(e) => setForm({ ...form, multiplier: Number(e.target.value) || 0 })}
+                aria-invalid={attempted && !!errors.multiplier}
               />
+              {attempted && errors.multiplier && (
+                <p className="text-xs text-destructive">{errors.multiplier}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ev-day">Day of week</Label>
@@ -199,20 +235,28 @@ export function EventsTab({ guildId }: { guildId: string }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ev-start">Start (HH:MM IST)</Label>
+              <Label htmlFor="ev-start">Start (IST)</Label>
               <Input
                 id="ev-start"
+                type="time"
                 value={form.start}
                 onChange={(e) => setForm({ ...form, start: e.target.value })}
+                aria-invalid={attempted && !!errors.start}
               />
+              {attempted && errors.start && (
+                <p className="text-xs text-destructive">{errors.start}</p>
+              )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ev-end">End (HH:MM IST)</Label>
+              <Label htmlFor="ev-end">End (IST)</Label>
               <Input
                 id="ev-end"
+                type="time"
                 value={form.end}
                 onChange={(e) => setForm({ ...form, end: e.target.value })}
+                aria-invalid={attempted && !!errors.end}
               />
+              {attempted && errors.end && <p className="text-xs text-destructive">{errors.end}</p>}
             </div>
             <div className="sm:col-span-2">
               <Button type="submit" disabled={create.isPending}>

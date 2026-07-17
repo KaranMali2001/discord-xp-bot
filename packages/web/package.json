@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-popover": "^1",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.1",
@@ -19,6 +20,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.454.0",
     "react": "^18.3.1",
+    "react-day-picker": "^9",
     "react-dom": "^18.3.1",
     "react-mentions": "^4.4.10",
     "tailwind-merge": "^2.5.4"
