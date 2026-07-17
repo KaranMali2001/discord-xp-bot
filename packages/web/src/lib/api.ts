@@ -102,6 +102,20 @@ export type EventInput = {
   endsAt?: number | null
 }
 
+export type EventAttendanceRow = {
+  userId: string
+  username: string
+  presentSeconds: number
+  mutedSeconds: number
+  speakingSeconds: number
+  days: number
+}
+
+export type EventAttendance = {
+  eventId: number
+  rows: EventAttendanceRow[]
+}
+
 export type LevelReward = {
   level: number
   roleId: string
@@ -254,6 +268,8 @@ export const endpoints = {
       apiFetch<MultiplierEvent>(`${g(guildId)}/events/${id}`, { method: 'PATCH', body }),
     remove: (guildId: string, id: number) =>
       apiFetch<void>(`${g(guildId)}/events/${id}`, { method: 'DELETE' }),
+    attendance: (guildId: string, id: number) =>
+      apiFetch<EventAttendance>(`${g(guildId)}/events/${id}/attendance`),
   },
 
   levelRewards: {

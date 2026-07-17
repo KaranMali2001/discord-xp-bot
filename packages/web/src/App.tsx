@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AdminsTab } from '@/features/AdminsTab'
 import { AnnouncementsTab } from '@/features/AnnouncementsTab'
+import { AttendanceTab } from '@/features/AttendanceTab'
 import { BadgesTab } from '@/features/BadgesTab'
 import { ChannelsTab } from '@/features/ChannelsTab'
 import { ConfigTab } from '@/features/ConfigTab'
@@ -16,6 +17,7 @@ const TABS = [
   { value: 'config', label: 'Config' },
   { value: 'channels', label: 'Channels' },
   { value: 'events', label: 'Events' },
+  { value: 'attendance', label: 'Attendance' },
   { value: 'rewards', label: 'Level Rewards' },
   { value: 'badges', label: 'Badges' },
   { value: 'leaderboard', label: 'Leaderboard' },
@@ -52,6 +54,9 @@ export default function App() {
               </TabsContent>
               <TabsContent value="events">
                 <EventsTab guildId={guildId} />
+              </TabsContent>
+              <TabsContent value="attendance">
+                <AttendanceTab guildId={guildId} />
               </TabsContent>
               <TabsContent value="rewards">
                 <LevelRewardsTab guildId={guildId} />

@@ -25,6 +25,11 @@ export async function eventsRoutes(app: FastifyInstance): Promise<void> {
     return eventsController.create(request.params.guildId, request.body)
   })
 
+  app.get<{ Params: EventParams }>('/guilds/:guildId/events/:id/attendance', async (request) => {
+    const id = parse(idParam, request.params.id)
+    return eventsController.attendance(request.params.guildId, id)
+  })
+
   app.patch<{ Params: EventParams }>('/guilds/:guildId/events/:id', async (request) => {
     const id = parse(idParam, request.params.id)
     return eventsController.update(request.params.guildId, id, request.body)

@@ -142,6 +142,41 @@ export const eventAttendance = sqliteTable(
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId, t.eventId, t.day] }) }),
 )
 
+/**
+ * Per (member, event, day) voice-duration accumulator — the data behind the attendance
+ * dashboard. Complements `event_attendance` (a binary "showed up" flag) by recording HOW
+ * LONG each person stayed, split by mute state and speaking.
+ *
+ * One row per event-day: a disconnect + rejoin during the same event/day accumulates into
+ * the SAME row (counters are incremented each XP tick). Time spent disconnected is never
+ * billed — the tracker drops the in-memory session on leave and resets the clock on rejoin.
+ *
+ * Derived views: unmuted = presentSeconds − mutedSeconds; talk-time = speakingSeconds.
+ */
+export const eventVoiceStats = sqliteTable(
+  'event_voice_stats',
+  {
+    guildId: text('guild_id').notNull(),
+    userId: text('user_id').notNull(),
+    eventId: integer('event_id').notNull(),
+    day: text('day').notNull(), // yyyy-mm-dd (UTC) — matches event_attendance
+    username: text('username').notNull().default(''),
+    channelId: text('channel_id').notNull().default(''),
+    // Total seconds connected to the VC (muted + unmuted) — "how long they stayed".
+    presentSeconds: integer('present_seconds').notNull().default(0),
+    // Of the above, seconds spent muted/deafened.
+    mutedSeconds: integer('muted_seconds').notNull().default(0),
+    // Seconds in ticks where the receiver reported them transmitting audio.
+    speakingSeconds: integer('speaking_seconds').notNull().default(0),
+    firstSeenAt: integer('first_seen_at').notNull().default(now), // epoch seconds
+    lastSeenAt: integer('last_seen_at').notNull().default(now),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.guildId, t.userId, t.eventId, t.day] }),
+    eventIdx: index('event_voice_stats_event').on(t.guildId, t.eventId),
+  }),
+)
+
 /** Dashboard admin allowlist (in addition to Discord MANAGE_GUILD perm). */
 export const admins = sqliteTable(
   'admins',
