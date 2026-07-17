@@ -8,6 +8,16 @@ export function utcDay(atSec: number = nowSec()): string {
   return new Date(atSec * 1000).toISOString().slice(0, 10)
 }
 
+/**
+ * IST yyyy-mm-dd for a given epoch-seconds instant (default: now). Shifting the instant
+ * forward by the IST offset makes its UTC calendar date read as the IST calendar date, so
+ * a late-evening event never splits across two day-rows. Use this for day-bucketing that
+ * must line up with the IST event windows (attendance, voice stats).
+ */
+export function istDay(atSec: number = nowSec()): string {
+  return utcDay(atSec + IST_OFFSET_MIN * 60)
+}
+
 /** Minutes since UTC midnight, and UTC day-of-week (0=Sun..6=Sat). */
 export function utcClock(atSec: number = nowSec()): { dow: number; minute: number } {
   const d = new Date(atSec * 1000)

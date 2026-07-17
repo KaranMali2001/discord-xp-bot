@@ -2,7 +2,7 @@
 export { env, type Env } from './env'
 export { db, type DB } from './db/client'
 export * as schema from './db/schema'
-export { nowSec, utcDay, utcClock, istWallClockToEpochSec, formatIst } from './util/time'
+export { nowSec, utcDay, istDay, utcClock, istWallClockToEpochSec, formatIst } from './util/time'
 
 // ── leveling (pure) ───────────────────────────────────────
 export {

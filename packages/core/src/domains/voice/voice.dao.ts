@@ -1,7 +1,7 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { db } from '../../db/client'
 import { eventAttendance, eventVoiceStats } from '../../db/schema'
-import { nowSec, utcDay } from '../../util/time'
+import { istDay, nowSec } from '../../util/time'
 
 /** One tick's worth of voice duration to fold into the event-day accumulator. */
 export interface ActivityDelta {
@@ -30,7 +30,7 @@ export const voiceDao = {
   /** Idempotent per (member, event, day) — one Friday attended = one row, however long they stayed. */
   recordAttendance(guildId: string, userId: string, eventId: number, atSec?: number) {
     db.insert(eventAttendance)
-      .values({ guildId, userId, eventId, day: utcDay(atSec) })
+      .values({ guildId, userId, eventId, day: istDay(atSec) })
       .onConflictDoNothing()
       .run()
   },
@@ -47,7 +47,7 @@ export const voiceDao = {
         guildId: d.guildId,
         userId: d.userId,
         eventId: d.eventId,
-        day: utcDay(at),
+        day: istDay(at),
         username: d.username,
         channelId: d.channelId,
         presentSeconds: d.seconds,

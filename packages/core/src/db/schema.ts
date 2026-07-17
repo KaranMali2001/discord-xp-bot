@@ -137,7 +137,7 @@ export const eventAttendance = sqliteTable(
     guildId: text('guild_id').notNull(),
     userId: text('user_id').notNull(),
     eventId: integer('event_id').notNull(),
-    day: text('day').notNull(), // yyyy-mm-dd (UTC)
+    day: text('day').notNull(), // yyyy-mm-dd (IST) — matches the IST event windows
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId, t.eventId, t.day] }) }),
 )
@@ -159,7 +159,7 @@ export const eventVoiceStats = sqliteTable(
     guildId: text('guild_id').notNull(),
     userId: text('user_id').notNull(),
     eventId: integer('event_id').notNull(),
-    day: text('day').notNull(), // yyyy-mm-dd (UTC) — matches event_attendance
+    day: text('day').notNull(), // yyyy-mm-dd (IST) — matches event_attendance & the IST event windows
     username: text('username').notNull().default(''),
     channelId: text('channel_id').notNull().default(''),
     // Total seconds connected to the VC (muted + unmuted) — "how long they stayed".
