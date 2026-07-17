@@ -12,6 +12,8 @@ import { LevelRewardsTab } from '@/features/LevelRewardsTab'
 import { TicketsTab } from '@/features/TicketsTab'
 import { VoiceCaptureCard } from '@/features/VoiceCaptureCard'
 import { useGuildId } from '@/hooks/useGuildId'
+import { EmptyState } from '@/components/States'
+import { ServerCog } from 'lucide-react'
 
 const TABS = [
   { value: 'config', label: 'Config' },
@@ -79,9 +81,12 @@ export default function App() {
             </Tabs>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-            Enter a guild id above to get started.
-          </div>
+          <EmptyState
+            icon={ServerCog}
+            title="No guild selected"
+            hint="Enter a Discord guild id in the header to load its leveling settings."
+            className="py-16"
+          />
         )}
       </main>
     </div>

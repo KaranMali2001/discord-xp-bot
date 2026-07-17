@@ -1,4 +1,6 @@
+import { RoleTag } from '@/components/EntityTag'
 import { RolePicker } from '@/components/RolePicker'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,7 +20,7 @@ import {
   useLevelRewards,
   useUpsertLevelReward,
 } from '@/hooks/useLevelRewards'
-import { Trash2 } from 'lucide-react'
+import { Medal, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 type Mode = 'create' | 'existing'
@@ -88,9 +90,13 @@ export function LevelRewardsTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent>
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows />
           ) : rewards.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tiers yet.</p>
+            <EmptyState
+              icon={Medal}
+              title="No tiers yet"
+              hint="Map a level to a role below — members earn it automatically when they reach that level."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -105,8 +111,8 @@ export function LevelRewardsTab({ guildId }: { guildId: string }) {
                 {rewards.map((reward) => (
                   <TableRow key={reward.level}>
                     <TableCell>{reward.level}</TableCell>
-                    <TableCell className="font-mono text-xs">
-                      &lt;@&amp;{reward.roleId}&gt;
+                    <TableCell>
+                      <RoleTag guildId={guildId} roleId={reward.roleId} />
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {reward.message || <span className="italic">default</span>}

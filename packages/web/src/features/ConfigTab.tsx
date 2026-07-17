@@ -1,4 +1,5 @@
 import { ChannelPicker } from '@/components/ChannelPicker'
+import { ErrorState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -44,11 +45,30 @@ export function ConfigTab({ guildId }: { guildId: string }) {
     if (query.data) setForm(query.data)
   }, [query.data])
 
-  if (query.isLoading || !form) {
-    return <p className="text-sm text-muted-foreground">Loading config…</p>
-  }
   if (query.isError) {
-    return <p className="text-sm text-destructive">Failed to load config.</p>
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Guild config</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ErrorState message="Failed to load config." />
+        </CardContent>
+      </Card>
+    )
+  }
+  if (query.isLoading || !form) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Guild config</CardTitle>
+          <CardDescription>Global XP knobs for this guild.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SkeletonRows rows={5} />
+        </CardContent>
+      </Card>
+    )
   }
 
   const current = form

@@ -1,4 +1,6 @@
 import { ChannelPicker } from '@/components/ChannelPicker'
+import { ChannelTag } from '@/components/EntityTag'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,7 +10,7 @@ import { useToast } from '@/components/ui/toast'
 import { useCreateEvent, useDeleteEvent, useEvents, usePatchEvent } from '@/hooks/useEvents'
 import type { EventInput } from '@/lib/api'
 import { DAY_NAMES, hhmmToMinutes, minutesToHhmm } from '@/lib/time'
-import { Trash2 } from 'lucide-react'
+import { CalendarClock, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 type FormState = {
@@ -87,22 +89,32 @@ export function EventsTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent className="space-y-3">
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={3} />
           ) : events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No events yet.</p>
+            <EmptyState
+              icon={CalendarClock}
+              title="No events yet"
+              hint="Create a recurring window below — e.g. double XP every Friday night."
+            />
           ) : (
             events.map((ev) => (
               <div
                 key={ev.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
               >
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   <p className="font-medium">
                     {ev.name} <span className="text-muted-foreground">×{ev.multiplier}</span>
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                     {describeWindow(ev.dayOfWeek, ev.startMinute, ev.endMinute)}
                     {ev.countsAttendance ? ' · counts attendance' : ''}
+                    {ev.channelId ? (
+                      <>
+                        {' · '}
+                        <ChannelTag guildId={guildId} channelId={ev.channelId} />
+                      </>
+                    ) : null}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

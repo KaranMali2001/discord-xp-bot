@@ -1,5 +1,7 @@
 import { ChannelPicker } from '@/components/ChannelPicker'
+import { ChannelTag } from '@/components/EntityTag'
 import { MentionTextarea } from '@/components/MentionTextarea'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,7 +24,7 @@ import {
 } from '@/hooks/useAnnouncements'
 import { markupToDiscord, markupToPlain } from '@/lib/mentions'
 import { formatIst, istDateTimeLocalToEpochSec } from '@/lib/time'
-import { Trash2 } from 'lucide-react'
+import { CalendarClock, Trash2 } from 'lucide-react'
 import * as React from 'react'
 
 const MAX_LEN = 1900
@@ -182,9 +184,13 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent>
           {upcoming.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={3} />
           ) : scheduled.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nothing scheduled.</p>
+            <EmptyState
+              icon={CalendarClock}
+              title="Nothing scheduled"
+              hint="Turn on “Schedule for later” above to queue an announcement."
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -201,7 +207,9 @@ export function AnnouncementsTab({ guildId }: { guildId: string }) {
                     <TableCell className="whitespace-nowrap text-xs">
                       {formatIst(a.fireAt)}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">&lt;#{a.channelId}&gt;</TableCell>
+                    <TableCell>
+                      <ChannelTag guildId={guildId} channelId={a.channelId} />
+                    </TableCell>
                     <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                       {a.message}
                     </TableCell>
