@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { RolePicker } from '@/components/RolePicker'
+import { SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -54,7 +55,7 @@ export function TicketsTab({ guildId }: { guildId: string }) {
       </CardHeader>
       <CardContent>
         {query.isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <SkeletonRows rows={3} />
         ) : (
           <form onSubmit={onSubmit} className="space-y-6">
             <div className="space-y-1.5">

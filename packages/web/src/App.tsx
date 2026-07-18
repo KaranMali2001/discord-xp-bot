@@ -1,3 +1,5 @@
+import { ServerCog } from 'lucide-react'
+import { EmptyState } from '@/components/States'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AdminsTab } from '@/features/AdminsTab'
 import { AnnouncementsTab } from '@/features/AnnouncementsTab'
@@ -79,9 +81,12 @@ export default function App() {
             </Tabs>
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">
-            Enter a guild id above to get started.
-          </div>
+          <EmptyState
+            icon={ServerCog}
+            title="No guild selected"
+            hint="Enter a Discord guild id in the header to load its leveling settings."
+            className="py-16"
+          />
         )}
       </main>
     </div>

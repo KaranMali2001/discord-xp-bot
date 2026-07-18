@@ -1,6 +1,8 @@
-import { Trash2 } from 'lucide-react'
+import { ShieldCheck, Trash2 } from 'lucide-react'
 import * as React from 'react'
+import { MemberTag } from '@/components/EntityTag'
 import { MemberPicker } from '@/components/MemberPicker'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -42,13 +44,17 @@ export function AdminsTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent className="space-y-2">
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={3} />
           ) : admins.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No explicit admins yet.</p>
+            <EmptyState
+              icon={ShieldCheck}
+              title="No explicit admins yet"
+              hint="Anyone with Discord’s Manage Server permission can already manage this guild. Add a member below to grant access without it."
+            />
           ) : (
             admins.map((userId) => (
               <div key={userId} className="flex items-center justify-between rounded-lg border p-3">
-                <span className="font-mono text-xs">{userId}</span>
+                <MemberTag guildId={guildId} userId={userId} />
                 <Button
                   variant="ghost"
                   size="icon"

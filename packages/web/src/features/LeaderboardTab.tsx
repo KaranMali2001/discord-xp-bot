@@ -1,5 +1,7 @@
+import { Trophy } from 'lucide-react'
 import * as React from 'react'
 import { MemberPicker } from '@/components/MemberPicker'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -87,9 +89,13 @@ export function LeaderboardTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent>
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows rows={6} />
           ) : entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No members yet.</p>
+            <EmptyState
+              icon={Trophy}
+              title="No members yet"
+              hint="As members chat and join voice they’ll start earning XP and appear here."
+            />
           ) : (
             <Table>
               <TableHeader>

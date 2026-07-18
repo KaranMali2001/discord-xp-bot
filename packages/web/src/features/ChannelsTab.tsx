@@ -1,6 +1,8 @@
-import { Trash2 } from 'lucide-react'
+import { Hash, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
+import { ChannelTag } from '@/components/EntityTag'
+import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -57,14 +59,18 @@ export function ChannelsTab({ guildId }: { guildId: string }) {
         </CardHeader>
         <CardContent>
           {query.isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <SkeletonRows />
           ) : rules.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No channel rules yet.</p>
+            <EmptyState
+              icon={Hash}
+              title="No channel rules yet"
+              hint="Add a rule below to boost or mute XP in a specific channel."
+            />
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Channel id</TableHead>
+                  <TableHead>Channel</TableHead>
                   <TableHead>Kind</TableHead>
                   <TableHead>Multiplier</TableHead>
                   <TableHead>No XP</TableHead>
@@ -74,7 +80,9 @@ export function ChannelsTab({ guildId }: { guildId: string }) {
               <TableBody>
                 {rules.map((rule) => (
                   <TableRow key={rule.channelId}>
-                    <TableCell className="font-mono text-xs">{rule.channelId}</TableCell>
+                    <TableCell>
+                      <ChannelTag guildId={guildId} channelId={rule.channelId} />
+                    </TableCell>
                     <TableCell className="capitalize">{rule.kind}</TableCell>
                     <TableCell>×{rule.multiplier}</TableCell>
                     <TableCell>{rule.noXp ? 'yes' : 'no'}</TableCell>
