@@ -22,79 +22,84 @@ import {
  * the thread. Validation lives here; the DAO is pure persistence.
  */
 export const ticketsService = {
-  getConfig(guildId: string): TicketConfig | undefined {
+  async getConfig(guildId: string): Promise<TicketConfig | undefined> {
     return ticketsDao.getConfig(guildId)
   },
 
   /** True once both channels are configured — the panel can't work without them. */
-  isReady(guildId: string): boolean {
-    const c = ticketsDao.getConfig(guildId)
+  async isReady(guildId: string): Promise<boolean> {
+    const c = await ticketsDao.getConfig(guildId)
     return Boolean(c?.enabled && c.panelChannelId && c.ticketChannelId)
   },
 
-  saveConfig(guildId: string, raw: Partial<TicketConfigInput>): TicketConfig {
+  async saveConfig(guildId: string, raw: Partial<TicketConfigInput>): Promise<TicketConfig> {
     const patch = ticketConfigInput.partial().parse(raw)
     return ticketsDao.upsertConfig(guildId, patch)
   },
 
   /** Validate + persist a raised ticket. Throws ZodError on bad input. */
-  create(guildId: string, raw: TicketInput): Ticket {
+  async create(guildId: string, raw: TicketInput): Promise<Ticket> {
     const input = ticketInput.parse(raw)
     return ticketsDao.create(guildId, input)
   },
 
-  get(guildId: string, id: number): Ticket | undefined {
+  async get(guildId: string, id: number): Promise<Ticket | undefined> {
     return ticketsDao.get(guildId, id)
   },
 
-  getByThread(threadId: string): Ticket | undefined {
+  async getByThread(threadId: string): Promise<Ticket | undefined> {
     return ticketsDao.getByThread(threadId)
   },
 
-  setStatus(guildId: string, id: number, status: TicketStatus): Ticket | undefined {
+  async setStatus(guildId: string, id: number, status: TicketStatus): Promise<Ticket | undefined> {
     return ticketsDao.setStatus(guildId, id, status)
   },
 
-  setModMessage(id: number, modMessageId: string): void {
-    ticketsDao.setModMessage(id, modMessageId)
-  },
-
-  setThread(id: number, threadId: string): void {
-    ticketsDao.setThread(id, threadId)
+  async setThread(id: number, threadId: string): Promise<void> {
+    await ticketsDao.setThread(id, threadId)
   },
 
   // ── participants / access ─────────────────────────────────
-  addParticipant(guildId: string, ticketId: number, userId: string, role: ParticipantRole): void {
-    ticketsDao.addParticipant(guildId, ticketId, userId, role)
+  async addParticipant(
+    guildId: string,
+    ticketId: number,
+    userId: string,
+    role: ParticipantRole,
+  ): Promise<void> {
+    await ticketsDao.addParticipant(guildId, ticketId, userId, role)
   },
 
-  isParticipant(ticketId: number, userId: string): boolean {
+  async isParticipant(ticketId: number, userId: string): Promise<boolean> {
     return ticketsDao.isParticipant(ticketId, userId)
   },
 
-  listParticipants(ticketId: number): TicketParticipant[] {
+  async listParticipants(ticketId: number): Promise<TicketParticipant[]> {
     return ticketsDao.listParticipants(ticketId)
   },
 
   /** Whether this user still needs channel access for some other open ticket. */
-  hasAccessElsewhere(guildId: string, userId: string, excludeTicketId: number): boolean {
+  async hasAccessElsewhere(
+    guildId: string,
+    userId: string,
+    excludeTicketId: number,
+  ): Promise<boolean> {
     return ticketsDao.hasAccessElsewhere(guildId, userId, excludeTicketId)
   },
 
-  listByStatus(guildId: string, status: TicketStatus, limit?: number): Ticket[] {
+  async listByStatus(guildId: string, status: TicketStatus, limit?: number): Promise<Ticket[]> {
     return ticketsDao.listByStatus(guildId, status, limit)
   },
 
-  addAttachment(guildId: string, ticketId: number, raw: TicketAttachmentInput) {
+  async addAttachment(guildId: string, ticketId: number, raw: TicketAttachmentInput) {
     const input = ticketAttachmentInput.parse(raw)
     return ticketsDao.addAttachment(guildId, ticketId, input)
   },
 
-  listAttachmentMeta(ticketId: number) {
-    return ticketsDao.listAttachmentMeta(ticketId)
+  async listAttachmentMeta(guildId: string, ticketId: number) {
+    return ticketsDao.listAttachmentMeta(guildId, ticketId)
   },
 
-  getAttachment(id: number) {
+  async getAttachment(id: number) {
     return ticketsDao.getAttachment(id)
   },
 }

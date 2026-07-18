@@ -1,6 +1,6 @@
+import { Mention, MentionsInput, type SuggestionDataItem } from 'react-mentions'
 import { useDiscordRoles } from '@/hooks/useDiscord'
 import { endpoints } from '@/lib/api'
-import { Mention, MentionsInput, type SuggestionDataItem } from 'react-mentions'
 
 type MentionTextareaProps = {
   guildId: string

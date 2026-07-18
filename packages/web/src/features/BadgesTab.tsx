@@ -1,3 +1,5 @@
+import { Award, Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,8 +8,6 @@ import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
 import { useBadges, useDeleteBadge, useUpsertBadge } from '@/hooks/useBadges'
 import { BADGE_CRITERIA, type Badge, type BadgeCriteria } from '@/lib/api'
-import { Award, Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 type FormState = {
   key: string

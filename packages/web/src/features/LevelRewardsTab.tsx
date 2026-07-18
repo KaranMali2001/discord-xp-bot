@@ -1,3 +1,5 @@
+import { Medal, Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { RoleTag } from '@/components/EntityTag'
 import { RolePicker } from '@/components/RolePicker'
 import { EmptyState, SkeletonRows } from '@/components/States'
@@ -20,8 +22,6 @@ import {
   useLevelRewards,
   useUpsertLevelReward,
 } from '@/hooks/useLevelRewards'
-import { Medal, Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 type Mode = 'create' | 'existing'
 

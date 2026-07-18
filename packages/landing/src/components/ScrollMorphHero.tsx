@@ -124,6 +124,7 @@ export function ScrollMorphHero({ lightMode = false }: Props) {
     }
 
     function render() {
+      if (!hero) return
       const rect = hero.getBoundingClientRect()
       cardsRef.current.forEach((card, i) => {
         const t = targetFor(i, rect)
@@ -157,6 +158,7 @@ export function ScrollMorphHero({ lightMode = false }: Props) {
     }
 
     function onPointerMove(e: MouseEvent) {
+      if (!hero) return
       const rect = hero.getBoundingClientRect()
       s.pointerOffset = (((e.clientX - rect.left) / rect.width) * 2 - 1) * 100
       if (s.phase === 'circle') render()

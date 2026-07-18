@@ -1,5 +1,5 @@
-import { type AuthUser, endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type AuthUser, endpoints } from '@/lib/api'
 
 const AUTH_KEY = ['auth', 'me'] as const
 

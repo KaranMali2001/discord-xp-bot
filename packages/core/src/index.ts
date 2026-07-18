@@ -1,112 +1,107 @@
 // ── env & db ──────────────────────────────────────────────
-export { env, type Env } from './env'
-export { db, type DB } from './db/client'
-export * as schema from './db/schema'
-export { nowSec, utcDay, istDay, utcClock, istWallClockToEpochSec, formatIst } from './util/time'
 
+export { type DB, db } from './db/client'
+export * as schema from './db/schema'
+export type {
+  AnnouncementInput,
+  ScheduledAnnouncementInput,
+} from './domains/announcements/announcements.schema'
+export {
+  announcementInput,
+  MIN_LEAD_SEC,
+  scheduledAnnouncementInput,
+} from './domains/announcements/announcements.schema'
+// ── announcements ─────────────────────────────────────────
+export { announcementsService } from './domains/announcements/announcements.service'
+export type {
+  ScheduledAnnouncement,
+  ScheduledStatus,
+} from './domains/announcements/scheduled.dao'
+export { scheduledDao } from './domains/announcements/scheduled.dao'
+export { scheduledAnnouncementsService } from './domains/announcements/scheduled.service'
+// ── auth (identity data only) ─────────────────────────────
+export { authService } from './domains/auth/auth.service'
+export type { Badge } from './domains/badges/badges.dao'
+export type { BadgeInput } from './domains/badges/badges.schema'
+export { BADGE_CRITERIA, badgeInput } from './domains/badges/badges.schema'
+// ── badges ────────────────────────────────────────────────
+export { badgesService } from './domains/badges/badges.service'
 // ── leveling (pure) ───────────────────────────────────────
 export {
-  xpForNextLevel,
-  totalXpForLevel,
   levelFromXp,
   levelProgress,
+  totalXpForLevel,
+  xpForNextLevel,
 } from './domains/leveling/leveling.service'
-
-// ── rules ─────────────────────────────────────────────────
-export { rulesService, DEFAULT_CONFIG, isEventActive } from './domains/rules/rules.service'
-export type { ResolvedConfig } from './domains/rules/rules.service'
+export type { LevelReward, RoleDiff } from './domains/rewards/level-roles.service'
+export { reconcileDecision, targetTier } from './domains/rewards/level-roles.service'
+export type { ReconcileResult } from './domains/rewards/reconcile.service'
+export { announceReconcile, reconcileMember } from './domains/rewards/reconcile.service'
 export { rulesDao } from './domains/rules/rules.dao'
+export type {
+  ChannelRuleInput,
+  EventInput,
+  GuildConfigInput,
+  LevelRewardInput,
+} from './domains/rules/rules.schema'
 export {
-  guildConfigInput,
   channelRuleInput,
   eventBase,
   eventInput,
+  guildConfigInput,
   levelRewardInput,
 } from './domains/rules/rules.schema'
+export type { ResolvedConfig } from './domains/rules/rules.service'
+// ── rules ─────────────────────────────────────────────────
+export { DEFAULT_CONFIG, isEventActive, rulesService } from './domains/rules/rules.service'
 export type {
-  GuildConfigInput,
-  ChannelRuleInput,
-  EventInput,
-  LevelRewardInput,
-} from './domains/rules/rules.schema'
-
-// ── xp ────────────────────────────────────────────────────
-export { xpService } from './domains/xp/xp.service'
-export type { GrantResult, SkipReason } from './domains/xp/xp.service'
-export { xpDao } from './domains/xp/xp.dao'
-export type { Member, CounterDelta } from './domains/xp/xp.dao'
-
-// ── voice ─────────────────────────────────────────────────
-export { voiceService } from './domains/voice/voice.service'
-export type { VoiceTick, DurationTick } from './domains/voice/voice.service'
-export type { EventAttendanceRow } from './domains/voice/voice.dao'
-
-// ── transcription (Part 1: capture + store; queue for a separate Whisper worker) ──
-export { transcriptService } from './domains/transcript/transcript.service'
-export type { EnqueueInput } from './domains/transcript/transcript.service'
-export { transcriptDao } from './domains/transcript/transcript.dao'
+  ParticipantRole,
+  Ticket,
+  TicketAttachment,
+  TicketConfig,
+  TicketParticipant,
+  TicketStatus,
+} from './domains/ticketing/tickets.dao'
+export { ticketsDao } from './domains/ticketing/tickets.dao'
+export type {
+  TicketAttachmentInput,
+  TicketConfigInput,
+  TicketInput,
+  TicketSetupInput,
+} from './domains/ticketing/tickets.schema'
+export {
+  ticketAttachmentInput,
+  ticketConfigInput,
+  ticketInput,
+  ticketSetupInput,
+} from './domains/ticketing/tickets.schema'
+// ── ticketing ─────────────────────────────────────────────
+export { ticketsService } from './domains/ticketing/tickets.service'
+export { applyTicketSetup, buildTicketPanelPayload } from './domains/ticketing/tickets.setup'
 export type {
   TranscriptJob,
   TranscriptJobInput,
   TranscriptStatus,
 } from './domains/transcript/transcript.dao'
-
-// ── badges ────────────────────────────────────────────────
-export { badgesService } from './domains/badges/badges.service'
-export type { Badge } from './domains/badges/badges.dao'
-export { badgeInput, BADGE_CRITERIA } from './domains/badges/badges.schema'
-export type { BadgeInput } from './domains/badges/badges.schema'
-
+export { transcriptDao } from './domains/transcript/transcript.dao'
+export type { EnqueueInput } from './domains/transcript/transcript.service'
+// ── transcription (Part 1: capture + store; queue for a separate Whisper worker) ──
+export { transcriptService } from './domains/transcript/transcript.service'
+export type { EventAttendanceRow } from './domains/voice/voice.dao'
+export type { DurationTick, VoiceTick } from './domains/voice/voice.service'
+// ── voice ─────────────────────────────────────────────────
+export { voiceService } from './domains/voice/voice.service'
+export type { CounterDelta, Member } from './domains/xp/xp.dao'
+export { xpDao } from './domains/xp/xp.dao'
+export type { GrantResult, SkipReason } from './domains/xp/xp.service'
+// ── xp ────────────────────────────────────────────────────
+export { xpService } from './domains/xp/xp.service'
+export { type Env, env } from './env'
+export type { DiscordMember, DiscordRole } from './lib/discord-rest'
 // ── level-reward roles + reconcile ────────────────────────
-export { discordRest, DiscordError } from './lib/discord-rest'
-export type { DiscordRole, DiscordMember } from './lib/discord-rest'
-export { targetTier, reconcileDecision } from './domains/rewards/level-roles.service'
-export type { LevelReward, RoleDiff } from './domains/rewards/level-roles.service'
-export { reconcileMember, announceReconcile } from './domains/rewards/reconcile.service'
-export type { ReconcileResult } from './domains/rewards/reconcile.service'
-
-// ── auth (identity data only) ─────────────────────────────
-export { authService } from './domains/auth/auth.service'
-
-// ── announcements ─────────────────────────────────────────
-export { announcementsService } from './domains/announcements/announcements.service'
-export { scheduledAnnouncementsService } from './domains/announcements/scheduled.service'
-export { scheduledDao } from './domains/announcements/scheduled.dao'
-export type {
-  ScheduledAnnouncement,
-  ScheduledStatus,
-} from './domains/announcements/scheduled.dao'
-export {
-  announcementInput,
-  scheduledAnnouncementInput,
-  MIN_LEAD_SEC,
-} from './domains/announcements/announcements.schema'
-export type {
-  AnnouncementInput,
-  ScheduledAnnouncementInput,
-} from './domains/announcements/announcements.schema'
-
-// ── ticketing ─────────────────────────────────────────────
-export { ticketsService } from './domains/ticketing/tickets.service'
-export { ticketsDao } from './domains/ticketing/tickets.dao'
-export type {
-  Ticket,
-  TicketConfig,
-  TicketAttachment,
-  TicketParticipant,
-  TicketStatus,
-  ParticipantRole,
-} from './domains/ticketing/tickets.dao'
-export {
-  ticketConfigInput,
-  ticketInput,
-  ticketAttachmentInput,
-  ticketSetupInput,
-} from './domains/ticketing/tickets.schema'
-export type {
-  TicketConfigInput,
-  TicketInput,
-  TicketAttachmentInput,
-  TicketSetupInput,
-} from './domains/ticketing/tickets.schema'
-export { applyTicketSetup, buildTicketPanelPayload } from './domains/ticketing/tickets.setup'
+export { DiscordError, discordRest } from './lib/discord-rest'
+export { imageStore, type UploadedImage } from './lib/image-store'
+export type { CrashHandlerOptions, LogFileDest } from './logging'
+export { createLogFileDest, installCrashHandlers } from './logging'
+export { withRetry } from './util/retry'
+export { formatIst, istDay, istWallClockToEpochSec, nowSec, utcClock, utcDay } from './util/time'

@@ -1,4 +1,4 @@
-import { type GrantResult, announceReconcile, reconcileMember } from '@xp/core'
+import { announceReconcile, type GrantResult, reconcileMember } from '@xp/core'
 import { log } from './log'
 
 /**

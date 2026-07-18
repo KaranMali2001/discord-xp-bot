@@ -1,6 +1,6 @@
-import { cn } from '@/lib/utils'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import * as React from 'react'
+import { cn } from '@/lib/utils'
 
 type ToastVariant = 'success' | 'error'
 type ToastItem = { id: number; message: string; variant: ToastVariant }

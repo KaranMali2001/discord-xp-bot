@@ -28,11 +28,11 @@ export interface EventAttendanceRow {
 
 export const voiceDao = {
   /** Idempotent per (member, event, day) — one Friday attended = one row, however long they stayed. */
-  recordAttendance(guildId: string, userId: string, eventId: number, atSec?: number) {
-    db.insert(eventAttendance)
+  async recordAttendance(guildId: string, userId: string, eventId: number, atSec?: number) {
+    await db
+      .insert(eventAttendance)
       .values({ guildId, userId, eventId, day: istDay(atSec) })
       .onConflictDoNothing()
-      .run()
   },
 
   /**
@@ -40,9 +40,10 @@ export const voiceDao = {
    * first sight and incrementing thereafter. Rejoins land in the same row (same day) — the
    * counters just keep growing.
    */
-  recordActivity(d: ActivityDelta) {
+  async recordActivity(d: ActivityDelta) {
     const at = d.atSec ?? nowSec()
-    db.insert(eventVoiceStats)
+    await db
+      .insert(eventVoiceStats)
       .values({
         guildId: d.guildId,
         userId: d.userId,
@@ -72,34 +73,32 @@ export const voiceDao = {
           lastSeenAt: at,
         },
       })
-      .run()
   },
 
   /** Per-user attendance summary for one event, summed across every day it ran. */
-  statsForEvent(guildId: string, eventId: number): EventAttendanceRow[] {
+  async statsForEvent(guildId: string, eventId: number): Promise<EventAttendanceRow[]> {
+    // sum()/count() are numeric/int8 → node-postgres returns them as strings; ::int coerces.
     return db
       .select({
         userId: eventVoiceStats.userId,
         username: sql<string>`max(${eventVoiceStats.username})`,
-        presentSeconds: sql<number>`sum(${eventVoiceStats.presentSeconds})`,
-        mutedSeconds: sql<number>`sum(${eventVoiceStats.mutedSeconds})`,
-        speakingSeconds: sql<number>`sum(${eventVoiceStats.speakingSeconds})`,
-        days: sql<number>`count(distinct ${eventVoiceStats.day})`,
+        presentSeconds: sql<number>`sum(${eventVoiceStats.presentSeconds})::int`,
+        mutedSeconds: sql<number>`sum(${eventVoiceStats.mutedSeconds})::int`,
+        speakingSeconds: sql<number>`sum(${eventVoiceStats.speakingSeconds})::int`,
+        days: sql<number>`count(distinct ${eventVoiceStats.day})::int`,
       })
       .from(eventVoiceStats)
       .where(and(eq(eventVoiceStats.guildId, guildId), eq(eventVoiceStats.eventId, eventId)))
       .groupBy(eventVoiceStats.userId)
       .orderBy(desc(sql`sum(${eventVoiceStats.presentSeconds})`))
-      .all()
   },
 
   /** How many distinct attendance-days a member has across all events (the "fridays_attended" stat). */
-  attendanceDays(guildId: string, userId: string): number {
-    const row = db
-      .select({ n: sql<number>`count(*)` })
+  async attendanceDays(guildId: string, userId: string): Promise<number> {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
       .from(eventAttendance)
       .where(and(eq(eventAttendance.guildId, guildId), eq(eventAttendance.userId, userId)))
-      .get()
     return row?.n ?? 0
   },
 }

@@ -1,3 +1,5 @@
+import { Trophy } from 'lucide-react'
+import * as React from 'react'
 import { MemberPicker } from '@/components/MemberPicker'
 import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
@@ -15,8 +17,6 @@ import {
 import { useToast } from '@/components/ui/toast'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useBoostXp } from '@/hooks/useMembers'
-import { Trophy } from 'lucide-react'
-import * as React from 'react'
 
 const LIMIT = 25
 

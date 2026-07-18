@@ -1,11 +1,11 @@
+import { Mic, Square } from 'lucide-react'
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
 import { useConfig, useUpdateConfig } from '@/hooks/useConfig'
-import { Mic, Square } from 'lucide-react'
-import * as React from 'react'
 
 /**
  * Dev control: make the bot join a voice channel *now* and track activity, without

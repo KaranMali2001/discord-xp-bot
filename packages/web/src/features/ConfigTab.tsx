@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { ErrorState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
@@ -8,7 +9,6 @@ import { Switch } from '@/components/ui/switch'
 import { useToast } from '@/components/ui/toast'
 import { useConfig, useUpdateConfig } from '@/hooks/useConfig'
 import type { GuildConfig } from '@/lib/api'
-import * as React from 'react'
 
 type NumericField =
   | 'messageXp'

@@ -1,3 +1,5 @@
+import { CalendarClock, Mic } from 'lucide-react'
+import * as React from 'react'
 import { EmptyState, SkeletonRows } from '@/components/States'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -11,8 +13,6 @@ import {
 } from '@/components/ui/table'
 import { useEventAttendance, useEvents } from '@/hooks/useEvents'
 import type { EventAttendanceRow } from '@/lib/api'
-import { CalendarClock, Mic } from 'lucide-react'
-import * as React from 'react'
 
 /** seconds → compact "1h 04m" / "4m 12s" / "38s". */
 function fmtDuration(totalSeconds: number): string {

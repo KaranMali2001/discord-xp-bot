@@ -24,4 +24,16 @@ export async function ticketsRoutes(app: FastifyInstance): Promise<void> {
       return ticketsController.setup(request.params.guildId, request.body)
     },
   )
+
+  // A ticket's attachments with signed (private) Cloudinary delivery URLs for the dashboard.
+  app.get<{ Params: GuildParams & { ticketId: string } }>(
+    '/guilds/:guildId/tickets/:ticketId/attachments',
+    { preHandler: requireManageParam },
+    async (request) => {
+      return ticketsController.listAttachments(
+        request.params.guildId,
+        Number(request.params.ticketId),
+      )
+    },
+  )
 }

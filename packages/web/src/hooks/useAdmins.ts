@@ -1,5 +1,5 @@
-import { endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { endpoints } from '@/lib/api'
 
 const key = (guildId: string) => ['admins', guildId] as const
 

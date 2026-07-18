@@ -1,7 +1,7 @@
 import { authService, env } from '@xp/core'
 import type { FastifyInstance, FastifyReply, FastifyRequest, preHandlerHookHandler } from 'fastify'
 import { z } from 'zod'
-import { type SessionData, clearSession, getSession, setSession } from '../lib/session'
+import { clearSession, getSession, type SessionData, setSession } from '../lib/session'
 import { parse } from '../lib/validate'
 
 const DISCORD_API = 'https://discord.com/api'
@@ -54,7 +54,11 @@ function devSession(guildId: string): SessionData {
   }
 }
 
-function assertCanManage(request: FastifyRequest, reply: FastifyReply, guildId: string): boolean {
+async function assertCanManage(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  guildId: string,
+): Promise<boolean> {
   if (env.AUTH_DISABLED) return true
   const session = getSession(request)
   if (!session) {
@@ -62,7 +66,7 @@ function assertCanManage(request: FastifyRequest, reply: FastifyReply, guildId: 
     return false
   }
   const hasManageGuild = session.manageGuildIds.includes(guildId)
-  if (!authService.canManage(guildId, session.userId, hasManageGuild)) {
+  if (!(await authService.canManage(guildId, session.userId, hasManageGuild))) {
     reply.code(403).send({ error: 'Not allowed to manage this guild' })
     return false
   }
@@ -75,7 +79,7 @@ function assertCanManage(request: FastifyRequest, reply: FastifyReply, guildId: 
  */
 export function requireManage(guildId: string): preHandlerHookHandler {
   return async (request, reply) => {
-    assertCanManage(request, reply, guildId)
+    await assertCanManage(request, reply, guildId)
   }
 }
 
@@ -88,7 +92,7 @@ export const requireManageParam: preHandlerHookHandler = async (request, reply) 
   if (!guildId) {
     return reply.code(400).send({ error: 'Missing guildId' })
   }
-  assertCanManage(request, reply, guildId)
+  await assertCanManage(request, reply, guildId)
 }
 
 export function registerAuth(app: FastifyInstance): void {

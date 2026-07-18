@@ -1,5 +1,5 @@
-import { endpoints } from '@/lib/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { endpoints } from '@/lib/api'
 
 /** Admin XP Boost. Invalidates the leaderboard so the new standing shows. */
 export function useBoostXp(guildId: string) {

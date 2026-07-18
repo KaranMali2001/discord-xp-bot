@@ -1,3 +1,5 @@
+import { CalendarClock, Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import { ChannelTag } from '@/components/EntityTag'
@@ -25,8 +27,6 @@ import {
 import { markupToDiscord, markupToPlain } from '@/lib/mentions'
 import { formatIst, istDateTimeLocalToEpochSec } from '@/lib/time'
 import { cn } from '@/lib/utils'
-import { CalendarClock, Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 const MAX_LEN = 1900
 

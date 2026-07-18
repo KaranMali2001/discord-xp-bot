@@ -1,13 +1,14 @@
 import {
-  MIN_LEAD_SEC,
   applyTicketSetup,
   authService,
   badgesService,
   formatIst,
   istWallClockToEpochSec,
   levelProgress,
+  MIN_LEAD_SEC,
   nowSec,
   rulesDao,
+  rulesService,
   xpService,
 } from '@xp/core'
 import {
@@ -27,13 +28,13 @@ export interface Command {
 }
 
 /** Config-editing commands require Discord MANAGE_GUILD or the core admin allowlist. */
-function isManager(i: ChatInputCommandInteraction): boolean {
+async function isManager(i: ChatInputCommandInteraction): Promise<boolean> {
   const hasPerm = i.memberPermissions?.has(PermissionFlagsBits.ManageGuild) ?? false
   return i.guildId ? authService.canManage(i.guildId, i.user.id, hasPerm) : false
 }
 
 async function denyIfNotManager(i: ChatInputCommandInteraction): Promise<boolean> {
-  if (isManager(i)) return false
+  if (await isManager(i)) return false
   await i.reply({ content: '⛔ You need **Manage Server** to do that.', ephemeral: true })
   return true
 }
@@ -47,13 +48,13 @@ const rank: Command = {
   async execute(i) {
     if (!i.guildId) return
     const target = i.options.getUser('user') ?? i.user
-    const m = xpService.get(i.guildId, target.id)
+    const m = await xpService.get(i.guildId, target.id)
     if (!m) {
       await i.reply({ content: `${target.username} has no XP yet.`, ephemeral: true })
       return
     }
     const p = levelProgress(m.xp)
-    const rankNo = xpService.rank(i.guildId, target.id)
+    const rankNo = await xpService.rank(i.guildId, target.id)
     const embed = new EmbedBuilder()
       .setTitle(`${target.username} — Level ${p.level}`)
       .setDescription(
@@ -75,7 +76,7 @@ const leaderboard: Command = {
     .toJSON(),
   async execute(i) {
     if (!i.guildId) return
-    const top = xpService.leaderboard(i.guildId, 10)
+    const top = await xpService.leaderboard(i.guildId, 10)
     if (top.length === 0) {
       await i.reply({ content: 'No XP yet — start chatting or hop in voice!', ephemeral: true })
       return
@@ -96,8 +97,8 @@ const badges: Command = {
   async execute(i) {
     if (!i.guildId) return
     const target = i.options.getUser('user') ?? i.user
-    const owned = new Set(badgesService.owned(i.guildId, target.id))
-    const defs = badgesService.list(i.guildId).filter((b) => owned.has(b.key))
+    const owned = new Set(await badgesService.owned(i.guildId, target.id))
+    const defs = (await badgesService.list(i.guildId)).filter((b) => owned.has(b.key))
     const body = defs.length
       ? defs.map((b) => `${b.emoji} **${b.name}** — ${b.description}`).join('\n')
       : 'No badges yet.'
@@ -124,7 +125,8 @@ const setMessageXp: Command = {
   async execute(i) {
     if (!i.guildId || (await denyIfNotManager(i))) return
     const amount = i.options.getInteger('amount', true)
-    rulesDao.upsertConfig(i.guildId, { messageXp: amount })
+    await rulesDao.upsertConfig(i.guildId, { messageXp: amount })
+    rulesService.invalidate(i.guildId) // this process holds the cache — refresh it in-place (§2.1)
     await i.reply({ content: `✅ Base message XP set to **${amount}**.`, ephemeral: true })
   },
 }
@@ -153,7 +155,8 @@ const setChannel: Command = {
       channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice
         ? 'voice'
         : 'text'
-    rulesDao.upsertChannelRule(i.guildId, { channelId: channel.id, kind, multiplier, noXp })
+    await rulesDao.upsertChannelRule(i.guildId, { channelId: channel.id, kind, multiplier, noXp })
+    rulesService.invalidate(i.guildId) // §2.1
     await i.reply({
       content: noXp
         ? `✅ XP disabled in <#${channel.id}>.`
@@ -200,7 +203,7 @@ const friday: Command = {
     const startHour = i.options.getInteger('start_hour', true)
     const endHour = i.options.getInteger('end_hour', true)
     const channel = i.options.getChannel('channel')
-    rulesDao.createEvent(i.guildId, {
+    await rulesDao.createEvent(i.guildId, {
       name: 'Friday Discussion',
       multiplier,
       enabled: true,
@@ -212,6 +215,7 @@ const friday: Command = {
       startsAt: null,
       endsAt: null,
     })
+    rulesService.invalidate(i.guildId) // §2.1
     await i.reply({
       content: `✅ Friday boost ×${multiplier} created (${startHour}:00–${endHour}:00 IST${channel ? ` in <#${channel.id}>` : ''}).`,
       ephemeral: true,
@@ -244,7 +248,7 @@ const setLevelRole: Command = {
     const level = i.options.getInteger('level', true)
     const role = i.options.getRole('role', true)
     const message = i.options.getString('message') ?? null
-    rulesDao.upsertLevelReward(i.guildId, { level, roleId: role.id, message })
+    await rulesDao.upsertLevelReward(i.guildId, { level, roleId: role.id, message })
     await i.reply({
       content: `✅ Level **${level}** now grants <@&${role.id}>. Members get it on their next level-up.`,
       ephemeral: true,

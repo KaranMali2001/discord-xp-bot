@@ -1,4 +1,5 @@
 import { channelRuleInput, rulesDao } from '@xp/core'
+import { invalidateBotCache } from '../lib/cache-invalidate'
 import { parse } from '../lib/validate'
 
 export const channelRulesController = {
@@ -6,13 +7,16 @@ export const channelRulesController = {
     return rulesDao.listChannelRules(guildId)
   },
 
-  put(guildId: string, body: unknown) {
+  async put(guildId: string, body: unknown) {
     const input = parse(channelRuleInput, body)
-    return rulesDao.upsertChannelRule(guildId, input)
+    const row = await rulesDao.upsertChannelRule(guildId, input)
+    invalidateBotCache(guildId) // channel multiplier/no-xp change (§2.1)
+    return row
   },
 
-  remove(guildId: string, channelId: string) {
-    rulesDao.deleteChannelRule(guildId, channelId)
+  async remove(guildId: string, channelId: string) {
+    await rulesDao.deleteChannelRule(guildId, channelId)
+    invalidateBotCache(guildId)
     return { ok: true }
   },
 }

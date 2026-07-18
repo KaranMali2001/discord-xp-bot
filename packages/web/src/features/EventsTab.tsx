@@ -1,3 +1,5 @@
+import { CalendarClock, Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { ChannelTag } from '@/components/EntityTag'
 import { EmptyState, SkeletonRows } from '@/components/States'
@@ -10,8 +12,6 @@ import { useToast } from '@/components/ui/toast'
 import { useCreateEvent, useDeleteEvent, useEvents, usePatchEvent } from '@/hooks/useEvents'
 import type { EventInput } from '@/lib/api'
 import { DAY_NAMES, hhmmToMinutes, minutesToHhmm } from '@/lib/time'
-import { CalendarClock, Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 type FormState = {
   name: string

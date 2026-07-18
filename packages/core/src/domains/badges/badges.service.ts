@@ -29,23 +29,23 @@ export const badgesService = {
    * Evaluate every badge for a member and award any newly-earned ones.
    * Returns the badges awarded *this call* (so the bot can announce them).
    */
-  evaluate(guildId: string, userId: string): Badge[] {
-    const member = xpService.get(guildId, userId)
+  async evaluate(guildId: string, userId: string): Promise<Badge[]> {
+    const member = await xpService.get(guildId, userId)
     if (!member) return []
 
-    const defs = badgesDao.list(guildId)
+    const defs = await badgesDao.list(guildId)
     if (defs.length === 0) return []
 
-    const owned = new Set(badgesDao.owned(guildId, userId))
+    const owned = new Set(await badgesDao.owned(guildId, userId))
     const attendanceDays = defs.some((d) => d.criteria === 'fridays_attended')
-      ? voiceService.attendanceDays(guildId, userId)
+      ? await voiceService.attendanceDays(guildId, userId)
       : 0
 
     const newly: Badge[] = []
     for (const def of defs) {
       if (owned.has(def.key)) continue
       if (statFor(def.criteria, member, attendanceDays) >= def.threshold) {
-        badgesDao.award(guildId, userId, def.key)
+        await badgesDao.award(guildId, userId, def.key)
         newly.push(def)
       }
     }

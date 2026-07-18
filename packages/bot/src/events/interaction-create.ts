@@ -7,10 +7,10 @@ import {
   isAnnounceComponent,
 } from '../features/announce'
 import {
-  TICKET_IDS,
   handleTicketButton,
   handleTicketModal,
   isTicketComponent,
+  TICKET_IDS,
 } from '../features/tickets'
 import { log } from '../lib/log'
 

@@ -1,12 +1,16 @@
 name: discord-xp-bot
 
 # One `docker compose up --build` runs the whole stack: schema migration → api + bot →
-# web dashboard. The database is Turso (libsql) — DATABASE_URL + DATABASE_AUTH_TOKEN come
-# from .env, so api & bot share the same cloud DB (no local volume needed). Captured audio
-# still uses a local named volume. Secrets come from .env (never baked into the image).
+# web dashboard. The database is Neon Postgres — DATABASE_URL (pooled) + DATABASE_DIRECT_URL
+# (direct, for migrations) come from .env, so api & bot share the same cloud DB (no local
+# volume needed). SSL is enforced in code for the remote Neon host. Captured audio uses a local
+# named volume. Secrets come from .env (never baked into the image).
+#
+# api + bot both run on the HOST network so the API can reach the bot's loopback-only
+# cache-invalidate listener (127.0.0.1:CACHE_INVALIDATE_PORT, §2.1) without exposing it off-box.
 
 services:
-  # One-shot: apply pending migrations to the Turso DB, then exit.
+  # One-shot: apply pending migrations to the Neon DB (direct URL), then exit.
   migrate:
     build:
       context: .
@@ -23,8 +27,14 @@ services:
     environment:
       API_PORT: "8090"
       WEB_URL: ${WEB_URL:-http://localhost:5173}
-    ports:
-      - "8090:8090"
+      # Persist logs to a HOST bind-mount so they survive `down --remove-orphans` (§2.3).
+      LOG_DIR: /data/logs
+    volumes:
+      - ./data/logs:/data/logs
+    # Host networking so the API shares the bot's loopback and can POST cache invalidations to
+    # 127.0.0.1:CACHE_INVALIDATE_PORT (§2.1). It binds API_PORT (8090) directly on the host —
+    # no `ports:` mapping needed (and it would be ignored under host networking anyway).
+    network_mode: host
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -41,8 +51,11 @@ services:
       # local `audio` volume so a separate Whisper worker can mount + read them.
       TRANSCRIPTS_ENABLED: ${TRANSCRIPTS_ENABLED:-false}
       AUDIO_ROOT: /data/audio
+      # Persist logs to a HOST bind-mount so they survive `down --remove-orphans` (§2.3).
+      LOG_DIR: /data/logs
     volumes:
       - audio:/data/audio
+      - ./data/logs:/data/logs
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -51,6 +64,16 @@ services:
     # Windows Docker Desktop this has no effect; run the bot natively there for voice.)
     network_mode: host
     restart: unless-stopped
+    # Best-effort crash-loop cap: clean crashes (Phase 0) still need throttling so a
+    # recurring DB wedge can't fragment recordings via rapid restarts (§Phase 0).
+    # NOTE: plain `docker compose up` (non-swarm) may IGNORE deploy.restart_policy —
+    # verify on VPS; consider a healthcheck-gate or external supervisor as the real cap.
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 120s
 
   web:
     build:

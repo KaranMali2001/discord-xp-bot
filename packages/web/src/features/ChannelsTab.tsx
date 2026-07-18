@@ -1,3 +1,5 @@
+import { Hash, Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { ChannelTag } from '@/components/EntityTag'
 import { EmptyState, SkeletonRows } from '@/components/States'
@@ -21,8 +23,6 @@ import {
   useUpsertChannelRule,
 } from '@/hooks/useChannelRules'
 import type { ChannelRule } from '@/lib/api'
-import { Hash, Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 const EMPTY: ChannelRule = { channelId: '', kind: 'text', multiplier: 1, noXp: false }
 

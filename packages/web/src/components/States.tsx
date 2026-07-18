@@ -1,6 +1,6 @@
+import type { LucideIcon } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import type { LucideIcon } from 'lucide-react'
 
 /**
  * Loading placeholder for list/table sections — a stack of shimmer rows that

@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import {
-  type VoiceConnection,
-  VoiceConnectionStatus,
   entersState,
   joinVoiceChannel,
+  type VoiceConnection,
+  VoiceConnectionStatus,
 } from '@discordjs/voice'
 import { nowSec } from '@xp/core'
 import type { VoiceBasedChannel } from 'discord.js'

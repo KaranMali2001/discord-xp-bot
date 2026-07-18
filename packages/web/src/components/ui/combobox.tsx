@@ -1,6 +1,6 @@
-import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown, X } from 'lucide-react'
 import * as React from 'react'
+import { cn } from '@/lib/utils'
 
 export type ComboboxOption = {
   value: string

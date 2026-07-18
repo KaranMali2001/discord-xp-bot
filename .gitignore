@@ -23,8 +23,12 @@ secrets.json
 data/audio/
 *.wav
 
+# persistent server-side logs (host bind-mount, §2.3)
+data/logs/
+
 # local audio dump + transcription scratch (not for the repo)
 audio-dump/
+audio-dumps/
 
 # astro (landing) build output
 .astro/

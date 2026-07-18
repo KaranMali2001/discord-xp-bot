@@ -33,3 +33,9 @@ jobs:
 
       - name: Lint / format check
         run: pnpm exec biome check packages/core packages/api packages/bot packages/web
+
+      # Load-bearing gate for the async DB layer: a dropped `await` on a write is silent data
+      # loss that tsc can't see. Type-aware (real TS type-checker), so it catches drizzle
+      # thenables Biome's own rule is unstable on (biome#8476).
+      - name: Floating-promise gate (typescript-eslint)
+        run: pnpm exec eslint packages/core/src packages/api/src packages/bot/src

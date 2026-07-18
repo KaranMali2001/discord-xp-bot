@@ -1,10 +1,11 @@
 import { xpService } from '@xp/core'
 
 export const leaderboardController = {
-  get(guildId: string, limit: number, offset: number) {
-    return {
-      entries: xpService.leaderboard(guildId, limit, offset),
-      total: xpService.count(guildId),
-    }
+  async get(guildId: string, limit: number, offset: number) {
+    const [entries, total] = await Promise.all([
+      xpService.leaderboard(guildId, limit, offset),
+      xpService.count(guildId),
+    ])
+    return { entries, total }
   },
 }

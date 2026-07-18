@@ -1,3 +1,4 @@
+import { ServerCog } from 'lucide-react'
 import { EmptyState } from '@/components/States'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AdminsTab } from '@/features/AdminsTab'
@@ -13,7 +14,6 @@ import { LevelRewardsTab } from '@/features/LevelRewardsTab'
 import { TicketsTab } from '@/features/TicketsTab'
 import { VoiceCaptureCard } from '@/features/VoiceCaptureCard'
 import { useGuildId } from '@/hooks/useGuildId'
-import { ServerCog } from 'lucide-react'
 
 const TABS = [
   { value: 'config', label: 'Config' },

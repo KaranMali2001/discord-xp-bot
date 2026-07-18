@@ -1,4 +1,4 @@
-import { authService, ticketsService } from '@xp/core'
+import { authService, imageStore, ticketsService } from '@xp/core'
 import {
   ActionRowBuilder,
   type Attachment,
@@ -39,7 +39,7 @@ export const TICKET_IDS = {
 } as const
 
 const MAX_IMAGES = 10
-// Per-image cap. Keeps a single Turso/libsql BLOB row well under practical limits.
+// Per-image cap — bounds each Cloudinary upload (the Free plan suspends on storage overage).
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 /** True for any component (button) that belongs to the ticket flow. */
@@ -53,12 +53,12 @@ export function isTicketComponent(customId: string): boolean {
  * button interactions and thread messages (channel-overwrite perms don't show on a raw
  * member's guild-level permission set).
  */
-function memberIsStaff(guildId: string, member: GuildMember): boolean {
-  const cfg = ticketsService.getConfig(guildId)
+async function memberIsStaff(guildId: string, member: GuildMember): Promise<boolean> {
+  const cfg = await ticketsService.getConfig(guildId)
   if (cfg?.staffRoleId && member.roles.cache.has(cfg.staffRoleId)) return true
   const manageThreads = member.permissions.has(PermissionFlagsBits.ManageThreads)
   const manageGuild = member.permissions.has(PermissionFlagsBits.ManageGuild)
-  return manageThreads || authService.canManage(guildId, member.id, manageGuild)
+  return manageThreads || (await authService.canManage(guildId, member.id, manageGuild))
 }
 
 // ── the raise-ticket modal ──────────────────────────────────
@@ -166,7 +166,7 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
   if (!interaction.guildId) return
 
   if (interaction.customId === TICKET_IDS.open) {
-    if (!ticketsService.isReady(interaction.guildId)) {
+    if (!(await ticketsService.isReady(interaction.guildId))) {
       await interaction.reply({
         content: '⚠️ The ticket system isn’t set up yet. Ask a mod to run `/ticket-setup`.',
         flags: MessageFlags.Ephemeral,
@@ -188,7 +188,7 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
   }
 
   const member = await interaction.guild?.members.fetch(interaction.user.id).catch(() => null)
-  if (!member || !memberIsStaff(interaction.guildId, member)) {
+  if (!member || !(await memberIsStaff(interaction.guildId, member))) {
     await interaction.reply({
       content: '⛔ Only staff can manage tickets.',
       flags: MessageFlags.Ephemeral,
@@ -202,13 +202,13 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
   }
 
   const next = action === 'resolve' ? 'resolved' : 'closed'
-  const ticket = ticketsService.setStatus(interaction.guildId, id, next)
+  const ticket = await ticketsService.setStatus(interaction.guildId, id, next)
   if (!ticket) {
     await interaction.reply({ content: 'Ticket not found.', flags: MessageFlags.Ephemeral })
     return
   }
 
-  const imageCount = ticketsService.listAttachmentMeta(id).length
+  const imageCount = (await ticketsService.listAttachmentMeta(interaction.guildId, id)).length
   await interaction.update({
     embeds: [
       ticketEmbed({
@@ -244,7 +244,7 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
  */
 async function createThread(interaction: ButtonInteraction, id: number): Promise<void> {
   if (!interaction.guildId) return
-  const ticket = ticketsService.get(interaction.guildId, id)
+  const ticket = await ticketsService.get(interaction.guildId, id)
   if (!ticket) {
     await interaction.reply({ content: 'Ticket not found.', flags: MessageFlags.Ephemeral })
     return
@@ -256,7 +256,7 @@ async function createThread(interaction: ButtonInteraction, id: number): Promise
     })
     return
   }
-  const cfg = ticketsService.getConfig(interaction.guildId)
+  const cfg = await ticketsService.getConfig(interaction.guildId)
   if (!cfg?.panelChannelId) {
     await interaction.reply({ content: '⚠️ Setup incomplete.', flags: MessageFlags.Ephemeral })
     return
@@ -277,10 +277,11 @@ async function createThread(interaction: ButtonInteraction, id: number): Promise
       invitable: false,
     })
     await thread.members.add(ticket.userId)
-    ticketsService.setThread(ticket.id, thread.id)
-    ticketsService.addParticipant(interaction.guildId, ticket.id, ticket.userId, 'owner')
+    await ticketsService.setThread(ticket.id, thread.id)
+    await ticketsService.addParticipant(interaction.guildId, ticket.id, ticket.userId, 'owner')
 
-    const imageCount = ticketsService.listAttachmentMeta(ticket.id).length
+    const imageCount = (await ticketsService.listAttachmentMeta(interaction.guildId, ticket.id))
+      .length
     await thread.send({
       content: `<@${ticket.userId}> a staff member opened this thread about your ticket **#${ticket.id}**. Only you and the team can see it.`,
       embeds: [
@@ -330,7 +331,7 @@ async function fetchImage(
  */
 export async function handleTicketModal(interaction: ModalSubmitInteraction): Promise<void> {
   if (!interaction.guildId) return
-  const cfg = ticketsService.getConfig(interaction.guildId)
+  const cfg = await ticketsService.getConfig(interaction.guildId)
   if (!cfg?.ticketChannelId) {
     await interaction.reply({
       content: '⚠️ The ticket system isn’t set up. Please tell a mod.',
@@ -344,14 +345,14 @@ export async function handleTicketModal(interaction: ModalSubmitInteraction): Pr
   const subject = interaction.fields.getTextInputValue(TICKET_IDS.subject)
   const description = interaction.fields.getTextInputValue(TICKET_IDS.description)
 
-  const ticket = ticketsService.create(interaction.guildId, {
+  const ticket = await ticketsService.create(interaction.guildId, {
     userId: interaction.user.id,
     username: interaction.user.username,
     subject,
     description,
   })
 
-  // Download + persist images (bytes are the source of truth).
+  // Download images for the staff embed + persist an attachment reference per image.
   const uploaded = interaction.fields.getUploadedFiles(TICKET_IDS.images)
   const files: AttachmentBuilder[] = []
   let stored = 0
@@ -363,7 +364,35 @@ export async function handleTicketModal(interaction: ModalSubmitInteraction): Pr
         skipped++
         continue
       }
-      ticketsService.addAttachment(interaction.guildId, ticket.id, img)
+      // Upload the bytes to Cloudinary (off-DB, §2.2) and store only the reference. Best-effort:
+      // if Cloudinary isn't configured or the upload fails, keep the ticket with an empty ref and
+      // log — never throw out of the handler (Phase-0 rule). The image is shown to staff via the
+      // Discord embed below regardless.
+      let ref = { cloudinaryPublicId: '', url: '' }
+      if (imageStore.isConfigured()) {
+        try {
+          const up = await imageStore.upload(img.data, {
+            folder: `tickets/${interaction.guildId}`,
+            contentType: img.contentType,
+          })
+          // Persist ONLY the public_id — never the returned secure_url. For an authenticated
+          // asset that url already embeds a permanent signature (directly viewable), so storing
+          // it at rest would put an openable private-image link in the DB/backups. The API mints
+          // a fresh signed URL from public_id on demand instead.
+          ref = { cloudinaryPublicId: up.publicId, url: '' }
+        } catch (err) {
+          log.warn(
+            'tickets',
+            `cloudinary upload failed for #${ticket.id} — storing ref-less: ${(err as Error).message}`,
+          )
+        }
+      }
+      await ticketsService.addAttachment(interaction.guildId, ticket.id, {
+        filename: img.filename,
+        contentType: img.contentType,
+        sizeBytes: img.sizeBytes,
+        ...ref,
+      })
       files.push(new AttachmentBuilder(img.data, { name: img.filename }))
       stored++
     } catch (err) {
@@ -387,7 +416,7 @@ export async function handleTicketModal(interaction: ModalSubmitInteraction): Pr
     if (!channel?.isTextBased() || !('send' in channel)) {
       throw new Error('collection channel is not a text channel')
     }
-    const msg = await channel.send({
+    await channel.send({
       embeds: [embed],
       components: statusButtons(interaction.guildId, {
         id: ticket.id,
@@ -396,7 +425,6 @@ export async function handleTicketModal(interaction: ModalSubmitInteraction): Pr
       }),
       files,
     })
-    ticketsService.setModMessage(ticket.id, msg.id)
 
     const extra =
       skipped > 0
@@ -422,7 +450,7 @@ export async function handleTicketModal(interaction: ModalSubmitInteraction): Pr
 export async function handleThreadMessage(message: Message): Promise<void> {
   if (message.author.bot || !message.guildId || !message.channel.isThread()) return
   const thread = message.channel
-  const ticket = ticketsService.getByThread(thread.id)
+  const ticket = await ticketsService.getByThread(thread.id)
   if (!ticket || ticket.status === 'closed') return
 
   const mentioned = message.mentions.users.filter((u) => !u.bot && u.id !== message.author.id)
@@ -430,20 +458,20 @@ export async function handleThreadMessage(message: Message): Promise<void> {
 
   const author =
     message.member ?? (await message.guild?.members.fetch(message.author.id).catch(() => null))
-  const authorIsStaff = author ? memberIsStaff(message.guildId, author) : false
+  const authorIsStaff = author ? await memberIsStaff(message.guildId, author) : false
 
   for (const user of mentioned.values()) {
-    if (ticketsService.isParticipant(ticket.id, user.id)) continue
+    if (await ticketsService.isParticipant(ticket.id, user.id)) continue
     // A mentioned user who is already staff has access via their role — leave them.
     const targetMember = await message.guild?.members.fetch(user.id).catch(() => null)
-    if (targetMember && memberIsStaff(message.guildId, targetMember)) continue
+    if (targetMember && (await memberIsStaff(message.guildId, targetMember))) continue
 
     if (authorIsStaff) {
       // Staff pulling a third person in: add them to the thread (panel channel is public, so
       // no extra permission grant is needed) and record them as a participant.
       try {
         await thread.members.add(user.id)
-        ticketsService.addParticipant(message.guildId, ticket.id, user.id, 'staff')
+        await ticketsService.addParticipant(message.guildId, ticket.id, user.id, 'staff')
       } catch (err) {
         log.warn(
           'tickets',

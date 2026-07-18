@@ -25,52 +25,56 @@ export type TranscriptJob = typeof transcriptJobs.$inferSelect
 
 export const transcriptDao = {
   /** Part 1: enqueue a captured utterance as `pending`. */
-  insert(job: TranscriptJobInput): void {
-    db.insert(transcriptJobs)
-      .values({ ...job, status: 'pending' })
-      .run()
+  async insert(job: TranscriptJobInput): Promise<void> {
+    await db.insert(transcriptJobs).values({ ...job, status: 'pending' })
   },
 
   /** Oldest-first jobs in a given state (the worker asks for `pending`). */
-  listByStatus(status: TranscriptStatus, limit = 50): TranscriptJob[] {
+  async listByStatus(status: TranscriptStatus, limit = 50): Promise<TranscriptJob[]> {
     return db
       .select()
       .from(transcriptJobs)
       .where(eq(transcriptJobs.status, status))
       .orderBy(asc(transcriptJobs.startedAt))
       .limit(limit)
-      .all()
   },
 
   /** All utterances of one capture window, in speaking order — for conversation views. */
-  listBySession(guildId: string, sessionId: string): TranscriptJob[] {
+  async listBySession(guildId: string, sessionId: string): Promise<TranscriptJob[]> {
     return db
       .select()
       .from(transcriptJobs)
       .where(and(eq(transcriptJobs.guildId, guildId), eq(transcriptJobs.sessionId, sessionId)))
       .orderBy(asc(transcriptJobs.startedAt))
-      .all()
   },
 
   // ── Part 2 (worker) helpers ──────────────────────────────
-  claim(id: string): void {
-    db.update(transcriptJobs)
+  /**
+   * Atomically claim a pending job for this worker. The `WHERE id = ? AND status = 'pending'`
+   * guard means only ONE worker can win a given job even if several poll the same `pending`
+   * row concurrently — the loser gets `false` (0 rows updated) and skips it, instead of two
+   * workers both transcribing the same utterance. Returns true iff this call claimed the job.
+   */
+  async claim(id: string): Promise<boolean> {
+    const rows = await db
+      .update(transcriptJobs)
       .set({ status: 'processing', updatedAt: nowSec() })
-      .where(eq(transcriptJobs.id, id))
-      .run()
+      .where(and(eq(transcriptJobs.id, id), eq(transcriptJobs.status, 'pending')))
+      .returning({ id: transcriptJobs.id })
+    return rows.length > 0
   },
 
-  complete(id: string, text: string, language: string | null): void {
-    db.update(transcriptJobs)
+  async complete(id: string, text: string, language: string | null): Promise<void> {
+    await db
+      .update(transcriptJobs)
       .set({ status: 'done', text, language, updatedAt: nowSec() })
       .where(eq(transcriptJobs.id, id))
-      .run()
   },
 
-  fail(id: string, error: string): void {
-    db.update(transcriptJobs)
+  async fail(id: string, error: string): Promise<void> {
+    await db
+      .update(transcriptJobs)
       .set({ status: 'error', error, updatedAt: nowSec() })
       .where(eq(transcriptJobs.id, id))
-      .run()
   },
 }

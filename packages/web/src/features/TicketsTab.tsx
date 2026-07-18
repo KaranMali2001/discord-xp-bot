@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { RolePicker } from '@/components/RolePicker'
 import { SkeletonRows } from '@/components/States'
@@ -6,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
 import { useSaveTicketConfig, useTicketConfig } from '@/hooks/useTickets'
-import * as React from 'react'
 
 export function TicketsTab({ guildId }: { guildId: string }) {
   const { toast } = useToast()

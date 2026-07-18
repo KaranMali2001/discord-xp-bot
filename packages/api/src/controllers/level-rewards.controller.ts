@@ -11,8 +11,8 @@ export const levelRewardsController = {
     return rulesDao.upsertLevelReward(guildId, input)
   },
 
-  remove(guildId: string, level: number) {
-    rulesDao.deleteLevelReward(guildId, level)
+  async remove(guildId: string, level: number) {
+    await rulesDao.deleteLevelReward(guildId, level)
     return { ok: true }
   },
 }

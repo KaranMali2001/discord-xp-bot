@@ -1,8 +1,8 @@
+import type { LucideIcon } from 'lucide-react'
+import { AtSign, Hash, Volume2 } from 'lucide-react'
+import type * as React from 'react'
 import { useDiscordChannels, useDiscordMembers, useDiscordRoles } from '@/hooks/useDiscord'
 import { cn } from '@/lib/utils'
-import { AtSign, Hash, Volume2 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import type * as React from 'react'
 
 /**
  * Chips that turn a stored Discord snowflake into the human-readable name.
