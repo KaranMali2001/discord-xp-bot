@@ -61,8 +61,8 @@ function toModel(r: Row): ScheduledAnnouncement {
 }
 
 export const scheduledDao = {
-  create(input: ScheduledCreateInput): ScheduledAnnouncement {
-    const rows = db
+  async create(input: ScheduledCreateInput): Promise<ScheduledAnnouncement> {
+    const rows = await db
       .insert(scheduledAnnouncements)
       .values({
         guildId: input.guildId,
@@ -75,15 +75,14 @@ export const scheduledDao = {
         createdBy: input.createdBy,
       })
       .returning()
-      .all()
     const row = rows[0]
     if (!row) throw new Error('Failed to create scheduled announcement')
     return toModel(row)
   },
 
   /** Upcoming (still pending) announcements for a guild, soonest first. */
-  listUpcoming(guildId: string): ScheduledAnnouncement[] {
-    return db
+  async listUpcoming(guildId: string): Promise<ScheduledAnnouncement[]> {
+    const rows = await db
       .select()
       .from(scheduledAnnouncements)
       .where(
@@ -93,33 +92,73 @@ export const scheduledDao = {
         ),
       )
       .orderBy(asc(scheduledAnnouncements.fireAt))
-      .all()
-      .map(toModel)
+    return rows.map(toModel)
+  },
+
+  /**
+   * Epoch-seconds of the EARLIEST still-pending announcement, or null if none. The scheduler
+   * keeps this one value in memory so an idle bot can decide "nothing is due yet" WITHOUT a DB
+   * query every tick — the enabler for Neon scale-to-zero (§2.1). Reads the column directly
+   * (bigint mode:'number') rather than an aggregate, so no int8-as-string coercion is needed.
+   */
+  async earliestPending(): Promise<number | null> {
+    const [row] = await db
+      .select({ fireAt: scheduledAnnouncements.fireAt })
+      .from(scheduledAnnouncements)
+      .where(eq(scheduledAnnouncements.status, 'pending'))
+      .orderBy(asc(scheduledAnnouncements.fireAt))
+      .limit(1)
+    return row?.fireAt ?? null
   },
 
   /** Pending rows whose fire time has arrived — the scheduler tick's work list. */
-  listDue(at: number = nowSec()): ScheduledAnnouncement[] {
-    return db
+  async listDue(at: number = nowSec()): Promise<ScheduledAnnouncement[]> {
+    const rows = await db
       .select()
       .from(scheduledAnnouncements)
       .where(
         and(eq(scheduledAnnouncements.status, 'pending'), lte(scheduledAnnouncements.fireAt, at)),
       )
       .orderBy(asc(scheduledAnnouncements.fireAt))
-      .all()
-      .map(toModel)
+    return rows.map(toModel)
   },
 
-  markSent(id: number): void {
-    db.update(scheduledAnnouncements)
+  /**
+   * Atomically CLAIM one pending row right before posting it: flip `pending → sent` guarded by
+   * `WHERE id = ? AND status = 'pending'` and report whether THIS call won it. Because the
+   * `UPDATE … RETURNING` is a single atomic statement, two concurrent schedulers can never both
+   * claim the same announcement — the loser gets `false` and skips it (the guard the old bare
+   * `markSent` lacked).
+   *
+   * TRADE-OFF: this marks `sent` BEFORE the post (at-MOST-once), whereas the old flow marked sent
+   * only AFTER a successful post (at-LEAST-once). We deliberately prefer at-most-once here: for an
+   * @everyone announcement a double-post is far worse than a rare miss. Claiming per-row keeps the
+   * exposure to a SINGLE in-flight row, and a crash in the tiny window between claim and post drops
+   * just that one announcement — which is consistent with the skip-missed policy (an announcement
+   * whose moment passed is never posted late). On a post FAILURE we roll back to `pending`
+   * (`releaseToPending`) so it retries; only an actual process crash in that window loses the row.
+   */
+  async claimOne(id: number): Promise<boolean> {
+    const rows = await db
+      .update(scheduledAnnouncements)
       .set({ status: 'sent', sentAt: nowSec() })
-      .where(eq(scheduledAnnouncements.id, id))
-      .run()
+      .where(and(eq(scheduledAnnouncements.id, id), eq(scheduledAnnouncements.status, 'pending')))
+      .returning({ id: scheduledAnnouncements.id })
+    return rows.length > 0
+  },
+
+  /** Undo a claim when the post failed, so the next tick retries it. */
+  async releaseToPending(id: number): Promise<void> {
+    await db
+      .update(scheduledAnnouncements)
+      .set({ status: 'pending', sentAt: null })
+      .where(and(eq(scheduledAnnouncements.id, id), eq(scheduledAnnouncements.status, 'sent')))
   },
 
   /** Skip-missed policy: anything still pending but overdue is marked, never sent. */
-  sweepMissed(before: number = nowSec()): number {
-    const res = db
+  async sweepMissed(before: number = nowSec()): Promise<number> {
+    // pg has no `.changes`; RETURNING the ids and counting them gives the affected-row count.
+    const rows = await db
       .update(scheduledAnnouncements)
       .set({ status: 'missed' })
       .where(
@@ -128,13 +167,13 @@ export const scheduledDao = {
           lt(scheduledAnnouncements.fireAt, before),
         ),
       )
-      .run()
-    return res.changes
+      .returning({ id: scheduledAnnouncements.id })
+    return rows.length
   },
 
   /** Cancel a pending announcement. Returns false if it wasn't pending (or absent). */
-  cancel(guildId: string, id: number): boolean {
-    const res = db
+  async cancel(guildId: string, id: number): Promise<boolean> {
+    const rows = await db
       .update(scheduledAnnouncements)
       .set({ status: 'cancelled' })
       .where(
@@ -144,7 +183,7 @@ export const scheduledDao = {
           eq(scheduledAnnouncements.status, 'pending'),
         ),
       )
-      .run()
-    return res.changes > 0
+      .returning({ id: scheduledAnnouncements.id })
+    return rows.length > 0
   },
 }

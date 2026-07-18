@@ -6,11 +6,12 @@ interface GuildParams {
 }
 
 /** Current top-of-board snapshot, serialised for the socket. */
-function snapshot(guildId: string): string {
-  return JSON.stringify({
-    entries: xpService.leaderboard(guildId, 25, 0),
-    total: xpService.count(guildId),
-  })
+async function snapshot(guildId: string): Promise<string> {
+  const [entries, total] = await Promise.all([
+    xpService.leaderboard(guildId, 25, 0),
+    xpService.count(guildId),
+  ])
+  return JSON.stringify({ entries, total })
 }
 
 /**
@@ -25,11 +26,14 @@ export async function wsRoutes(app: FastifyInstance): Promise<void> {
     (socket, request) => {
       const { guildId } = request.params
 
-      socket.send(snapshot(guildId))
+      const push = () => {
+        void snapshot(guildId)
+          .then((s) => socket.send(s))
+          .catch(() => {})
+      }
+      push()
 
-      const interval = setInterval(() => {
-        socket.send(snapshot(guildId))
-      }, 5000)
+      const interval = setInterval(push, 5000)
 
       socket.on('close', () => {
         clearInterval(interval)

@@ -1,5 +1,5 @@
-import { type ChannelRule, endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type ChannelRule, endpoints } from '@/lib/api'
 
 const key = (guildId: string) => ['channel-rules', guildId] as const
 

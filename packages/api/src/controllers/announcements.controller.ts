@@ -4,6 +4,7 @@ import {
   scheduledAnnouncementInput,
   scheduledAnnouncementsService,
 } from '@xp/core'
+import { invalidateBotCache } from '../lib/cache-invalidate'
 import { parse } from '../lib/validate'
 
 export const announcementsController = {
@@ -14,16 +15,21 @@ export const announcementsController = {
   },
 
   /** Validate + persist a one-off scheduled announcement. */
-  schedule(guildId: string, createdBy: string, body: unknown) {
+  async schedule(guildId: string, createdBy: string, body: unknown) {
     const input = parse(scheduledAnnouncementInput, body)
-    return scheduledAnnouncementsService.schedule(guildId, createdBy, input)
+    const row = await scheduledAnnouncementsService.schedule(guildId, createdBy, input)
+    // Wake the bot's scheduler gate so the new row fires on time, not at the next backstop (§2.1).
+    invalidateBotCache(guildId, 'announcements')
+    return row
   },
 
   listScheduled(guildId: string) {
     return scheduledAnnouncementsService.listUpcoming(guildId)
   },
 
-  cancelScheduled(guildId: string, id: number) {
-    return { ok: scheduledAnnouncementsService.cancel(guildId, id) }
+  async cancelScheduled(guildId: string, id: number) {
+    const ok = await scheduledAnnouncementsService.cancel(guildId, id)
+    if (ok) invalidateBotCache(guildId, 'announcements')
+    return { ok }
   },
 }

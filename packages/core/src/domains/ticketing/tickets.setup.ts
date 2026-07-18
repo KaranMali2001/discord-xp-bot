@@ -99,7 +99,7 @@ export async function applyTicketSetup(
   })
 
   // 3. Replace any stale panel, then post a fresh one.
-  const prev = ticketsDao.getConfig(guildId)
+  const prev = await ticketsDao.getConfig(guildId)
   if (prev?.panelChannelId && prev.panelMessageId) {
     await discordRest.deleteMessage(prev.panelChannelId, prev.panelMessageId).catch(() => {})
   }

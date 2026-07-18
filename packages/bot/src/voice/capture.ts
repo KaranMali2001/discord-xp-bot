@@ -138,6 +138,6 @@ async function record(ctx: CaptureContext): Promise<void> {
     join(dir, `${base}.json`),
     JSON.stringify({ ...meta, status: 'pending' }, null, 2),
   )
-  transcriptService.enqueue(meta)
+  await transcriptService.enqueue(meta)
   log.info('capture', `saved utterance ${base} (${durationMs}ms) → pending`)
 }

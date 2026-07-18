@@ -1,5 +1,5 @@
-import { type LevelReward, endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { endpoints, type LevelReward } from '@/lib/api'
 
 const key = (guildId: string) => ['level-rewards', guildId] as const
 

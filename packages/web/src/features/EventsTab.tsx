@@ -1,3 +1,5 @@
+import { Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,8 +10,6 @@ import { useToast } from '@/components/ui/toast'
 import { useCreateEvent, useDeleteEvent, useEvents, usePatchEvent } from '@/hooks/useEvents'
 import type { EventInput } from '@/lib/api'
 import { DAY_NAMES, hhmmToMinutes, minutesToHhmm } from '@/lib/time'
-import { Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 type FormState = {
   name: string

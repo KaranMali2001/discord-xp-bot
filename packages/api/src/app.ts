@@ -2,7 +2,8 @@ import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
 import websocket from '@fastify/websocket'
 import { env } from '@xp/core'
-import Fastify, { type FastifyInstance } from 'fastify'
+import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify'
+import { apiLogger } from './lib/logger'
 import { ValidationError } from './lib/validate'
 import { registerAuth } from './middleware/auth'
 import { adminsRoutes } from './routes/admins.routes'
@@ -19,7 +20,9 @@ import { ticketsRoutes } from './routes/tickets.routes'
 import { wsRoutes } from './routes/ws.routes'
 
 export async function buildApp(): Promise<FastifyInstance> {
-  const app = Fastify({ logger: { level: env.LOG_LEVEL } })
+  // Cast keeps the app typed with Fastify's default FastifyBaseLogger — passing a raw pino
+  // instance would otherwise re-type the whole instance and clash with the route modules.
+  const app = Fastify({ loggerInstance: apiLogger as unknown as FastifyBaseLogger })
 
   // Surface zod validation failures as a clean 400 with flattened issues.
   app.setErrorHandler((error, _request, reply) => {

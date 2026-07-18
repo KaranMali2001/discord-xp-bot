@@ -34,12 +34,15 @@ export const ticketInput = z.object({
 
 export type TicketInput = z.infer<typeof ticketInput>
 
-/** One decoded image attachment to persist alongside a ticket. */
+/** One image attachment reference to persist alongside a ticket. */
 export const ticketAttachmentInput = z.object({
   filename: z.string().default('image'),
   contentType: z.string().default('application/octet-stream'),
   sizeBytes: z.number().int().nonnegative().default(0),
-  data: z.instanceof(Buffer),
+  // Cloudinary reference (§2.2) — the raw bytes live off-DB in Cloudinary. Empty until an
+  // upload lands (Cloudinary wiring is deferred until the API key is provided).
+  cloudinaryPublicId: z.string().default(''),
+  url: z.string().default(''),
 })
 
 export type TicketAttachmentInput = z.infer<typeof ticketAttachmentInput>

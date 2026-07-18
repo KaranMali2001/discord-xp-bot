@@ -6,12 +6,12 @@ import type { BadgeInput } from './badges.schema'
 export type Badge = typeof badges.$inferSelect
 
 export const badgesDao = {
-  list(guildId: string): Badge[] {
-    return db.select().from(badges).where(eq(badges.guildId, guildId)).all()
+  async list(guildId: string): Promise<Badge[]> {
+    return db.select().from(badges).where(eq(badges.guildId, guildId))
   },
 
-  upsert(guildId: string, input: BadgeInput): Badge {
-    return db
+  async upsert(guildId: string, input: BadgeInput): Promise<Badge> {
+    const [row] = await db
       .insert(badges)
       .values({ guildId, ...input })
       .onConflictDoUpdate({
@@ -25,25 +25,23 @@ export const badgesDao = {
         },
       })
       .returning()
-      .get()
+    if (!row) throw new Error('badges upsert returned no row')
+    return row
   },
 
-  remove(guildId: string, key: string) {
-    db.delete(badges)
-      .where(and(eq(badges.guildId, guildId), eq(badges.key, key)))
-      .run()
+  async remove(guildId: string, key: string) {
+    await db.delete(badges).where(and(eq(badges.guildId, guildId), eq(badges.key, key)))
   },
 
-  owned(guildId: string, userId: string): string[] {
-    return db
+  async owned(guildId: string, userId: string): Promise<string[]> {
+    const rows = await db
       .select({ key: memberBadges.badgeKey })
       .from(memberBadges)
       .where(and(eq(memberBadges.guildId, guildId), eq(memberBadges.userId, userId)))
-      .all()
-      .map((r) => r.key)
+    return rows.map((r) => r.key)
   },
 
-  award(guildId: string, userId: string, badgeKey: string) {
-    db.insert(memberBadges).values({ guildId, userId, badgeKey }).onConflictDoNothing().run()
+  async award(guildId: string, userId: string, badgeKey: string) {
+    await db.insert(memberBadges).values({ guildId, userId, badgeKey }).onConflictDoNothing()
   },
 }

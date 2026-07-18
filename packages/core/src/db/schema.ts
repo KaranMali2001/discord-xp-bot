@@ -1,19 +1,27 @@
 import { sql } from 'drizzle-orm'
 import {
-  blob,
+  bigint,
+  boolean,
   index,
   integer,
+  pgTable,
   primaryKey,
   real,
-  sqliteTable,
+  serial,
   text,
   uniqueIndex,
-} from 'drizzle-orm/sqlite-core'
+} from 'drizzle-orm/pg-core'
 
-const now = sql`(unixepoch())`
+// Epoch-second default (Postgres has no unixepoch()); keeps the same integer-seconds semantics
+// as the old sqlite `(unixepoch())` so nowSec() and every comparison keep working unchanged.
+const now = sql`extract(epoch from now())::bigint`
+
+// Epoch-second timestamp column: stored as bigint (mode:'number') so JS keeps using plain
+// numbers exactly as before. (Optional later: migrate these to timestamptz in a follow-up ADR.)
+const epoch = (name: string) => bigint(name, { mode: 'number' })
 
 /** Per-guild member progress — the persistent XP state (survives restarts). */
-export const members = sqliteTable(
+export const members = pgTable(
   'members',
   {
     guildId: text('guild_id').notNull(),
@@ -24,21 +32,21 @@ export const members = sqliteTable(
     messageCount: integer('message_count').notNull().default(0),
     voiceSeconds: integer('voice_seconds').notNull().default(0),
     speakingSeconds: integer('speaking_seconds').notNull().default(0),
-    lastMessageAt: integer('last_message_at'), // epoch seconds
-    createdAt: integer('created_at').notNull().default(now),
-    updatedAt: integer('updated_at').notNull().default(now),
+    lastMessageAt: epoch('last_message_at'), // epoch seconds
+    createdAt: epoch('created_at').notNull().default(now),
+    updatedAt: epoch('updated_at').notNull().default(now),
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
 )
 
 /** One config row per guild — the global knobs. */
-export const guildConfig = sqliteTable('guild_config', {
+export const guildConfig = pgTable('guild_config', {
   guildId: text('guild_id').primaryKey(),
   messageXp: integer('message_xp').notNull().default(3),
   messageCooldownSec: integer('message_cooldown_sec').notNull().default(60),
   voicePresenceXpPerMin: integer('voice_presence_xp_per_min').notNull().default(2),
   voiceSpeakingXpPerMin: integer('voice_speaking_xp_per_min').notNull().default(5),
-  ignoreMutedVoice: integer('ignore_muted_voice', { mode: 'boolean' }).notNull().default(true),
+  ignoreMutedVoice: boolean('ignore_muted_voice').notNull().default(true),
   levelUpChannelId: text('level_up_channel_id'),
   levelUpMessage: text('level_up_message')
     .notNull()
@@ -49,19 +57,19 @@ export const guildConfig = sqliteTable('guild_config', {
   // Manual voice-capture override: when set, the bot joins this voice channel and tracks
   // activity regardless of events (dashboard "Voice capture" control). Null = off.
   voiceCaptureChannelId: text('voice_capture_channel_id'),
-  updatedAt: integer('updated_at').notNull().default(now),
+  updatedAt: epoch('updated_at').notNull().default(now),
 })
 
 /** Per-channel overrides: multiplier or "no XP here". */
-export const channelRules = sqliteTable(
+export const channelRules = pgTable(
   'channel_rules',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+    id: serial('id').primaryKey(),
     guildId: text('guild_id').notNull(),
     channelId: text('channel_id').notNull(),
     kind: text('kind', { enum: ['text', 'voice'] }).notNull(),
     multiplier: real('multiplier').notNull().default(1),
-    noXp: integer('no_xp', { mode: 'boolean' }).notNull().default(false),
+    noXp: boolean('no_xp').notNull().default(false),
   },
   (t) => ({ uq: uniqueIndex('channel_rules_guild_channel').on(t.guildId, t.channelId) }),
 )
@@ -72,26 +80,26 @@ export const channelRules = sqliteTable(
  *  - one-off window: startsAt/endsAt (epoch seconds)
  * Scope: whole guild, or a single channel when channelId is set.
  */
-export const multiplierEvents = sqliteTable('multiplier_events', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
+export const multiplierEvents = pgTable('multiplier_events', {
+  id: serial('id').primaryKey(),
   guildId: text('guild_id').notNull(),
   name: text('name').notNull(),
   multiplier: real('multiplier').notNull().default(2),
-  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
-  countsAttendance: integer('counts_attendance', { mode: 'boolean' }).notNull().default(false),
+  enabled: boolean('enabled').notNull().default(true),
+  countsAttendance: boolean('counts_attendance').notNull().default(false),
   dayOfWeek: integer('day_of_week'),
   startMinute: integer('start_minute'),
   endMinute: integer('end_minute'),
-  startsAt: integer('starts_at'),
-  endsAt: integer('ends_at'),
+  startsAt: epoch('starts_at'),
+  endsAt: epoch('ends_at'),
   channelId: text('channel_id'),
 })
 
 /** level → role to grant on reaching it. */
-export const levelRewards = sqliteTable(
+export const levelRewards = pgTable(
   'level_rewards',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+    id: serial('id').primaryKey(),
     guildId: text('guild_id').notNull(),
     level: integer('level').notNull(),
     roleId: text('role_id').notNull(),
@@ -102,10 +110,10 @@ export const levelRewards = sqliteTable(
 )
 
 /** Badge definitions — earned when a stat crosses `threshold`. */
-export const badges = sqliteTable(
+export const badges = pgTable(
   'badges',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+    id: serial('id').primaryKey(),
     guildId: text('guild_id').notNull(),
     key: text('key').notNull(),
     name: text('name').notNull(),
@@ -119,19 +127,19 @@ export const badges = sqliteTable(
   (t) => ({ uq: uniqueIndex('badges_guild_key').on(t.guildId, t.key) }),
 )
 
-export const memberBadges = sqliteTable(
+export const memberBadges = pgTable(
   'member_badges',
   {
     guildId: text('guild_id').notNull(),
     userId: text('user_id').notNull(),
     badgeKey: text('badge_key').notNull(),
-    awardedAt: integer('awarded_at').notNull().default(now),
+    awardedAt: epoch('awarded_at').notNull().default(now),
   },
   (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId, t.badgeKey] }) }),
 )
 
 /** One row per (member, event, day) — powers the "attended N Fridays" badge. */
-export const eventAttendance = sqliteTable(
+export const eventAttendance = pgTable(
   'event_attendance',
   {
     guildId: text('guild_id').notNull(),
@@ -153,7 +161,7 @@ export const eventAttendance = sqliteTable(
  *
  * Derived views: unmuted = presentSeconds − mutedSeconds; talk-time = speakingSeconds.
  */
-export const eventVoiceStats = sqliteTable(
+export const eventVoiceStats = pgTable(
   'event_voice_stats',
   {
     guildId: text('guild_id').notNull(),
@@ -168,8 +176,8 @@ export const eventVoiceStats = sqliteTable(
     mutedSeconds: integer('muted_seconds').notNull().default(0),
     // Seconds in ticks where the receiver reported them transmitting audio.
     speakingSeconds: integer('speaking_seconds').notNull().default(0),
-    firstSeenAt: integer('first_seen_at').notNull().default(now), // epoch seconds
-    lastSeenAt: integer('last_seen_at').notNull().default(now),
+    firstSeenAt: epoch('first_seen_at').notNull().default(now), // epoch seconds
+    lastSeenAt: epoch('last_seen_at').notNull().default(now),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.guildId, t.userId, t.eventId, t.day] }),
@@ -178,7 +186,7 @@ export const eventVoiceStats = sqliteTable(
 )
 
 /** Dashboard admin allowlist (in addition to Discord MANAGE_GUILD perm). */
-export const admins = sqliteTable(
+export const admins = pgTable(
   'admins',
   {
     guildId: text('guild_id').notNull(),
@@ -193,24 +201,24 @@ export const admins = sqliteTable(
  * `fireAt` is epoch seconds (computed from an IST wall-clock at creation). Member/role
  * mention lists are stored as JSON text — the same payload the immediate-send path uses.
  */
-export const scheduledAnnouncements = sqliteTable(
+export const scheduledAnnouncements = pgTable(
   'scheduled_announcements',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+    id: serial('id').primaryKey(),
     guildId: text('guild_id').notNull(),
     channelId: text('channel_id').notNull(),
     message: text('message').notNull(),
     // JSON-encoded string[] of user / role ids to mention.
     memberIds: text('member_ids').notNull().default('[]'),
     roleIds: text('role_ids').notNull().default('[]'),
-    mentionEveryone: integer('mention_everyone', { mode: 'boolean' }).notNull().default(false),
-    fireAt: integer('fire_at').notNull(), // epoch seconds
+    mentionEveryone: boolean('mention_everyone').notNull().default(false),
+    fireAt: epoch('fire_at').notNull(), // epoch seconds
     status: text('status', { enum: ['pending', 'sent', 'missed', 'cancelled'] })
       .notNull()
       .default('pending'),
     createdBy: text('created_by').notNull().default(''),
-    createdAt: integer('created_at').notNull().default(now),
-    sentAt: integer('sent_at'),
+    createdAt: epoch('created_at').notNull().default(now),
+    sentAt: epoch('sent_at'),
   },
   // Scheduler polls pending rows by fire time; index keeps that cheap.
   (t) => ({ dueIdx: index('scheduled_announcements_due').on(t.status, t.fireAt) }),
@@ -223,7 +231,7 @@ export const scheduledAnnouncements = sqliteTable(
  * transcribes the file, and writes back `text`/`language` — the two halves never share
  * state beyond this table + the audio file, so the worker can run anywhere.
  */
-export const transcriptJobs = sqliteTable(
+export const transcriptJobs = pgTable(
   'transcript_jobs',
   {
     id: text('id').primaryKey(), // uuid, minted by the capturer
@@ -235,7 +243,7 @@ export const transcriptJobs = sqliteTable(
     userId: text('user_id').notNull(),
     username: text('username').notNull().default(''),
     filePath: text('file_path').notNull(),
-    startedAt: integer('started_at').notNull(), // epoch seconds
+    startedAt: epoch('started_at').notNull(), // epoch seconds
     durationMs: integer('duration_ms').notNull().default(0),
     // Format of the stored WAV — self-describing so the worker needn't guess.
     sampleRate: integer('sample_rate').notNull().default(48000),
@@ -247,8 +255,8 @@ export const transcriptJobs = sqliteTable(
     text: text('text'),
     language: text('language'),
     error: text('error'),
-    createdAt: integer('created_at').notNull().default(now),
-    updatedAt: integer('updated_at').notNull().default(now),
+    createdAt: epoch('created_at').notNull().default(now),
+    updatedAt: epoch('updated_at').notNull().default(now),
   },
   // Worker polls by status; index keeps that cheap as the table grows.
   (t) => ({ statusIdx: index('transcript_jobs_status').on(t.status, t.startedAt) }),
@@ -262,44 +270,38 @@ export const transcriptJobs = sqliteTable(
  * bot grants each submitter a personal View-Channel overwrite so they can reach their own
  * thread. `panelMessageId` lets `/ticket-setup` re-post/replace a stale panel.
  */
-export const ticketConfig = sqliteTable('ticket_config', {
+export const ticketConfig = pgTable('ticket_config', {
   guildId: text('guild_id').primaryKey(),
   panelChannelId: text('panel_channel_id'),
   ticketChannelId: text('ticket_channel_id'),
   // Role that can see all tickets + pull a third person into a thread. Setup grants it
   // View Channel + Manage Threads on the ticket channel.
   staffRoleId: text('staff_role_id'),
-  // Deprecated: superseded by ticketChannelId. Kept nullable/unused to keep the migration
-  // additive (drizzle would otherwise prompt to disambiguate a rename). Drop on Neon move.
-  modChannelId: text('mod_channel_id'),
   panelMessageId: text('panel_message_id'),
-  enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
-  updatedAt: integer('updated_at').notNull().default(now),
+  enabled: boolean('enabled').notNull().default(true),
+  updatedAt: epoch('updated_at').notNull().default(now),
 })
 
 /**
- * One row per raised ticket. Metadata only — image bytes live in `ticket_attachments` so
- * listing/queries stay light. `threadId` is the private thread created at submit time; the
- * ticket content + conversation all live inside it.
+ * One row per raised ticket. Metadata only — image references live in `ticket_attachments`
+ * so listing/queries stay light. `threadId` is the private thread created at submit time;
+ * the ticket content + conversation all live inside it.
  */
-export const tickets = sqliteTable(
+export const tickets = pgTable(
   'tickets',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+    id: serial('id').primaryKey(),
     guildId: text('guild_id').notNull(),
     userId: text('user_id').notNull(),
     username: text('username').notNull().default(''),
     subject: text('subject').notNull(),
     description: text('description').notNull().default(''),
     threadId: text('thread_id'),
-    // Deprecated (no separate mod-channel post anymore). Kept to keep the migration
-    // additive; drop on the Neon move.
-    modMessageId: text('mod_message_id'),
     status: text('status', { enum: ['open', 'resolved', 'closed'] })
       .notNull()
       .default('open'),
-    createdAt: integer('created_at').notNull().default(now),
-    resolvedAt: integer('resolved_at'),
+    createdAt: epoch('created_at').notNull().default(now),
+    resolvedAt: epoch('resolved_at'),
   },
   // Staff triage lists by (guild, status); index keeps that cheap.
   (t) => ({ statusIdx: index('tickets_guild_status').on(t.guildId, t.status) }),
@@ -311,7 +313,7 @@ export const tickets = sqliteTable(
  * overwrite on the hidden ticket channel. On close we revoke an overwrite only if that
  * user isn't still a participant of another open ticket (overwrites are channel-wide).
  */
-export const ticketParticipants = sqliteTable(
+export const ticketParticipants = pgTable(
   'ticket_participants',
   {
     guildId: text('guild_id').notNull(),
@@ -320,28 +322,31 @@ export const ticketParticipants = sqliteTable(
     role: text('role', { enum: ['owner', 'staff'] })
       .notNull()
       .default('owner'),
-    createdAt: integer('created_at').notNull().default(now),
+    createdAt: epoch('created_at').notNull().default(now),
   },
   (t) => ({ pk: primaryKey({ columns: [t.ticketId, t.userId] }) }),
 )
 
 /**
- * Raw image bytes for a ticket, one row per attachment. Stored as a BLOB (source of truth)
- * — the bot downloads each modal upload from Discord's CDN and persists it here so the
- * image survives the staff message being deleted. Kept in its own table so the heavy
- * binary is never dragged into ticket-list queries.
+ * Image reference for a ticket, one row per attachment. The raw bytes live in Cloudinary
+ * (off-DB object storage, §2.2) — the bot uploads each modal upload server-side and stores
+ * only the Cloudinary `public_id` + delivery `url` here (plus lightweight metadata), so the
+ * heavy binary never enters Postgres and never bloats a `pg_dump`. Kept in its own table so
+ * the reference is never dragged into ticket-list queries.
  */
-export const ticketAttachments = sqliteTable(
+export const ticketAttachments = pgTable(
   'ticket_attachments',
   {
-    id: integer('id').primaryKey({ autoIncrement: true }),
+    id: serial('id').primaryKey(),
     ticketId: integer('ticket_id').notNull(),
     guildId: text('guild_id').notNull(),
     filename: text('filename').notNull().default('image'),
     contentType: text('content_type').notNull().default('application/octet-stream'),
     sizeBytes: integer('size_bytes').notNull().default(0),
-    data: blob('data', { mode: 'buffer' }).notNull(),
-    createdAt: integer('created_at').notNull().default(now),
+    // Cloudinary reference (replaces the old `data` blob). Empty until an upload lands.
+    cloudinaryPublicId: text('cloudinary_public_id').notNull().default(''),
+    url: text('url').notNull().default(''),
+    createdAt: epoch('created_at').notNull().default(now),
   },
   (t) => ({ ticketIdx: index('ticket_attachments_ticket').on(t.ticketId) }),
 )

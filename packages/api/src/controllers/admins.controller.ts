@@ -9,14 +9,14 @@ export const adminsController = {
     return authService.listAdmins(guildId)
   },
 
-  add(guildId: string, body: unknown) {
+  async add(guildId: string, body: unknown) {
     const { userId } = parse(addAdminBody, body)
-    authService.addAdmin(guildId, userId)
+    await authService.addAdmin(guildId, userId)
     return { ok: true, userId }
   },
 
-  remove(guildId: string, userId: string) {
-    authService.removeAdmin(guildId, userId)
+  async remove(guildId: string, userId: string) {
+    await authService.removeAdmin(guildId, userId)
     return { ok: true }
   },
 }

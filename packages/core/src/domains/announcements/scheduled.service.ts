@@ -9,11 +9,11 @@ import { type ScheduledAnnouncement, scheduledDao } from './scheduled.dao'
  */
 export const scheduledAnnouncementsService = {
   /** Validate + persist a scheduled announcement. Throws ZodError on bad input. */
-  schedule(
+  async schedule(
     guildId: string,
     createdBy: string,
     raw: ScheduledAnnouncementInput,
-  ): ScheduledAnnouncement {
+  ): Promise<ScheduledAnnouncement> {
     const input = scheduledAnnouncementInput.parse(raw)
     return scheduledDao.create({
       guildId,
@@ -27,30 +27,40 @@ export const scheduledAnnouncementsService = {
     })
   },
 
-  listUpcoming(guildId: string): ScheduledAnnouncement[] {
+  async listUpcoming(guildId: string): Promise<ScheduledAnnouncement[]> {
     return scheduledDao.listUpcoming(guildId)
   },
 
-  cancel(guildId: string, id: number): boolean {
+  /** Earliest pending fire time across all guilds (or null) — the scheduler's idle gate (§2.1). */
+  async earliestPending(): Promise<number | null> {
+    return scheduledDao.earliestPending()
+  },
+
+  async cancel(guildId: string, id: number): Promise<boolean> {
     return scheduledDao.cancel(guildId, id)
   },
 
   /** Skip-missed sweep, run once at bot startup. Returns how many were marked missed. */
-  sweepMissed(before?: number): number {
+  async sweepMissed(before?: number): Promise<number> {
     return scheduledDao.sweepMissed(before)
   },
 
   /**
-   * Post every due announcement and mark it sent. A single row's failure is isolated
-   * (logged via onError) so one bad channel doesn't stall the rest of the batch.
+   * Post every due announcement. Each row is CLAIMED atomically right before it's sent
+   * (`claimOne` flips pending→sent guarded by status), so a second scheduler process can never
+   * double-post the same announcement — the loser simply skips it. A single row's failure is
+   * isolated (logged via onError) AND rolled back to `pending` so the next tick retries it,
+   * rather than leaving it silently marked sent-but-not-posted.
    */
   async runDue(
     at?: number,
     onError?: (a: ScheduledAnnouncement, err: unknown) => void,
   ): Promise<ScheduledAnnouncement[]> {
-    const due = scheduledDao.listDue(at)
+    const due = await scheduledDao.listDue(at)
     const sent: ScheduledAnnouncement[] = []
     for (const a of due) {
+      // Skip anything a concurrent scheduler already claimed (atomic pending→sent guard).
+      if (!(await scheduledDao.claimOne(a.id))) continue
       try {
         await announcementsService.send({
           channelId: a.channelId,
@@ -59,9 +69,11 @@ export const scheduledAnnouncementsService = {
           roleIds: a.roleIds,
           mentionEveryone: a.mentionEveryone,
         })
-        scheduledDao.markSent(a.id)
         sent.push(a)
       } catch (err) {
+        await scheduledDao.releaseToPending(a.id).catch(() => {
+          // best effort — if the rollback itself fails the startup sweep still catches it
+        })
         onError?.(a, err)
       }
     }

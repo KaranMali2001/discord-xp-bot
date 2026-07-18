@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { MemberPicker } from '@/components/MemberPicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,7 +15,6 @@ import {
 import { useToast } from '@/components/ui/toast'
 import { useLeaderboard } from '@/hooks/useLeaderboard'
 import { useBoostXp } from '@/hooks/useMembers'
-import * as React from 'react'
 
 const LIMIT = 25
 

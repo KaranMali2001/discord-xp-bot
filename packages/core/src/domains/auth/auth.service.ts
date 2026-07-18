@@ -13,7 +13,7 @@ export const authService = {
   addAdmin: authDao.add,
   removeAdmin: authDao.remove,
 
-  canManage(guildId: string, userId: string, hasManageGuild: boolean): boolean {
-    return hasManageGuild || authDao.isAdmin(guildId, userId)
+  async canManage(guildId: string, userId: string, hasManageGuild: boolean): Promise<boolean> {
+    return hasManageGuild || (await authDao.isAdmin(guildId, userId))
   },
 }

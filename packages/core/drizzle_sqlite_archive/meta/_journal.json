@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1784043784134,
+      "tag": "0000_special_the_order",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784108806999,
+      "tag": "0001_eager_bruce_banner",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784119144400,
+      "tag": "0002_wise_hemingway",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1784122524611,
+      "tag": "0003_spotty_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784123872057,
+      "tag": "0004_elite_gamora",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1784277767912,
+      "tag": "0005_careless_iron_patriot",
+      "breakpoints": true
+    }
+  ]
+}

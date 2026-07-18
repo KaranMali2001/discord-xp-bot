@@ -1,6 +1,6 @@
+import * as React from 'react'
 import { Combobox, type ComboboxOption } from '@/components/ui/combobox'
 import { useDiscordMembers } from '@/hooks/useDiscord'
-import * as React from 'react'
 
 type MemberPickerProps = {
   guildId: string

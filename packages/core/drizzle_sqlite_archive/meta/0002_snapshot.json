@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "5cb68fbf-6f83-46b6-9885-c4616c67818b",
-  "prevId": "af0722fb-0053-4351-adf7-fb78e8133acd",
+  "id": "af0722fb-0053-4351-adf7-fb78e8133acd",
+  "prevId": "5c9e6a80-761d-4cfb-806a-7db9521c2646",
   "tables": {
     "admins": {
       "name": "admins",
@@ -26,10 +26,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "admins_guild_id_user_id_pk": {
-          "columns": [
-            "guild_id",
-            "user_id"
-          ],
+          "columns": ["guild_id", "user_id"],
           "name": "admins_guild_id_user_id_pk"
         }
       },
@@ -101,10 +98,7 @@
       "indexes": {
         "badges_guild_key": {
           "name": "badges_guild_key",
-          "columns": [
-            "guild_id",
-            "key"
-          ],
+          "columns": ["guild_id", "key"],
           "isUnique": true
         }
       },
@@ -164,10 +158,7 @@
       "indexes": {
         "channel_rules_guild_channel": {
           "name": "channel_rules_guild_channel",
-          "columns": [
-            "guild_id",
-            "channel_id"
-          ],
+          "columns": ["guild_id", "channel_id"],
           "isUnique": true
         }
       },
@@ -212,12 +203,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "event_attendance_guild_id_user_id_event_id_day_pk": {
-          "columns": [
-            "guild_id",
-            "user_id",
-            "event_id",
-            "day"
-          ],
+          "columns": ["guild_id", "user_id", "event_id", "day"],
           "name": "event_attendance_guild_id_user_id_event_id_day_pk"
         }
       },
@@ -361,10 +347,7 @@
       "indexes": {
         "level_rewards_guild_level": {
           "name": "level_rewards_guild_level",
-          "columns": [
-            "guild_id",
-            "level"
-          ],
+          "columns": ["guild_id", "level"],
           "isUnique": true
         }
       },
@@ -410,11 +393,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "member_badges_guild_id_user_id_badge_key_pk": {
-          "columns": [
-            "guild_id",
-            "user_id",
-            "badge_key"
-          ],
+          "columns": ["guild_id", "user_id", "badge_key"],
           "name": "member_badges_guild_id_user_id_badge_key_pk"
         }
       },
@@ -514,10 +493,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "members_guild_id_user_id_pk": {
-          "columns": [
-            "guild_id",
-            "user_id"
-          ],
+          "columns": ["guild_id", "user_id"],
           "name": "members_guild_id_user_id_pk"
         }
       },
@@ -718,10 +694,7 @@
       "indexes": {
         "scheduled_announcements_due": {
           "name": "scheduled_announcements_due",
-          "columns": [
-            "status",
-            "fire_at"
-          ],
+          "columns": ["status", "fire_at"],
           "isUnique": false
         }
       },
@@ -797,9 +770,7 @@
       "indexes": {
         "ticket_attachments_ticket": {
           "name": "ticket_attachments_ticket",
-          "columns": [
-            "ticket_id"
-          ],
+          "columns": ["ticket_id"],
           "isUnique": false
         }
       },
@@ -820,13 +791,6 @@
         },
         "panel_channel_id": {
           "name": "panel_channel_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "ticket_channel_id": {
-          "name": "ticket_channel_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -866,61 +830,6 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "ticket_participants": {
-      "name": "ticket_participants",
-      "columns": {
-        "guild_id": {
-          "name": "guild_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "ticket_id": {
-          "name": "ticket_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "role": {
-          "name": "role",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'owner'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(unixepoch())"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "ticket_participants_ticket_id_user_id_pk": {
-          "columns": [
-            "ticket_id",
-            "user_id"
-          ],
-          "name": "ticket_participants_ticket_id_user_id_pk"
-        }
-      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -971,15 +880,15 @@
           "autoincrement": false,
           "default": "''"
         },
-        "thread_id": {
-          "name": "thread_id",
+        "mod_message_id": {
+          "name": "mod_message_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "mod_message_id": {
-          "name": "mod_message_id",
+        "thread_id": {
+          "name": "thread_id",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1012,10 +921,7 @@
       "indexes": {
         "tickets_guild_status": {
           "name": "tickets_guild_status",
-          "columns": [
-            "guild_id",
-            "status"
-          ],
+          "columns": ["guild_id", "status"],
           "isUnique": false
         }
       },
@@ -1165,10 +1071,7 @@
       "indexes": {
         "transcript_jobs_status": {
           "name": "transcript_jobs_status",
-          "columns": [
-            "status",
-            "started_at"
-          ],
+          "columns": ["status", "started_at"],
           "isUnique": false
         }
       },

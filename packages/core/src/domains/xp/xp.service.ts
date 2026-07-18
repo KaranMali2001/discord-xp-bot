@@ -20,7 +20,7 @@ export const xpService = {
    * the channel, applies it to `baseAmount`, writes atomically, recomputes level.
    * Returns the attendance event ids so voice can record Friday attendance.
    */
-  grant(
+  async grant(
     guildId: string,
     userId: string,
     username: string,
@@ -28,8 +28,8 @@ export const xpService = {
     channelId: string,
     counters: CounterDelta = {},
     atSec: number = nowSec(),
-  ): { result: GrantResult; attendanceEventIds: number[] } | { skip: SkipReason } {
-    const { multiplier, noXp, attendanceEventIds } = rulesService.effectiveMultiplier(
+  ): Promise<{ result: GrantResult; attendanceEventIds: number[] } | { skip: SkipReason }> {
+    const { multiplier, noXp, attendanceEventIds } = await rulesService.effectiveMultiplier(
       guildId,
       channelId,
       atSec,
@@ -37,10 +37,10 @@ export const xpService = {
     if (noXp) return { skip: 'no_xp_channel' }
 
     const awarded = Math.round(baseAmount * multiplier)
-    const member = xpDao.ensure(guildId, userId, username)
+    const member = await xpDao.ensure(guildId, userId, username)
     if (awarded <= 0) {
       // still persist counters (e.g. voice seconds) even when no XP is granted
-      const updated = xpDao.apply(guildId, userId, 0, member.level, counters)
+      const updated = await xpDao.apply(guildId, userId, 0, member.level, counters)
       return {
         result: {
           awarded: 0,
@@ -56,7 +56,7 @@ export const xpService = {
     const oldLevel = member.level
     const newXp = member.xp + awarded
     const newLevel = levelFromXp(newXp)
-    const updated = xpDao.apply(guildId, userId, awarded, newLevel, counters)
+    const updated = await xpDao.apply(guildId, userId, awarded, newLevel, counters)
 
     return {
       result: { awarded, member: updated, oldLevel, newLevel, leveledUp: newLevel > oldLevel },
@@ -65,14 +65,14 @@ export const xpService = {
   },
 
   /** Chat XP with per-user cooldown enforced here (the anti-spam-farm rule). */
-  grantMessage(
+  async grantMessage(
     guildId: string,
     userId: string,
     username: string,
     channelId: string,
-  ): { result: GrantResult; attendanceEventIds: number[] } | { skip: SkipReason } {
-    const cfg = rulesService.getConfig(guildId)
-    const existing = xpDao.get(guildId, userId)
+  ): Promise<{ result: GrantResult; attendanceEventIds: number[] } | { skip: SkipReason }> {
+    const cfg = await rulesService.getConfig(guildId)
+    const existing = await xpDao.get(guildId, userId)
     const at = nowSec()
     if (existing?.lastMessageAt && at - existing.lastMessageAt < cfg.messageCooldownSec) {
       return { skip: 'cooldown' }
@@ -88,14 +88,19 @@ export const xpService = {
    * level, and return the before/after. Reconciliation (roles/badges/announcement) is
    * the caller's job — see the reconcile service. Creates the row if the member is new.
    */
-  adjust(guildId: string, userId: string, username: string, delta: number): GrantResult {
+  async adjust(
+    guildId: string,
+    userId: string,
+    username: string,
+    delta: number,
+  ): Promise<GrantResult> {
     // ensure() upserts the username too, so a boost also refreshes a stale/placeholder
     // name (e.g. a row first created by a boost before the real name was known).
-    const base = xpDao.ensure(guildId, userId, username)
+    const base = await xpDao.ensure(guildId, userId, username)
     const oldLevel = base.level
     const newXp = Math.max(0, base.xp + delta)
     const newLevel = levelFromXp(newXp)
-    const member = xpDao.setXp(guildId, userId, newXp, newLevel)
+    const member = await xpDao.setXp(guildId, userId, newXp, newLevel)
     return { awarded: newXp - base.xp, member, oldLevel, newLevel, leveledUp: newLevel > oldLevel }
   },
 

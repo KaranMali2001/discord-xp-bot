@@ -1,5 +1,5 @@
-import { type Badge, endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type Badge, endpoints } from '@/lib/api'
 
 const key = (guildId: string) => ['badges', guildId] as const
 

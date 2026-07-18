@@ -20,13 +20,20 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
+    "lint:promises": "eslint packages/core/src packages/api/src packages/bot/src",
     "format": "biome format --write ."
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
-    "typescript": "^5.6.3"
+    "@biomejs/biome": "^2.5.4",
+    "eslint": "^9",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["better-sqlite3", "libsql", "@discordjs/opus", "esbuild"]
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "@discordjs/opus",
+      "esbuild"
+    ]
   }
 }

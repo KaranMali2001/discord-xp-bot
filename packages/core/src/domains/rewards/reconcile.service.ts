@@ -27,7 +27,7 @@ export async function reconcileMember(
   userId: string,
   previousLevel: number,
 ): Promise<ReconcileResult | null> {
-  const member = xpService.get(guildId, userId)
+  const member = await xpService.get(guildId, userId)
   if (!member) return null
 
   // A single-tier role can only change when the level changes. Most grants (every
@@ -35,7 +35,7 @@ export async function reconcileMember(
   // badges below are cheap DB reads and always run.
   let newTierRoleId: string | null = null
   if (member.level !== previousLevel) {
-    const rewards = rulesDao.listLevelRewards(guildId)
+    const rewards = await rulesDao.listLevelRewards(guildId)
     if (rewards.length > 0) {
       const currentRoleIds = await discordRest.memberRoleIds(guildId, userId)
       const diff = reconcileDecision(currentRoleIds, member.level, rewards)
@@ -51,7 +51,7 @@ export async function reconcileMember(
     }
   }
 
-  const newBadges = badgesService.evaluate(guildId, userId)
+  const newBadges = await badgesService.evaluate(guildId, userId)
 
   return {
     level: member.level,
@@ -74,7 +74,7 @@ export async function announceReconcile(
   result: ReconcileResult,
   opts: { fallbackChannelId?: string } = {},
 ): Promise<void> {
-  const cfg = rulesService.getConfig(guildId)
+  const cfg = await rulesService.getConfig(guildId)
   const channelId = cfg.levelUpChannelId ?? opts.fallbackChannelId
   if (!channelId) return
 
@@ -88,9 +88,9 @@ export async function announceReconcile(
   // A level-up announces once: the tier message supersedes the plain level-up line.
   if (result.leveledUp) {
     if (result.newTierRoleId) {
-      const reward = rulesDao
-        .listLevelRewards(guildId)
-        .find((r) => r.roleId === result.newTierRoleId)
+      const reward = (await rulesDao.listLevelRewards(guildId)).find(
+        (r) => r.roleId === result.newTierRoleId,
+      )
       const roleName = await roleNameFor(guildId, result.newTierRoleId)
       await discordRest
         .sendMessage(channelId, fill(reward?.message ?? cfg.tierUpMessage, roleName))

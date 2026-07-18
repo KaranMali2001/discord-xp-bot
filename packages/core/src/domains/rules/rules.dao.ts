@@ -10,12 +10,13 @@ import type {
 } from './rules.schema'
 
 export const rulesDao = {
-  getConfig(guildId: string) {
-    return db.select().from(guildConfig).where(eq(guildConfig.guildId, guildId)).get()
+  async getConfig(guildId: string) {
+    const [row] = await db.select().from(guildConfig).where(eq(guildConfig.guildId, guildId))
+    return row
   },
 
-  upsertConfig(guildId: string, patch: GuildConfigInput) {
-    return db
+  async upsertConfig(guildId: string, patch: GuildConfigInput) {
+    const [row] = await db
       .insert(guildConfig)
       .values({ guildId, ...patch, updatedAt: nowSec() })
       .onConflictDoUpdate({
@@ -23,23 +24,23 @@ export const rulesDao = {
         set: { ...patch, updatedAt: nowSec() },
       })
       .returning()
-      .get()
+    return row
   },
 
-  listChannelRules(guildId: string) {
-    return db.select().from(channelRules).where(eq(channelRules.guildId, guildId)).all()
+  async listChannelRules(guildId: string) {
+    return db.select().from(channelRules).where(eq(channelRules.guildId, guildId))
   },
 
-  getChannelRule(guildId: string, channelId: string) {
-    return db
+  async getChannelRule(guildId: string, channelId: string) {
+    const [row] = await db
       .select()
       .from(channelRules)
       .where(and(eq(channelRules.guildId, guildId), eq(channelRules.channelId, channelId)))
-      .get()
+    return row
   },
 
-  upsertChannelRule(guildId: string, input: ChannelRuleInput) {
-    return db
+  async upsertChannelRule(guildId: string, input: ChannelRuleInput) {
+    const [row] = await db
       .insert(channelRules)
       .values({ guildId, ...input })
       .onConflictDoUpdate({
@@ -47,48 +48,48 @@ export const rulesDao = {
         set: { kind: input.kind, multiplier: input.multiplier, noXp: input.noXp },
       })
       .returning()
-      .get()
+    return row
   },
 
-  deleteChannelRule(guildId: string, channelId: string) {
-    db.delete(channelRules)
+  async deleteChannelRule(guildId: string, channelId: string) {
+    await db
+      .delete(channelRules)
       .where(and(eq(channelRules.guildId, guildId), eq(channelRules.channelId, channelId)))
-      .run()
   },
 
-  listEvents(guildId: string) {
-    return db.select().from(multiplierEvents).where(eq(multiplierEvents.guildId, guildId)).all()
+  async listEvents(guildId: string) {
+    return db.select().from(multiplierEvents).where(eq(multiplierEvents.guildId, guildId))
   },
 
-  createEvent(guildId: string, input: EventInput) {
-    return db
+  async createEvent(guildId: string, input: EventInput) {
+    const [row] = await db
       .insert(multiplierEvents)
       .values({ guildId, ...input })
       .returning()
-      .get()
+    return row
   },
 
-  updateEvent(guildId: string, id: number, input: Partial<EventInput>) {
-    return db
+  async updateEvent(guildId: string, id: number, input: Partial<EventInput>) {
+    const [row] = await db
       .update(multiplierEvents)
       .set(input)
       .where(and(eq(multiplierEvents.guildId, guildId), eq(multiplierEvents.id, id)))
       .returning()
-      .get()
+    return row
   },
 
-  deleteEvent(guildId: string, id: number) {
-    db.delete(multiplierEvents)
+  async deleteEvent(guildId: string, id: number) {
+    await db
+      .delete(multiplierEvents)
       .where(and(eq(multiplierEvents.guildId, guildId), eq(multiplierEvents.id, id)))
-      .run()
   },
 
-  listLevelRewards(guildId: string) {
-    return db.select().from(levelRewards).where(eq(levelRewards.guildId, guildId)).all()
+  async listLevelRewards(guildId: string) {
+    return db.select().from(levelRewards).where(eq(levelRewards.guildId, guildId))
   },
 
-  upsertLevelReward(guildId: string, input: LevelRewardInput) {
-    return db
+  async upsertLevelReward(guildId: string, input: LevelRewardInput) {
+    const [row] = await db
       .insert(levelRewards)
       .values({ guildId, ...input })
       .onConflictDoUpdate({
@@ -96,12 +97,12 @@ export const rulesDao = {
         set: { roleId: input.roleId, message: input.message ?? null },
       })
       .returning()
-      .get()
+    return row
   },
 
-  deleteLevelReward(guildId: string, level: number) {
-    db.delete(levelRewards)
+  async deleteLevelReward(guildId: string, level: number) {
+    await db
+      .delete(levelRewards)
       .where(and(eq(levelRewards.guildId, guildId), eq(levelRewards.level, level)))
-      .run()
   },
 }

@@ -6,8 +6,8 @@ export type EnqueueInput = TranscriptJobInput
 
 export const transcriptService = {
   /** Part 1: record a finished capture as a pending job. Idempotent per `id`. */
-  enqueue(input: EnqueueInput): void {
-    transcriptDao.insert(input)
+  async enqueue(input: EnqueueInput): Promise<void> {
+    await transcriptDao.insert(input)
   },
 
   /** The worker's inbox. */

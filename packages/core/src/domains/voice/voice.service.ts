@@ -35,14 +35,14 @@ export const voiceService = {
    * spoke *at all* this tick, the whole tick is billed at the speaking rate; otherwise
    * at the presence rate. Also records attendance for any active Friday-style event.
    */
-  grantTick(tick: VoiceTick): { result: GrantResult } | { skip: SkipReason } {
-    const cfg = rulesService.getConfig(tick.guildId)
+  async grantTick(tick: VoiceTick): Promise<{ result: GrantResult } | { skip: SkipReason }> {
+    const cfg = await rulesService.getConfig(tick.guildId)
     if (tick.presentSeconds <= 0) return { skip: 'zero_multiplier' }
 
     const perMin = tick.spoke ? cfg.voiceSpeakingXpPerMin : cfg.voicePresenceXpPerMin
     const base = (perMin * tick.presentSeconds) / 60
 
-    const outcome = xpService.grant(
+    const outcome = await xpService.grant(
       tick.guildId,
       tick.userId,
       tick.username,
@@ -58,7 +58,7 @@ export const voiceService = {
 
     const at = nowSec()
     for (const eventId of outcome.attendanceEventIds) {
-      voiceDao.recordAttendance(tick.guildId, tick.userId, eventId, at)
+      await voiceDao.recordAttendance(tick.guildId, tick.userId, eventId, at)
     }
     return { result: outcome.result }
   },
@@ -69,16 +69,16 @@ export const voiceService = {
    * the same event resolution as XP (`effectiveMultiplier`), so a no-XP channel records no
    * duration, keeping the numbers consistent with binary attendance.
    */
-  recordDuration(tick: DurationTick): void {
+  async recordDuration(tick: DurationTick): Promise<void> {
     if (tick.seconds <= 0) return
     const at = nowSec()
-    const { attendanceEventIds } = rulesService.effectiveMultiplier(
+    const { attendanceEventIds } = await rulesService.effectiveMultiplier(
       tick.guildId,
       tick.channelId,
       at,
     )
     for (const eventId of attendanceEventIds) {
-      voiceDao.recordActivity({
+      await voiceDao.recordActivity({
         guildId: tick.guildId,
         userId: tick.userId,
         username: tick.username,

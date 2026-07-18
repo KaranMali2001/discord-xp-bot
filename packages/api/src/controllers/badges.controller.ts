@@ -11,8 +11,8 @@ export const badgesController = {
     return badgesService.upsert(guildId, input)
   },
 
-  remove(guildId: string, key: string) {
-    badgesService.remove(guildId, key)
+  async remove(guildId: string, key: string) {
+    await badgesService.remove(guildId, key)
     return { ok: true }
   },
 }

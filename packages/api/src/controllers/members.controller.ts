@@ -15,7 +15,7 @@ export const membersController = {
    */
   async boostXp(guildId: string, userId: string, body: unknown) {
     const { delta, username } = parse(boostBody, body)
-    const existing = xpService.get(guildId, userId)
+    const existing = await xpService.get(guildId, userId)
     // Prefer an explicit name; else the stored one; else look the member up on Discord
     // so a freshly-created row never falls back to the placeholder "member".
     let name = username ?? existing?.username
@@ -23,7 +23,7 @@ export const membersController = {
       const m = await discordRest.member(guildId, userId).catch(() => null)
       if (m) name = m.displayName
     }
-    const result = xpService.adjust(guildId, userId, name ?? 'member', delta)
+    const result = await xpService.adjust(guildId, userId, name ?? 'member', delta)
 
     const reconciled = await reconcileMember(guildId, userId, result.oldLevel)
     if (reconciled) await announceReconcile(guildId, userId, reconciled)

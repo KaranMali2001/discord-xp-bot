@@ -15,6 +15,7 @@ import {
   type UserSelectMenuInteraction,
 } from 'discord.js'
 import { log } from '../lib/log'
+import { noteScheduledAt } from './scheduled-tick'
 
 /**
  * `/announce` is stateful across three interactions — the slash command opens the
@@ -169,10 +170,13 @@ export async function handleAnnounceModal(interaction: ModalSubmitInteraction): 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral })
   try {
     if (draft.fireAt != null) {
-      scheduledAnnouncementsService.schedule(interaction.guildId, interaction.user.id, {
+      await scheduledAnnouncementsService.schedule(interaction.guildId, interaction.user.id, {
         ...payload,
         fireAt: draft.fireAt,
       })
+      // This process runs the scheduler — update its in-memory gate so the new row fires on
+      // time without waiting for the backstop re-sync (§2.1).
+      noteScheduledAt(draft.fireAt)
       await interaction.editReply(
         `📅 Announcement scheduled for **${formatIst(draft.fireAt)}** in <#${draft.channelId}>.`,
       )

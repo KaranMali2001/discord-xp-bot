@@ -1,3 +1,5 @@
+import { Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
 import { MentionTextarea } from '@/components/MentionTextarea'
 import { Button } from '@/components/ui/button'
@@ -22,8 +24,6 @@ import {
 } from '@/hooks/useAnnouncements'
 import { markupToDiscord, markupToPlain } from '@/lib/mentions'
 import { formatIst, istDateTimeLocalToEpochSec } from '@/lib/time'
-import { Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 const MAX_LEN = 1900
 

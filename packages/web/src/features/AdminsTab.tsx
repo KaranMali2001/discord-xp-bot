@@ -1,11 +1,11 @@
+import { Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { MemberPicker } from '@/components/MemberPicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/components/ui/toast'
 import { useAddAdmin, useAdmins, useRemoveAdmin } from '@/hooks/useAdmins'
-import { Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 export function AdminsTab({ guildId }: { guildId: string }) {
   const { toast } = useToast()

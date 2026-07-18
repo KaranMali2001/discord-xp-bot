@@ -1,4 +1,5 @@
 import { guildConfigInput, rulesDao, rulesService } from '@xp/core'
+import { invalidateBotCache } from '../lib/cache-invalidate'
 import { parse } from '../lib/validate'
 
 export const configController = {
@@ -6,8 +7,10 @@ export const configController = {
     return rulesService.getConfig(guildId)
   },
 
-  put(guildId: string, body: unknown) {
+  async put(guildId: string, body: unknown) {
     const patch = parse(guildConfigInput, body)
-    return rulesDao.upsertConfig(guildId, patch)
+    const row = await rulesDao.upsertConfig(guildId, patch)
+    invalidateBotCache(guildId) // refresh the bot's cached config (§2.1)
+    return row
   },
 }

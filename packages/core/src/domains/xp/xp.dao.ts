@@ -14,16 +14,16 @@ export interface CounterDelta {
 }
 
 export const xpDao = {
-  get(guildId: string, userId: string): Member | undefined {
-    return db
+  async get(guildId: string, userId: string): Promise<Member | undefined> {
+    const [row] = await db
       .select()
       .from(members)
       .where(and(eq(members.guildId, guildId), eq(members.userId, userId)))
-      .get()
+    return row
   },
 
-  ensure(guildId: string, userId: string, username: string): Member {
-    return db
+  async ensure(guildId: string, userId: string, username: string): Promise<Member> {
+    const [row] = await db
       .insert(members)
       .values({ guildId, userId, username })
       .onConflictDoUpdate({
@@ -31,18 +31,19 @@ export const xpDao = {
         set: { username },
       })
       .returning()
-      .get()
+    if (!row) throw new Error('members upsert returned no row')
+    return row
   },
 
   /** Atomically add XP + counters and set the new level. Returns the fresh row. */
-  apply(
+  async apply(
     guildId: string,
     userId: string,
     xpDelta: number,
     newLevel: number,
     counters: CounterDelta,
-  ): Member {
-    return db
+  ): Promise<Member> {
+    const [row] = await db
       .update(members)
       .set({
         xp: sql`${members.xp} + ${xpDelta}`,
@@ -55,20 +56,22 @@ export const xpDao = {
       })
       .where(and(eq(members.guildId, guildId), eq(members.userId, userId)))
       .returning()
-      .get()
+    if (!row) throw new Error('members upsert returned no row')
+    return row
   },
 
   /** Set XP + level to absolute values (used by admin XP Boosts). Returns the fresh row. */
-  setXp(guildId: string, userId: string, xp: number, level: number): Member {
-    return db
+  async setXp(guildId: string, userId: string, xp: number, level: number): Promise<Member> {
+    const [row] = await db
       .update(members)
       .set({ xp, level, updatedAt: nowSec() })
       .where(and(eq(members.guildId, guildId), eq(members.userId, userId)))
       .returning()
-      .get()
+    if (!row) throw new Error('members upsert returned no row')
+    return row
   },
 
-  leaderboard(guildId: string, limit = 25, offset = 0): Member[] {
+  async leaderboard(guildId: string, limit = 25, offset = 0): Promise<Member[]> {
     return db
       .select()
       .from(members)
@@ -76,26 +79,24 @@ export const xpDao = {
       .orderBy(desc(members.xp))
       .limit(limit)
       .offset(offset)
-      .all()
   },
 
-  rank(guildId: string, userId: string): number | null {
-    const me = this.get(guildId, userId)
+  async rank(guildId: string, userId: string): Promise<number | null> {
+    const me = await this.get(guildId, userId)
     if (!me) return null
-    const row = db
-      .select({ n: sql<number>`count(*)` })
+    // count(*) is int8 → node-postgres returns it as a string; ::int coerces to a JS number.
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
       .from(members)
       .where(and(eq(members.guildId, guildId), sql`${members.xp} > ${me.xp}`))
-      .get()
     return (row?.n ?? 0) + 1
   },
 
-  count(guildId: string): number {
-    const row = db
-      .select({ n: sql<number>`count(*)` })
+  async count(guildId: string): Promise<number> {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
       .from(members)
       .where(eq(members.guildId, guildId))
-      .get()
     return row?.n ?? 0
   },
 }

@@ -1,5 +1,5 @@
-import { type LeaderboardPage, endpoints } from '@/lib/api'
 import { useQuery } from '@tanstack/react-query'
+import { endpoints, type LeaderboardPage } from '@/lib/api'
 
 const key = (guildId: string, limit: number, offset: number) =>
   ['leaderboard', guildId, limit, offset] as const

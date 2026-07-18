@@ -1,5 +1,5 @@
-import { type EventAttendance, type EventInput, type MultiplierEvent, endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { type EventAttendance, type EventInput, endpoints, type MultiplierEvent } from '@/lib/api'
 
 const key = (guildId: string) => ['events', guildId] as const
 

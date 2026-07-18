@@ -14,12 +14,13 @@ export type TicketParticipant = typeof ticketParticipants.$inferSelect
 
 export const ticketsDao = {
   // ── config ────────────────────────────────────────────────
-  getConfig(guildId: string): TicketConfig | undefined {
-    return db.select().from(ticketConfig).where(eq(ticketConfig.guildId, guildId)).get()
+  async getConfig(guildId: string): Promise<TicketConfig | undefined> {
+    const [row] = await db.select().from(ticketConfig).where(eq(ticketConfig.guildId, guildId))
+    return row
   },
 
-  upsertConfig(guildId: string, patch: Partial<TicketConfigInput>): TicketConfig {
-    return db
+  async upsertConfig(guildId: string, patch: Partial<TicketConfigInput>): Promise<TicketConfig> {
+    const [row] = await db
       .insert(ticketConfig)
       .values({ guildId, ...patch, updatedAt: nowSec() })
       .onConflictDoUpdate({
@@ -27,12 +28,13 @@ export const ticketsDao = {
         set: { ...patch, updatedAt: nowSec() },
       })
       .returning()
-      .get()
+    if (!row) throw new Error('ticket_config upsert returned no row')
+    return row
   },
 
   // ── tickets ───────────────────────────────────────────────
-  create(guildId: string, input: TicketInput): Ticket {
-    const row = db
+  async create(guildId: string, input: TicketInput): Promise<Ticket> {
+    const [row] = await db
       .insert(tickets)
       .values({
         guildId,
@@ -42,56 +44,55 @@ export const ticketsDao = {
         description: input.description,
       })
       .returning()
-      .get()
     if (!row) throw new Error('Failed to create ticket')
     return row
   },
 
-  get(guildId: string, id: number): Ticket | undefined {
-    return db
+  async get(guildId: string, id: number): Promise<Ticket | undefined> {
+    const [row] = await db
       .select()
       .from(tickets)
       .where(and(eq(tickets.guildId, guildId), eq(tickets.id, id)))
-      .get()
-  },
-
-  /** Persist the collection-channel message id (reuses the mod_message_id column). */
-  setModMessage(id: number, modMessageId: string): void {
-    db.update(tickets).set({ modMessageId }).where(eq(tickets.id, id)).run()
+    return row
   },
 
   /** Link the private thread once staff creates it. */
-  setThread(id: number, threadId: string): void {
-    db.update(tickets).set({ threadId }).where(eq(tickets.id, id)).run()
+  async setThread(id: number, threadId: string): Promise<void> {
+    await db.update(tickets).set({ threadId }).where(eq(tickets.id, id))
   },
 
   /** Find a ticket by its thread id (the thread-message guard's lookup). */
-  getByThread(threadId: string): Ticket | undefined {
-    return db.select().from(tickets).where(eq(tickets.threadId, threadId)).get()
+  async getByThread(threadId: string): Promise<Ticket | undefined> {
+    const [row] = await db.select().from(tickets).where(eq(tickets.threadId, threadId))
+    return row
   },
 
-  setStatus(guildId: string, id: number, status: TicketStatus): Ticket | undefined {
-    return db
+  async setStatus(guildId: string, id: number, status: TicketStatus): Promise<Ticket | undefined> {
+    const [row] = await db
       .update(tickets)
       .set({ status, resolvedAt: status === 'open' ? null : nowSec() })
       .where(and(eq(tickets.guildId, guildId), eq(tickets.id, id)))
       .returning()
-      .get()
+    return row
   },
 
-  listByStatus(guildId: string, status: TicketStatus, limit = 25): Ticket[] {
+  async listByStatus(guildId: string, status: TicketStatus, limit = 25): Promise<Ticket[]> {
     return db
       .select()
       .from(tickets)
       .where(and(eq(tickets.guildId, guildId), eq(tickets.status, status)))
       .orderBy(desc(tickets.createdAt))
       .limit(limit)
-      .all()
   },
 
   // ── attachments ───────────────────────────────────────────
-  addAttachment(guildId: string, ticketId: number, input: TicketAttachmentInput): TicketAttachment {
-    const row = db
+  // Image bytes live in Cloudinary (§2.2); this row stores only the public_id + url reference.
+  async addAttachment(
+    guildId: string,
+    ticketId: number,
+    input: TicketAttachmentInput,
+  ): Promise<TicketAttachment> {
+    const [row] = await db
       .insert(ticketAttachments)
       .values({
         ticketId,
@@ -99,58 +100,54 @@ export const ticketsDao = {
         filename: input.filename,
         contentType: input.contentType,
         sizeBytes: input.sizeBytes,
-        data: input.data,
+        cloudinaryPublicId: input.cloudinaryPublicId ?? '',
+        url: input.url ?? '',
       })
       .returning()
-      .get()
     if (!row) throw new Error('Failed to store ticket attachment')
     return row
   },
 
-  /** Bytes excluded — the list view never needs the blob, only metadata. */
-  listAttachmentMeta(ticketId: number): Omit<TicketAttachment, 'data'>[] {
+  /**
+   * Attachment references for a ticket (lightweight — the heavy bytes live in Cloudinary).
+   * Scoped by `guildId` as well as `ticketId` so a caller authorized for one guild can't read
+   * another guild's attachments by guessing the numeric ticket id (§2.2 private-attachment rule).
+   */
+  async listAttachmentMeta(guildId: string, ticketId: number): Promise<TicketAttachment[]> {
     return db
-      .select({
-        id: ticketAttachments.id,
-        ticketId: ticketAttachments.ticketId,
-        guildId: ticketAttachments.guildId,
-        filename: ticketAttachments.filename,
-        contentType: ticketAttachments.contentType,
-        sizeBytes: ticketAttachments.sizeBytes,
-        createdAt: ticketAttachments.createdAt,
-      })
+      .select()
       .from(ticketAttachments)
-      .where(eq(ticketAttachments.ticketId, ticketId))
-      .all()
+      .where(and(eq(ticketAttachments.guildId, guildId), eq(ticketAttachments.ticketId, ticketId)))
   },
 
-  getAttachment(id: number): TicketAttachment | undefined {
-    return db.select().from(ticketAttachments).where(eq(ticketAttachments.id, id)).get()
+  async getAttachment(id: number): Promise<TicketAttachment | undefined> {
+    const [row] = await db.select().from(ticketAttachments).where(eq(ticketAttachments.id, id))
+    return row
   },
 
   // ── participants (per-user access on the hidden ticket channel) ──
-  addParticipant(guildId: string, ticketId: number, userId: string, role: ParticipantRole): void {
-    db.insert(ticketParticipants)
+  async addParticipant(
+    guildId: string,
+    ticketId: number,
+    userId: string,
+    role: ParticipantRole,
+  ): Promise<void> {
+    await db
+      .insert(ticketParticipants)
       .values({ guildId, ticketId, userId, role })
       .onConflictDoNothing()
-      .run()
   },
 
-  isParticipant(ticketId: number, userId: string): boolean {
-    const row = db
+  async isParticipant(ticketId: number, userId: string): Promise<boolean> {
+    const [row] = await db
       .select({ userId: ticketParticipants.userId })
       .from(ticketParticipants)
       .where(and(eq(ticketParticipants.ticketId, ticketId), eq(ticketParticipants.userId, userId)))
-      .get()
     return Boolean(row)
   },
 
-  listParticipants(ticketId: number): TicketParticipant[] {
-    return db
-      .select()
-      .from(ticketParticipants)
-      .where(eq(ticketParticipants.ticketId, ticketId))
-      .all()
+  async listParticipants(ticketId: number): Promise<TicketParticipant[]> {
+    return db.select().from(ticketParticipants).where(eq(ticketParticipants.ticketId, ticketId))
   },
 
   /**
@@ -158,8 +155,12 @@ export const ticketsDao = {
    * close time to decide whether their channel overwrite must stay (overwrites are shared
    * across every ticket in the one hidden channel).
    */
-  hasAccessElsewhere(guildId: string, userId: string, excludeTicketId: number): boolean {
-    const row = db
+  async hasAccessElsewhere(
+    guildId: string,
+    userId: string,
+    excludeTicketId: number,
+  ): Promise<boolean> {
+    const [row] = await db
       .select({ ticketId: ticketParticipants.ticketId })
       .from(ticketParticipants)
       .innerJoin(tickets, eq(tickets.id, ticketParticipants.ticketId))
@@ -171,7 +172,6 @@ export const ticketsDao = {
           ne(tickets.status, 'closed'),
         ),
       )
-      .get()
     return Boolean(row)
   },
 }

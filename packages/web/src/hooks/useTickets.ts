@@ -1,5 +1,5 @@
-import { type TicketConfig, type TicketSetupBody, endpoints } from '@/lib/api'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { endpoints, type TicketConfig, type TicketSetupBody } from '@/lib/api'
 
 const key = (guildId: string) => ['tickets', guildId] as const
 

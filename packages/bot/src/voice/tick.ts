@@ -1,4 +1,4 @@
-import { env, isEventActive, nowSec, rulesDao, rulesService, voiceService } from '@xp/core'
+import { env, isEventActive, nowSec, rulesService, voiceService } from '@xp/core'
 import type { Client } from 'discord.js'
 import { log } from '../lib/log'
 import { processGrant } from '../lib/rewards'
@@ -10,7 +10,7 @@ import { tracker } from './tracker'
  * connection per guild, we pick the eligible channel with the most people. This keeps
  * the bot out of casual voice — it only appears during actual boosted discussions.
  */
-function reconcileConnections(client: Client): void {
+async function reconcileConnections(client: Client): Promise<void> {
   const at = nowSec()
   // Iterate every guild (not just ones with sessions) so a manual capture can join an
   // empty channel and wait, and so capture works even before anyone is tracked.
@@ -18,9 +18,9 @@ function reconcileConnections(client: Client): void {
     const guildId = guild.id
 
     // Manual dashboard capture wins: join the chosen channel regardless of events/members.
-    const manualChannelId = rulesService.getConfig(guildId).voiceCaptureChannelId
+    const manualChannelId = (await rulesService.getConfig(guildId)).voiceCaptureChannelId
 
-    const activeEvents = rulesDao.listEvents(guildId).filter((e) => isEventActive(e, at))
+    const activeEvents = (await rulesService.getEvents(guildId)).filter((e) => isEventActive(e, at))
     const eventChannel = tracker
       .channelsWithMembers(guildId)
       .filter((chId) => activeEvents.some((e) => e.channelId == null || e.channelId === chId))
@@ -86,53 +86,67 @@ const RECONCILE_INTERVAL_MS = 5_000
  */
 export function startVoiceTick(client: Client): void {
   // Reconcile immediately, then on a short interval — never slower than the bill tick.
-  reconcileConnections(client)
+  void reconcileConnections(client).catch((e) =>
+    log.error('voice', `initial reconcile failed: ${e}`),
+  )
   const reconcileMs = Math.min(RECONCILE_INTERVAL_MS, env.XP_TICK_SECONDS * 1000)
-  setInterval(() => reconcileConnections(client), reconcileMs)
+  // Never let a transient DB throw escape the timer — that becomes an uncaught
+  // exception and kills the process (the 130-restart incident). Log + skip the tick.
+  setInterval(() => {
+    void reconcileConnections(client).catch((e) =>
+      log.error('voice', `reconcile tick failed — skipping: ${e}`),
+    )
+  }, reconcileMs)
 
   setInterval(async () => {
-    const now = nowSec()
-    for (const s of tracker.all()) {
-      const cfg = rulesService.getConfig(s.guildId)
-      const elapsed = Math.min(now - s.lastAccountedAt, env.XP_TICK_SECONDS * 2)
-      s.lastAccountedAt = now
+    try {
+      const now = nowSec()
+      for (const s of tracker.all()) {
+        const cfg = await rulesService.getConfig(s.guildId)
+        const elapsed = Math.min(now - s.lastAccountedAt, env.XP_TICK_SECONDS * 2)
+        s.lastAccountedAt = now
 
-      const present = !(s.muted && cfg.ignoreMutedVoice)
-      const spoke = s.spokeThisTick
-      s.spokeThisTick = false
+        const present = !(s.muted && cfg.ignoreMutedVoice)
+        const spoke = s.spokeThisTick
+        s.spokeThisTick = false
 
-      if (elapsed <= 0) continue
+        if (elapsed <= 0) continue
 
-      // Record per-event attendance DURATION every tick — including muted ticks that the
-      // XP grant below skips — so the dashboard can report muted vs unmuted vs talk time.
-      voiceService.recordDuration({
-        guildId: s.guildId,
-        userId: s.userId,
-        username: s.username,
-        channelId: s.channelId,
-        seconds: elapsed,
-        muted: s.muted,
-        spoke,
-      })
+        // Record per-event attendance DURATION every tick — including muted ticks that the
+        // XP grant below skips — so the dashboard can report muted vs unmuted vs talk time.
+        // MUST be awaited: a floating promise here silently drops attendance duration and
+        // races the next tick's s.lastAccountedAt (the highest data-loss risk in the migration).
+        await voiceService.recordDuration({
+          guildId: s.guildId,
+          userId: s.userId,
+          username: s.username,
+          channelId: s.channelId,
+          seconds: elapsed,
+          muted: s.muted,
+          spoke,
+        })
 
-      if (!present) continue
+        if (!present) continue
 
-      const outcome = voiceService.grantTick({
-        guildId: s.guildId,
-        userId: s.userId,
-        username: s.username,
-        channelId: s.channelId,
-        presentSeconds: elapsed,
-        spoke,
-      })
+        const outcome = await voiceService.grantTick({
+          guildId: s.guildId,
+          userId: s.userId,
+          username: s.username,
+          channelId: s.channelId,
+          presentSeconds: elapsed,
+          spoke,
+        })
 
-      if ('result' in outcome && outcome.result.awarded > 0) {
-        log.debug(
-          'voice',
-          `${s.username} +${outcome.result.awarded}xp (spoke=${spoke}) → ${outcome.result.member.xp}`,
-        )
-        await processGrant(s.guildId, s.userId, outcome.result, s.channelId)
+        if ('result' in outcome && outcome.result.awarded > 0) {
+          log.debug(
+            'voice',
+            `${s.username} +${outcome.result.awarded}xp (spoke=${spoke}) → ${outcome.result.member.xp}`,
+          )
+          await processGrant(s.guildId, s.userId, outcome.result, s.channelId)
+        }
       }
+    } catch (e) {
+      log.error('voice', `bill tick failed — skipping: ${e}`)
     }
   }, env.XP_TICK_SECONDS * 1000)
 }

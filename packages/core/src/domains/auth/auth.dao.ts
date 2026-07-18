@@ -3,30 +3,27 @@ import { db } from '../../db/client'
 import { admins } from '../../db/schema'
 
 export const authDao = {
-  list(guildId: string): string[] {
-    return db
+  async list(guildId: string): Promise<string[]> {
+    const rows = await db
       .select({ userId: admins.userId })
       .from(admins)
       .where(eq(admins.guildId, guildId))
-      .all()
-      .map((r) => r.userId)
+    return rows.map((r) => r.userId)
   },
 
-  isAdmin(guildId: string, userId: string): boolean {
-    return !!db
+  async isAdmin(guildId: string, userId: string): Promise<boolean> {
+    const [row] = await db
       .select({ userId: admins.userId })
       .from(admins)
       .where(and(eq(admins.guildId, guildId), eq(admins.userId, userId)))
-      .get()
+    return Boolean(row)
   },
 
-  add(guildId: string, userId: string) {
-    db.insert(admins).values({ guildId, userId }).onConflictDoNothing().run()
+  async add(guildId: string, userId: string) {
+    await db.insert(admins).values({ guildId, userId }).onConflictDoNothing()
   },
 
-  remove(guildId: string, userId: string) {
-    db.delete(admins)
-      .where(and(eq(admins.guildId, guildId), eq(admins.userId, userId)))
-      .run()
+  async remove(guildId: string, userId: string) {
+    await db.delete(admins).where(and(eq(admins.guildId, guildId), eq(admins.userId, userId)))
   },
 }

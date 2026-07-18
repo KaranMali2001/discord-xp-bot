@@ -1,3 +1,5 @@
+import { Trash2 } from 'lucide-react'
+import * as React from 'react'
 import { RolePicker } from '@/components/RolePicker'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,8 +20,6 @@ import {
   useLevelRewards,
   useUpsertLevelReward,
 } from '@/hooks/useLevelRewards'
-import { Trash2 } from 'lucide-react'
-import * as React from 'react'
 
 type Mode = 'create' | 'existing'
 
