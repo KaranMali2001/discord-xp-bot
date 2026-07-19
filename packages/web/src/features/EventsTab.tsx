@@ -1,7 +1,8 @@
-import { CalendarClock, Trash2 } from 'lucide-react'
+import { CalendarClock, Trash2, X } from 'lucide-react'
 import * as React from 'react'
 import { ChannelPicker } from '@/components/ChannelPicker'
-import { ChannelTag } from '@/components/EntityTag'
+import { ChannelTag, MemberTag } from '@/components/EntityTag'
+import { MemberPicker } from '@/components/MemberPicker'
 import { EmptyState, SkeletonRows } from '@/components/States'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +22,7 @@ type FormState = {
   end: string
   countsAttendance: boolean
   channelId: string | null
+  targetUserIds: string[]
 }
 
 const EMPTY: FormState = {
@@ -31,6 +33,7 @@ const EMPTY: FormState = {
   end: '22:00',
   countsAttendance: true,
   channelId: null,
+  targetUserIds: [],
 }
 
 function describeWindow(
@@ -41,6 +44,56 @@ function describeWindow(
   if (dayOfWeek == null || startMinute == null || endMinute == null) return 'one-off'
   const day = DAY_NAMES[dayOfWeek] ?? `day ${dayOfWeek}`
   return `${day} ${minutesToHhmm(startMinute)}–${minutesToHhmm(endMinute)} IST`
+}
+
+function TargetMembersField({
+  guildId,
+  value,
+  onChange,
+}: {
+  guildId: string
+  value: string[]
+  onChange: (value: string[]) => void
+}) {
+  const [picked, setPicked] = React.useState<string | null>(null)
+
+  const addMember = (userId: string | null) => {
+    setPicked(null)
+    if (!userId || value.includes(userId)) return
+    onChange([...value, userId])
+  }
+
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <Label htmlFor="ev-target-member">Boosted members (optional)</Label>
+      <MemberPicker
+        id="ev-target-member"
+        guildId={guildId}
+        value={picked}
+        onChange={addMember}
+        placeholder="Add member"
+      />
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map((userId) => (
+            <span key={userId} className="inline-flex items-center gap-1">
+              <MemberTag guildId={guildId} userId={userId} />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-6"
+                aria-label="Remove boosted member"
+                onClick={() => onChange(value.filter((id) => id !== userId))}
+              >
+                <X className="size-3" />
+              </Button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function EventsTab({ guildId }: { guildId: string }) {
@@ -83,6 +136,7 @@ export function EventsTab({ guildId }: { guildId: string }) {
       startMinute,
       endMinute,
       channelId: form.channelId,
+      targetUserIds: form.targetUserIds,
     }
     create.mutate(body, {
       onSuccess: () => {
@@ -125,6 +179,11 @@ export function EventsTab({ guildId }: { guildId: string }) {
                   <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
                     {describeWindow(ev.dayOfWeek, ev.startMinute, ev.endMinute)}
                     {ev.countsAttendance ? ' · counts attendance' : ''}
+                    {ev.targetUserIds.length > 0
+                      ? ` · boosts ${ev.targetUserIds.length} member${
+                          ev.targetUserIds.length === 1 ? '' : 's'
+                        }`
+                      : ''}
                     {ev.channelId ? (
                       <>
                         {' · '}
@@ -234,6 +293,11 @@ export function EventsTab({ guildId }: { guildId: string }) {
                 onChange={(next) => setForm({ ...form, channelId: next })}
               />
             </div>
+            <TargetMembersField
+              guildId={guildId}
+              value={form.targetUserIds}
+              onChange={(targetUserIds) => setForm({ ...form, targetUserIds })}
+            />
             <div className="space-y-1.5">
               <Label htmlFor="ev-start">Start (IST)</Label>
               <Input

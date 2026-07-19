@@ -1,7 +1,7 @@
 import type { channelRules, multiplierEvents } from '../../db/schema'
 import { withRetry } from '../../util/retry'
 import { localClock, nowSec } from '../../util/time'
-import { rulesDao } from './rules.dao'
+import { type EventWithTargets, rulesDao } from './rules.dao'
 
 type EventRow = typeof multiplierEvents.$inferSelect
 type ChannelRuleRow = typeof channelRules.$inferSelect
@@ -58,7 +58,7 @@ export function isEventActive(e: EventRow, atSec: number): boolean {
 // and never serve a stale dashboard.
 interface GuildRules {
   config: ResolvedConfig
-  events: EventRow[]
+  events: EventWithTargets[]
   channelRules: ChannelRuleRow[]
 }
 
@@ -116,7 +116,7 @@ export const rulesService = {
   },
 
   /** All multiplier events for a guild (cached alongside config on the bot). */
-  async getEvents(guildId: string): Promise<EventRow[]> {
+  async getEvents(guildId: string): Promise<EventWithTargets[]> {
     return (await guildRules(guildId)).events
   },
 
@@ -138,6 +138,7 @@ export const rulesService = {
     guildId: string,
     channelId: string,
     atSec: number = nowSec(),
+    userId?: string,
   ): Promise<{ multiplier: number; noXp: boolean; attendanceEventIds: number[] }> {
     const gr = await guildRules(guildId)
     const chRule = gr.channelRules.find((r) => r.channelId === channelId)
@@ -149,8 +150,9 @@ export const rulesService = {
     for (const e of gr.events) {
       if (e.channelId != null && e.channelId !== channelId) continue
       if (!isEventActive(e, atSec)) continue
-      multiplier *= e.multiplier
       if (e.countsAttendance) attendanceEventIds.push(e.id)
+      if (e.targetUserIds.length > 0 && (!userId || !e.targetUserIds.includes(userId))) continue
+      multiplier *= e.multiplier
     }
 
     return { multiplier, noXp: false, attendanceEventIds }
