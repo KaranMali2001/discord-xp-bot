@@ -33,6 +33,7 @@ export const xpService = {
       guildId,
       channelId,
       atSec,
+      userId,
     )
     if (noXp) return { skip: 'no_xp_channel' }
 

@@ -81,6 +81,7 @@ export type MultiplierEvent = {
   multiplier: number
   enabled: boolean
   countsAttendance: boolean
+  targetUserIds: string[]
   channelId: string | null
   dayOfWeek: number | null
   startMinute: number | null
@@ -94,6 +95,7 @@ export type EventInput = {
   multiplier: number
   enabled: boolean
   countsAttendance: boolean
+  targetUserIds?: string[]
   channelId?: string | null
   dayOfWeek?: number | null
   startMinute?: number | null

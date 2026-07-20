@@ -37,6 +37,7 @@ export type { LevelReward, RoleDiff } from './domains/rewards/level-roles.servic
 export { reconcileDecision, targetTier } from './domains/rewards/level-roles.service'
 export type { ReconcileResult } from './domains/rewards/reconcile.service'
 export { announceReconcile, reconcileMember } from './domains/rewards/reconcile.service'
+export type { EventWithTargets } from './domains/rules/rules.dao'
 export { rulesDao } from './domains/rules/rules.dao'
 export type {
   ChannelRuleInput,

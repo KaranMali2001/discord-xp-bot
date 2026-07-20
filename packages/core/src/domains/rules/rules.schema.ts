@@ -35,6 +35,7 @@ export const eventBase = z.object({
   // one-off
   startsAt: z.number().int().nullable().optional(),
   endsAt: z.number().int().nullable().optional(),
+  targetUserIds: z.array(z.string().min(1)).default([]).optional(),
 })
 
 export const eventInput = eventBase.refine(

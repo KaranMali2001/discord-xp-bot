@@ -95,6 +95,23 @@ export const multiplierEvents = pgTable('multiplier_events', {
   channelId: text('channel_id'),
 })
 
+/**
+ * Optional per-event XP booster scope. No rows for an event means the multiplier applies
+ * to everyone; one or more rows means only those user IDs receive the multiplier.
+ */
+export const eventTargetMembers = pgTable(
+  'event_target_members',
+  {
+    guildId: text('guild_id').notNull(),
+    eventId: integer('event_id').notNull(),
+    userId: text('user_id').notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.guildId, t.eventId, t.userId] }),
+    eventIdx: index('event_target_members_event').on(t.guildId, t.eventId),
+  }),
+)
+
 /** level → role to grant on reaching it. */
 export const levelRewards = pgTable(
   'level_rewards',
