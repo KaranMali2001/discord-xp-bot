@@ -36,7 +36,13 @@ export const members = pgTable(
     createdAt: epoch('created_at').notNull().default(now),
     updatedAt: epoch('updated_at').notNull().default(now),
   },
-  (t) => ({ pk: primaryKey({ columns: [t.guildId, t.userId] }) }),
+  (t) => ({
+    pk: primaryKey({ columns: [t.guildId, t.userId] }),
+    // Leaderboard (WHERE guild_id = ? ORDER BY xp DESC LIMIT n) and rank() (WHERE guild_id = ?
+    // AND xp > ?) sort/scan by xp within a guild; the PK's (guild_id, user_id) prefix can't serve
+    // that ordering, so without this they fall back to a sort. Keeps both index-only as the table grows.
+    guildXpIdx: index('members_guild_xp').on(t.guildId, t.xp.desc()),
+  }),
 )
 
 /** One config row per guild — the global knobs. */
