@@ -38,3 +38,6 @@ audio-dumps/
 .DS_Store
 .turbo/
 coverage/
+
+# Pulled session audio recordings (large, local-only)
+recordings/

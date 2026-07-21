@@ -15,6 +15,13 @@
       "when": 1784455366718,
       "tag": "0001_happy_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784575043310,
+      "tag": "0002_grey_klaw",
+      "breakpoints": true
     }
   ]
 }
